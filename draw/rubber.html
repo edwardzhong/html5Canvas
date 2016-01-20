@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>draw line with rubber bands</title>
+	<style>
+	body{
+		background-color: #eee;
+	}
+	</style>
+</head>
+<body>
+<div class="control">
+<label for="strokeSel">Stroke Color:</label>
+<select name="strokeSel" id="strokeSel">
+	<option value="red" selected="selected">red</option>
+	<option value="green">green</option>
+	<option value="blue">blue</option>
+	<option value="orange">orange</option>
+	<option value="navy">navy</option>
+	<option value="purple">purple</option>
+</select>
+<label for="fillSel">Fill Color:</label>
+<select name="fillSel" id="fillSel">
+	<option value="red" selected="selected">red</option>
+	<option value="green">green</option>
+	<option value="blue">blue</option>
+	<option value="orange">orange</option>
+	<option value="navy">navy</option>
+	<option value="purple">purple</option>
+</select>
+<label for="typeSel">shape Type:</label>
+<select name="typeSel" id="typeSel">
+	<option value="line" selected="selected">line</option>
+	<option value="circle">circle</option>
+	<option value="polygon">polygon</option>
+</select>
+<label for="sideSel">Sides</label>
+<select name="sideSel" id="sideSel">
+	<option value="3" selected="selected">3</option>
+	<option value="4">4</option>
+	<option value="5">5</option>
+	<option value="6">6</option>
+	<option value="7">7</option>
+	<option value="8">8</option>
+</select>
+angle:
+<input type="text" id="angle" value="0" style="width:20px;">
+<label for="fillModeCb">fillMode</label> <input type="checkbox" name="fillModeCb" id="fillModeCb">
+<label for="dashLineCb">dashLine</label> <input type="checkbox" name="dashLineCb" id="dashLineCb">
+<label for="guidWireCb">guidWires</label> <input type="checkbox" name="guidWireCb" id="guidWireCb" checked="checked" />
+<input type="button" value="Erase all" id="eraseBtn">
+</div>
+<canvas id="canvas" width="800" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		eraseBtn=document.getElementById('eraseBtn'),
+		strokeSel=document.getElementById('strokeSel'),
+		fillSel=document.getElementById('fillSel'),
+		dashLineCb=document.getElementById('dashLineCb'),
+		guidWireCb=document.getElementById('guidWireCb'),
+		fillModeCb=document.getElementById('fillModeCb'),
+		typeSel=document.getElementById('typeSel'),
+		sideSel=document.getElementById('sideSel'),
+		angleTxt=document.getElementById('angle'),
+		drawingSurfaceImgData,
+		mousedown={},
+		rubberbandRect={},
+		guidWires=guidWireCb.checked,
+		dashLine=dashLineCb.checked,
+		dragging=false;
+
+	//画网格线
+	function drawGrid(color,stepx,stepy){
+		ctx.lineWidth=0.5;
+		ctx.strokeStyle=color;
+
+		for(var i=stepx+0.5;i<ctx.canvas.width;i+=stepx){
+			ctx.beginPath();
+			ctx.moveTo(i,0);
+			ctx.lineTo(i,ctx.canvas.height);
+			ctx.stroke();
+		}
+
+		for(var i=stepy+0.5;i<ctx.canvas.height;i+=stepy){
+			ctx.beginPath();
+			ctx.moveTo(0,i);
+			ctx.lineTo(ctx.canvas.width,i);
+			ctx.stroke();
+		}
+	}
+
+	//获取坐标
+	function windowToCanvas(x,y){
+		var bbox=canvas.getBoundingClientRect();
+		return {
+			x:x-bbox.left*(canvas.width/bbox.width),
+			y:y-bbox.top*(canvas.height/bbox.height)
+		};
+	}
+
+	//画虚线
+	function drawDashLine(x1,y1,x2,y2,dashLen){
+		dashLen=dashLen||5;
+		var deltaX=x2-x1,
+			deltaY=y2-y1;
+		var dashNums=Math.floor(Math.sqrt(deltaX*deltaX+deltaY*deltaY)/dashLen);
+		ctx.beginPath();//使用beginPath后，末尾不会出现多余的线
+		for(var i=0;i<dashNums;i++){
+			ctx[i%2==0?'moveTo':'lineTo'](x1+(deltaX/dashNums)*i,y1+(deltaY/dashNums)*i);
+		}
+		ctx.stroke();
+	}
+
+	//画圆
+	function drawArc(loc){
+		var angle,radius;
+		if(mousedown.y==loc.y){
+			radius=Math.abs(loc.x-mousedown.x);
+		} else {
+			angle=Math.atan(rubberbandRect.height/rubberbandRect.width);
+			radius= rubberbandRect.height/Math.sin(angle);
+		}
+		ctx.beginPath();
+		ctx.arc(mousedown.x,mousedown.y,radius,0,Math.PI*2,false);
+		ctx.stroke();
+
+		if(fillModeCb.checked){
+			ctx.fillStyle=fillSel.value;
+			ctx.fill();
+		}
+	}
+
+	//画多边形
+	function drawPolygon(){
+		var polygon=new Polygon(mousedown.x,mousedown.y,
+			rubberbandRect.width,
+			parseInt(sideSel.value),
+			(Math.PI/180)*parseInt(angleTxt.value),
+			ctx.strokeStyle,
+			ctx.fillStyle,
+			fillModeCb.checked);
+
+		ctx.beginPath();
+		polygon.createPath(ctx);
+		polygon.stroke(ctx);
+
+		if(fillModeCb.checked){
+			polygon.fill(ctx);
+		}
+	}
+
+	//save and restore drawingSurface
+	function saveDrawingSurface(){
+		drawingSurfaceImgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+	}
+
+	function restoreDrawingSurface(){
+		ctx.putImageData(drawingSurfaceImgData,0,0);
+	}
+
+	//rubberband
+	function updateRubberbandRectAngle(loc){
+		rubberbandRect.width=Math.abs(loc.x-mousedown.x);
+		rubberbandRect.height=Math.abs(loc.y-mousedown.y);
+
+		if(loc.x>mousedown.x){
+			rubberbandRect.left=mousedown.x;
+		} else {
+			rubberbandRect.left=loc.x;
+		}
+
+		if(loc.y>mousedown.y){
+			rubberbandRect.top=mousedown.y;
+		} else {
+			rubberbandRect.top=loc.y;
+		}
+	}
+
+	function drawRubberbandShape(loc){
+		ctx.strokeStyle=strokeSel.value;
+		if(typeSel.value=='polygon'){//多边形
+			drawPolygon();
+		} else if(typeSel.value=='circle'){//圆
+			drawArc(loc);
+		} else if(typeSel.value=='line'){//线条
+			if(dashLine){//虚线
+				drawDashLine(mousedown.x,mousedown.y,loc.x,loc.y);
+			} else {//实线
+				ctx.beginPath();
+				ctx.moveTo(mousedown.x,mousedown.y);
+				ctx.lineTo(loc.x,loc.y);
+				ctx.stroke();
+			}	
+		}
+	}
+
+	function updateRubberband(loc){
+		updateRubberbandRectAngle(loc);
+		drawRubberbandShape(loc);
+	}
+
+	//Guidwires
+	function drawHorizontalLine(y){
+		ctx.beginPath();
+		ctx.moveTo(0,y+0.5);
+		ctx.lineTo(ctx.canvas.width,y+0.5);
+		ctx.stroke();
+	}
+
+	function drawVerticalLine(x){
+		ctx.beginPath();
+		ctx.moveTo(x+0.5,0);
+		ctx.lineTo(x+0.5,ctx.canvas.height);
+		ctx.stroke();
+	}
+
+	function drawGuidewires(x,y){
+		ctx.save();
+		ctx.strokeStyle='rgba(0,0,230,0.4)';
+		ctx.lineWidth=0.5;
+		drawVerticalLine(x);
+		drawHorizontalLine(y);
+		ctx.restore();
+	}
+
+	//canvas event handlers
+	canvas.onmousedown=function(e){
+		var loc=windowToCanvas(e.clientX,e.clientY);
+		e.preventDefault();
+		saveDrawingSurface();
+		mousedown.x=loc.x;
+		mousedown.y=loc.y;
+		dragging=true;
+	};
+
+	canvas.onmousemove=function(e){
+		var loc;
+		if(dragging){
+			e.preventDefault();
+
+			loc=windowToCanvas(e.clientX,e.clientY);
+			restoreDrawingSurface();
+			updateRubberband(loc);
+
+			if(guidWires){
+				drawGuidewires(loc.x,loc.y);
+			}
+		}
+	};
+
+	canvas.onmouseup=function(e){
+		loc=windowToCanvas(e.clientX,e.clientY);
+		restoreDrawingSurface();
+		updateRubberband(loc);
+		dragging=false;
+	};
+
+	// control event handler
+	eraseBtn.onclick=function(e){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		drawGrid('lightgray',10,10);
+		saveDrawingSurface();
+	};
+
+	strokeSel.onchange=function(e){
+		ctx.strokeStyle=strokeSel.value;
+	};
+
+	guidWireCb.onchange=function(e){
+		guidWires=guidWireCb.checked;
+	};
+
+	dashLineCb.onchange=function(e){
+		dashLine=dashLineCb.checked;
+	};
+
+	//initialization
+	drawGrid('lightgray',10,10);
+
+	function Point(x,y){
+		this.x=x;
+		this.y=y;
+	}
+
+	function Polygon(centerX,centerY,radius,sides,startAngle,strokeStyle,fillStyle,filled){
+		this.x=centerX;
+		this.y=centerY;
+		this.radius=radius;
+		this.sides=sides;
+		this.startAngle=startAngle;
+		this.strokeStyle=strokeStyle;
+		this.fillStyle=fillStyle;
+		this.filled=filled;
+	}
+
+	Polygon.prototype={
+		getPoints:function(){
+			var points=[],
+				angle=this.startAngle||0;
+			for(var i=0;i<this.sides;++i){
+				points.push(new Point(this.x+this.radius*Math.cos(angle),this.y-this.radius*Math.sin(angle)));
+				angle+=2*Math.PI/this.sides;
+			}
+			return points;
+		},
+		createPath:function(ctx){
+			var points=this.getPoints();
+			ctx.beginPath();
+			ctx.moveTo(points[0].x,points[0].y);
+
+			for(var i=1;i<this.sides;++i){
+				ctx.lineTo(points[i].x,points[i].y);
+			}
+			ctx.closePath();
+		},
+		stroke:function(ctx){
+			ctx.save();
+			this.createPath(ctx);
+			ctx.strokeStyle=this.strokeStyle;
+			ctx.stroke();
+			ctx.restore();
+		},
+		fill:function(ctx){
+			ctx.save();
+			this.createPath(ctx);
+			ctx.fillStyle=this.fillStyle;
+			ctx.fill();
+			ctx.restore();
+		},
+		move:function(x,y){
+			this.x=x;
+			this.y=y;
+		}
+	};
+</script>
+</body>
+</html>

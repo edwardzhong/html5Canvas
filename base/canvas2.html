@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>canvas2</title>
+</head>
+<body>
+<canvas id="canvas" width="800" height="600">不支持canvas!</canvas>
+<script type="text/javascript">
+(function(){
+	var canvas=document.getElementById('canvas');
+	var c=canvas.getContext('2d');
+	//渐变
+	var g1=c.createLinearGradient(0,0,0,300);
+	g1.addColorStop(0,'gray');
+	g1.addColorStop(1,'#99d9ea');
+	c.fillStyle=g1;
+	c.fillRect(0,0,400,300);
+	//径向渐变
+	var g2=c.createLinearGradient(400,0,0,400,0,400);
+	g2.addColorStop(0.1,'gray');
+	g2.addColorStop(0.5,'red');
+	g2.addColorStop(1,'#99d9ea');
+	c.fillStyle=g2;
+	c.fillRect(0,300,400,800);
+
+        c.fillStyle = 'red';
+        c.fillRect(10, 10, 50, 50);
+
+        c.translate(60, 60);//原点平移
+        c.fillRect(0, 0, 50, 50);
+
+        c.translate(60, 60); //原点平移
+        c.scale(1.5, 1.2); //放大
+        c.fillRect(0, 0, 50, 50);
+
+        c.translate(60, 60); //原点平移
+        c.rotate(Math.PI/20);//旋转
+        c.fillRect(0,0,50,50);
+
+        c.translate(100,0);//原点平移
+        c.rotate(-Math.PI/20);//旋转回原来
+        c.fillRect(0,0,50,50);
+        //c.globalCompositeOperation='xor';//lighter,图形组合
+
+        c.fillStyle='blue';
+        c.translate(20,20);
+        c.fillRect(0,0,50,50);
+
+        c.translate(20,50);
+        c.shadowOffsetX=10;//阴影
+        c.shadowOffsetY=10;
+        c.shadowColor='red';
+        c.shadowBlur=7.5;
+        c.fillRect(0,0,50,50);
+
+        c.translate(100,100);
+        var img=new Image();
+        img.src='../Images/Tulips.jpg';
+        img.onload=function(){
+            //复制图像
+            c.drawImage(img,0,0,100,100);//缩放为100*100的图像
+            c.translate(0,-200);
+            c.drawImage(img,300,300,200,200,0,0,100,100);//(图像,源图像x,源图像y,源图像宽,源图像高,目的图x,目的图y,缩放宽,缩放高)
+
+            //剪切图像
+            c.translate(50,150);
+            c.beginPath();
+            c.arc(0,0,40,0,360*Math.PI/180,true);
+            c.fill();
+            c.clip();
+            c.drawImage(img,0,0);
+        }
+}());
+</script>
+</body>
+</html>

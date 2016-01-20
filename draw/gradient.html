@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>渐变</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		gradient=ctx.createLinearGradient(0,0,canvas.width,0),//线性渐变
+		rdGradient=ctx.createRadialGradient(canvas.width/2,canvas.height,10,canvas.width/2,0,100);//放射渐变 开始坐标x，开始坐标y，开始点半径，结束坐标x，结束坐标y，结束点半径
+		// rdGradient=ctx.createRadialGradient(canvas.width/2,canvas.height/2,10,canvas.width/2,canvas.height/2,100);//起始点和终点重合，则会画出一个渐变同心圆
+
+	gradient.addColorStop(0,'blue');
+	gradient.addColorStop(0.25,'white');
+	gradient.addColorStop(0.5,'purple');
+	gradient.addColorStop(0.75,'red');
+	gradient.addColorStop(1,'yellow');
+
+	rdGradient.addColorStop(0,'blue');
+	rdGradient.addColorStop(0.25,'white');
+	rdGradient.addColorStop(0.5,'purple');
+	rdGradient.addColorStop(0.75,'red');
+	rdGradient.addColorStop(1,'orange');
+
+	ctx.fillStyle=gradient;
+	ctx.fillRect(0,0,canvas.width,canvas.height);
+
+	ctx.fillStyle=rdGradient;
+	// ctx.fillRect(0,0,canvas.width,canvas.height);
+	ctx.rect(0,0,canvas.width,canvas.height);//fillRect和rect，fill等效
+	ctx.fill();
+</script>
+</body>
+</html>

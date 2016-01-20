@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>擦除功能</title>
+
+</head>
+<body>
+<canvas id="canvas" width='600' height="400"></canvas>	
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		imgData=null,
+		mouseData={},
+		isDragging=false;;
+
+	//画网格线
+	function drawGrid(color,stepx,stepy){
+		ctx.lineWidth=0.5;
+		ctx.strokeStyle=color;
+
+		for(var i=stepx+0.5;i<ctx.canvas.width;i+=stepx){
+			ctx.beginPath();
+			ctx.moveTo(i,0);
+			ctx.lineTo(i,ctx.canvas.height);
+			ctx.stroke();
+		}
+
+		for(var i=stepy+0.5;i<ctx.canvas.height;i+=stepy){
+			ctx.beginPath();
+			ctx.moveTo(0,i);
+			ctx.lineTo(ctx.canvas.width,i);
+			ctx.stroke();
+		}
+	}
+
+	//获取坐标
+	function windowToCanvas(x,y){
+		var bbox=canvas.getBoundingClientRect();
+		return {
+			x:x-bbox.left*(canvas.width/bbox.width),
+			y:y-bbox.top*(canvas.height/bbox.height)
+		};
+	}
+
+	function init(){
+		ctx.beginPath();
+		ctx.fillStyle='orange';
+		ctx.strokeStyle='red';
+		ctx.arc(200,200,100,0,Math.PI*2,false);
+		ctx.fill();
+		ctx.stroke();
+	}
+
+	function drawRect(x,y){
+		ctx.beginPath();
+		ctx.fillStyle='white';
+		ctx.strokeStyle='gray';
+
+		ctx.rect(x-20,y-20,40,40);
+		ctx.stroke();
+		ctx.fill();
+	}
+
+	function clearRect(loc){
+		ctx.clearRect(loc.x-20,loc.y-20,40,40);
+	}
+
+	canvas.onmousedown=function(e){
+		var loc=windowToCanvas(e.clientX,e.clientY);
+		// mouseData={x1:loc.x,y1:loc.y};
+		drawRect(loc.x,loc.y);
+		isDragging=true;
+	};
+
+	canvas.onmousemove=function(e){
+		var loc=windowToCanvas(e.clientX,e.clientY);
+		if(isDragging){
+			// mouseData.x2=loc.x;
+			// mouseData.y2=loc.y;
+			ctx.save();
+			drawRect(loc.x,loc.y);
+			ctx.restore();
+		}
+	};
+
+	canvas.onmouseup=function(e){
+		isDragging=false;
+	};
+
+	drawGrid('lightgray',10,10);
+	init();
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>坐标变换</title>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d');
+
+	ctx.strokeStyle='red';
+
+	ctx.rotate(Math.PI/4);//旋转45度
+	ctx.translate(50,50);//平移到指定位置
+	ctx.scale(2,2);//缩放
+
+	ctx.beginPath();
+	ctx.moveTo(10,10);
+	ctx.lineTo(100,10);
+	ctx.stroke();
+</script>
+</body>
+</html>

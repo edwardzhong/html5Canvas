@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>arcTo</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d');
+
+	function roundRect(cx,cy,width,height,cRadius){
+		if(width>0){
+			ctx.moveTo(cx+cRadius,cy);
+		} else {
+			ctx.moveTo(cx-cRadius,cy);
+		}
+
+		ctx.arcTo(cx+width,cy,cx+width,cy+height,cRadius);
+		ctx.arcTo(cx+width,cy+height,cx,cy+height,cRadius);
+		ctx.arcTo(cx,cy+height,cx,cy,cRadius);
+
+		if(width>0){
+			ctx.arcTo(cx,cy,cx+cRadius,cy,cRadius);
+		} else {
+			ctx.arcTo(cx,cy,cx-cRadius,cy,cRadius);
+		}
+	}
+
+	function drawRoundedRect(strokeStyle,fillStyle,cx,cy,width,height,cRadius){
+		ctx.beginPath();
+		roundRect(cx,cy,width,height,cRadius);
+		ctx.fillStyle=fillStyle;
+		ctx.strokeStyle=strokeStyle;
+		ctx.stroke();
+		ctx.fill();
+	}
+
+	drawRoundedRect('blue','yellow',50,40,100,100,10);
+	drawRoundedRect('purple','green',275,40,-100,100,20);
+	drawRoundedRect('red','white',300,140,100,-100,30);
+	drawRoundedRect('white','blue',525,140,-100,-100,40);
+</script>
+</body>
+</html>

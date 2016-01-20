@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>贝塞尔曲线</title>
+</head>
+<body>
+<canvas id="canvas" width="500" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		endPoints=[{x:130,y:70},{x:430,y:270}],
+		controlPoints=[{x:130,y:250},{x:450,y:70}];
+
+	function drawBezierCurve(){
+		ctx.strokeStyle='blue';
+		ctx.beginPath();
+		ctx.moveTo(endPoints[0].x,endPoints[0].y);
+		ctx.bezierCurveTo(controlPoints[0].x,controlPoints[0].y,controlPoints[1].x,controlPoints[1].y,endPoints[1].x,endPoints[1].y);
+		ctx.stroke();
+	}
+
+	function drawEndPoints(){
+		ctx.strokeStyle='blue';
+		ctx.fillStyle='red';
+
+		endPoints.forEach(function(point){
+			ctx.beginPath();
+			ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+			ctx.stroke();
+			ctx.fill();
+		});	
+	}
+
+	function drawControlPoints(){
+		ctx.strokeStyle='yellow';
+		ctx.fillStyle='blue';
+
+		controlPoints.forEach(function(point){
+			ctx.beginPath();
+			ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+			ctx.stroke();
+			ctx.fill();
+		});
+	}
+
+	drawControlPoints();
+	drawEndPoints();
+	drawBezierCurve();
+
+</script>
+</body>
+</html>

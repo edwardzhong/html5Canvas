@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>图像的缩放</title>
+</head>
+<body>
+<div id="controls">
+	<output id="scaleOutput">1.0</output>
+	<input type="range" id="scaleSlider" min="1" max="3.0" step="0.01" value="1.0">
+</div>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		image=new Image(),
+
+		scaleOutput=document.getElementById('scaleOutput'),
+		scaleSlider=document.getElementById('scaleSlider'),
+		scale=1.0,
+		MinScale=1.0,
+		MaxScale=3.0;
+
+	function drawImage() {
+		var w=canvas.width,
+			h=canvas.height,
+			sw=w*scale,
+			sh=h*scale;
+
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		ctx.drawImage(image,w/2-sw/2,h/2-sh/2,sw,sh);
+	}
+
+	function drawScaleText(value){
+		var text=parseFloat(value).toFixed(2);
+		var percent=parseFloat(value-MinScale)/parseFloat(MaxScale-MinScale);
+
+		scaleOutput.innerText=text;
+		percent=percent<0.35?0.35:percent;
+		scaleOutput.style.fontSize=percent*MaxScale/1.5+'em';
+	}
+
+	scaleSlider.onchange=function(e){
+		scale=e.target.value;
+		if(scale<MinScale){
+			scale=MinScale
+		} else if(scale>MaxScale){
+			scale=MaxScale;
+		}
+
+		drawScaleText(scale);
+		drawImage();
+	}
+
+	ctx.fillStyle='cornflowblue';
+	ctx.strokeStyle='yellow';
+	ctx.shadowColor='rgba(50,50,50,1.0)';
+	ctx.shadowOffsetX=5;
+	ctx.shadowOffsetX=5;
+	ctx.shadowBlur=10;
+	
+	image.src='../img/Lighthouse.jpg';
+	image.onload=function(e){
+		drawImage();
+		drawScaleText(scaleSlider.value);
+	};
+</script>
+</body>
+</html>

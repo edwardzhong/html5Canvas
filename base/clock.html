@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>canvas时钟</title>
+</head>
+<body>
+	<canvas id="canvas" width="400" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		FontHeight=15,
+		Margin=35,
+		HandTrunCation=canvas.width/25,
+		HourTrunCation=canvas.width/10,
+		NumSpace=20,
+		Radius=canvas.width/2-Margin,
+		HandRadius=Radius+NumSpace;
+
+	function drawCircle(){
+		ctx.beginPath();
+		ctx.arc(canvas.width/2,canvas.height/2,Radius,0,Math.PI*2,true);
+		ctx.stroke();
+	}
+
+	function drawNumbers(){
+		var nums=[1,2,3,4,5,6,7,8,9,10,11,12],
+			angle=0,
+			numWidth=0;
+
+		nums.forEach(function(num){
+			angle=Math.PI/6*(num-3);
+			numWidth=ctx.measureText(num).width;
+			ctx.fillText(num,canvas.width/2+Math.cos(angle)*HandRadius-numWidth/2,canvas.height/2+Math.sin(angle)*HandRadius+FontHeight/3);
+		});
+	}
+
+	function drawCenter(){
+		ctx.beginPath();
+		ctx.arc(canvas.width/2,canvas.height/2,5,0,Math.PI*2,true);
+		ctx.fill();
+	}
+
+	function drawHand(loc,isHour){
+		var angle=(Math.PI*2)*(loc/60)-Math.PI/2,
+			HandRadius=isHour?Radius-HandTrunCation-HourTrunCation:Radius-HandTrunCation;
+
+		ctx.moveTo(canvas.width/2,canvas.height/2);
+		ctx.lineTo(canvas.width/2+Math.cos(angle)*HandRadius,canvas.height/2+Math.sin(angle)*HandRadius);
+		ctx.stroke();
+	}
+
+	function drawHands(){
+		var date=new Date,
+			hour=date.getHours();
+
+		hour=hour>12?hour-12:hour;
+		drawHand(hour*5+date.getMinutes()/60*5,true,0.5);
+		drawHand(date.getMinutes(),false,0.5);
+		drawHand(date.getSeconds(),false,0.2);
+	}
+
+	function drawClock(){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+
+		drawCircle();
+		drawCenter();
+		drawHands();
+		drawNumbers();
+	}
+
+	ctx.font=FontHeight+'px Arial';
+	setInterval(drawClock,1000);
+</script>
+</body>
+</html>

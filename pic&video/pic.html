@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>draw img</title>
+	<style></style>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		img=new Image();
+
+	img.src='../img/Lighthouse.jpg';
+	img.onload=function(){
+		ctx.drawImage(img,0,0,1200,800);
+	};
+
+	
+</script>
+</body>
+</html>

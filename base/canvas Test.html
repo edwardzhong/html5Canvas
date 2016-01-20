@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>canvas Test</title>
+</head>
+<body>
+	<canvas id="canvas" width="500" height="500">不支持canvas!</canvas>
+	<script type="text/javascript">
+	(function() {
+		var canvas=document.getElementById('canvas');
+		var ctx=canvas.getContext('2d');
+		ctx.fillStyle='rgba(0,0,255,1)';
+		ctx.fillRect(10,10,50,50);
+
+		ctx.beginPath();
+		ctx.moveTo(10,60);
+		ctx.lineTo(10,100);
+		ctx.lineTo(60,100);
+		ctx.lineTo(10,60);
+		ctx.closePath();
+		ctx.fill();
+
+		ctx.lineWidth=10;
+		ctx.strokeStyle="rgba(255,0,0,1)";
+		ctx.strokeRect(10,100,50,50);
+
+		//ctx.stroke();
+		//清除第一个矩形
+		ctx.clearRect(10,10,50,50);
+		//清除整个画布
+		//ctx.clearRect(0,0,canvas.width,canvas.height);
+
+		//圆形
+		ctx.beginPath();
+		ctx.arc(80,80,50,0,180*Math.PI/180,true);//逆时针
+		ctx.closePath();
+		ctx.fillStyle='gray';
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.arc(180,180,50,180*Math.PI/180,false);//顺时针
+		ctx.closePath();
+		ctx.fillStyle='gray';
+		ctx.fill();
+	}())
+	</script>
+</body>
+</html>

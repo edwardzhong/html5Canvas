@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>hello canvas</title>
+	<style>
+	canvas{
+		width: 600px;/*css设置大小只会拉伸canvas*/
+		height: 300px;
+		margin: 0;
+		padding: 0;
+		background-color: #fff;
+		border:thin inset #aaa;
+	}
+	</style>
+</head>
+<body>
+	<canvas id="canvas" width="600" height="300">您的浏览器不支持canvas，建议使用最新版的Chrome！</canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d');
+
+	ctx.font='38pt Arial';
+	ctx.fillStyle='cornflowerblue';
+	ctx.strokeStyle='blue';
+
+	ctx.fillText('Hello Canvas',canvas.width/2-150,canvas.height/2+15);
+	ctx.strokeText('Hello Canvas',canvas.width/2-150,canvas.height/2+15);
+
+	canvas.addEventListener('mousedown',function(e){//添加事件
+		console.log(e);
+	});
+
+	var img=canvas.toDataURL('image/jpeg');//将canvas转换为base64图像
+	console.log(img);
+</script>
+</body>
+</html>

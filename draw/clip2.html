@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>伸缩式动画</title>
+	<style>
+
+	</style>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d');
+
+	function drawText(){
+		// ctx.save();
+		ctx.shadowColor='rgba(100,100,150,0.8)';
+		ctx.shadowOffsetX=5;
+		ctx.shadowOffsetX=5;
+		ctx.shadowBlur=10;
+
+		ctx.fillStyle='cornflowerblue';
+		ctx.fillText('html5',20,250);
+		ctx.strokeStyle='yellow';
+		ctx.strokeText('html5',20,250);
+		// ctx.restore();
+	}
+
+	function setClipingRegin(radius){
+		ctx.beginPath();
+		ctx.arc(canvas.width/2,canvas.height/2,radius,0,Math.PI*2,false);
+		ctx.clip();
+	}
+
+	function fillCanvas(color){
+		ctx.fillStyle=color;
+		ctx.fillRect(0,0,canvas.width,canvas.height);
+
+	}
+
+	function endAnimation(loop){
+		clearInterval(loop);
+		setTimeout(function(e) {
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+			drawText();
+		}, 1000);
+	}
+
+	function drawAnimationFrame(radius){
+		setClipingRegin(radius);
+		fillCanvas('lightgray');
+		drawText();
+	}
+
+	function animate(){
+		var radius=canvas.width/2,
+			loop;
+
+		loop=setInterval(function(){
+			radius-=canvas.width/100;
+			fillCanvas('charcoal');
+
+			if(radius>0){
+				ctx.save();
+				drawAnimationFrame(radius);
+				ctx.restore();
+			} else {
+				endAnimation(loop);
+			}
+		},16);
+	}
+
+	canvas.onmousedown=function(e){
+		animate();
+	};
+
+	ctx.lineWidth=0.5;
+	ctx.font='128pt Comic-sans';
+	drawText();
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>填充与描边</title>
+</head>
+<body>
+<canvas id="canvas" width="400" height="300"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		gradient=ctx.createLinearGradient(0,0,canvas.width,canvas.height),
+		image=new Image(),
+		pattern;
+
+	function drawText(txt,x,y,s){
+		ctx.font='128px Palatino';
+		ctx.lineWidth=1.0;
+		ctx.strokeStyle='rgba(0,0,0,0.8)';
+		// ctx.fillStyle='cornflowerblue';
+
+		// ctx.fillText(txt,x,y,s);
+		ctx.strokeText(txt,x,y,s);
+		// drawGradientText(txt,x,y,s);
+		drawPatternText(txt,x,y,s);
+	}
+
+	function setShadow(){
+		ctx.shadowColor='rgba(0,0,0,0.8)';
+		ctx.shadowOffsetX=5;
+		ctx.shadowOffsetY=5;
+		ctx.shadowBlur=10;
+	}
+
+	function drawGradientText(txt,x,y,s){
+		gradient.addColorStop(0,'blue');
+		gradient.addColorStop(0.25,'purple');
+		gradient.addColorStop(0.5,'white');
+		gradient.addColorStop(0.75,'red');
+		gradient.addColorStop(1,'yellow');
+
+		ctx.fillStyle=gradient;
+		ctx.fillText(txt,x,y,s);
+	}
+
+	image.onload=function(){
+		pattern=ctx.createPattern(image,'repeat');
+		drawText('canvas',10,100,200);
+	}
+
+	function drawPatternText(txt,x,y,s){
+		ctx.fillStyle=pattern;
+		ctx.fillText(txt,x,y,s);
+	}
+
+	setShadow();
+	image.src='../img/closer.png';
+	// drawText('canvas',10,100,200);
+</script>
+</body>
+</html>

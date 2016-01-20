@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>多边形</title>
+<style>
+	body{
+		background-color: #eee;
+	}
+	canvas{
+		cursor: pointer;
+	}
+</style>
+</head>
+<body>
+<div class="control">
+<label for="sideSel">Sides</label>
+<select name="sideSel" id="sideSel">
+	<option value="3" selected="selected">3</option>
+	<option value="4">4</option>
+	<option value="5">5</option>
+	<option value="6">6</option>
+	<option value="7">7</option>
+	<option value="8">8</option>
+</select>
+angle:<input type="text" id="angleTxt" value="0" style="width:20px;">
+<label for="fillModeCb">fillMode</label> <input type="checkbox" name="fillModeCb" id="fillModeCb">
+<button id="clearBtn">Clear All</button>
+</div>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		sideSel=document.getElementById('sideSel'),
+		dashLineCb=document.getElementById('dashLineCb'),
+		fillModeCb=document.getElementById('fillModeCb'),
+		angleTxt=document.getElementById('angleTxt'),
+		clearBtn=document.getElementById('clearBtn'),
+		isDragging=false,
+		imgData=null,
+		mousedown={};
+
+	function drawPolygon(){
+		var points=getPoints();
+		ctx.strokeStyle='red';
+		ctx.fillStyle='orange';
+
+		ctx.beginPath();
+		ctx.moveTo(points[0].x,points[0].y);
+		for(var i=0,len=points.length;i<len;i++){
+			ctx.lineTo(points[(i+1)%len].x,points[(i+1)%len].y);
+		}
+		ctx.stroke();
+
+		if(fillModeCb.checked){
+			ctx.fill();
+		}
+	}
+
+	//画网格线
+	function drawGrid(color,stepx,stepy){
+		ctx.lineWidth=0.5;
+		ctx.strokeStyle=color;
+
+		for(var i=stepx+0.5;i<ctx.canvas.width;i+=stepx){
+			ctx.beginPath();
+			ctx.moveTo(i,0);
+			ctx.lineTo(i,ctx.canvas.height);
+			ctx.stroke();
+		}
+
+		for(var i=stepy+0.5;i<ctx.canvas.height;i+=stepy){
+			ctx.beginPath();
+			ctx.moveTo(0,i);
+			ctx.lineTo(ctx.canvas.width,i);
+			ctx.stroke();
+		}
+	}
+
+	//获取坐标
+	function windowToCanvas(x,y){
+		var bbox=canvas.getBoundingClientRect();
+		return {
+			x:x-bbox.left*(canvas.width/bbox.width),
+			y:y-bbox.top*(canvas.height/bbox.height)
+		};
+	}
+
+	//获取多边形的所有顶点
+	function getPoints(){
+		var sides=parseInt(sideSel.value,10)||3,
+			angle=parseInt(angleTxt.value,10)||0,
+			radius=Math.sqrt(Math.pow((mousedown.x2-mousedown.x1),2)+Math.pow((mousedown.y2-mousedown.y1),2)),
+			points=[];
+		for(var i=0;i<sides;i++){
+			angle+=2*Math.PI/sides;
+			points.push({x:mousedown.x1+radius*Math.sin(angle),y:mousedown.y1-radius*Math.cos(angle)});
+		}
+
+		return points;
+	}
+
+	canvas.onmousedown=function(e){
+		var loc=windowToCanvas(e.clientX,e.clientY);
+		mousedown={x1:loc.x,y1:loc.y};
+		imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+		isDragging=true;
+	};
+
+	canvas.onmousemove=function(e){
+		var loc;
+		if(isDragging){
+			loc=windowToCanvas(e.clientX,e.clientY);
+			mousedown.x2=loc.x;
+			mousedown.y2=loc.y;
+			ctx.putImageData(imgData,0,0);
+			drawPolygon();
+		}
+	};
+	
+	canvas.onmouseup=function(e){
+		isDragging=false;
+	};
+
+	clearBtn.onclick=function(e){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+	};
+
+	drawGrid('lightgray',10,10);
+</script>
+</body>
+</html>

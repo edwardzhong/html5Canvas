@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>图像合成</title>
+</head>
+<body>
+<div>
+	
+</div>
+<canvas id="canvas"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d');
+
+	ctx.fillStyle='orange';
+	ctx.strokeStyle='red';
+	ctx.globalCompositeOperation='source-atop';
+	
+	ctx.fillRect(10,10,100,100);
+	ctx.save();
+
+	ctx.beginPath();
+	ctx.fillStyle='red';
+	ctx.arc(100,100,50,0,Math.PI*2,false);
+	ctx.stroke();
+	ctx.fill();
+
+	ctx.restore();
+</script>
+</body>
+</html>

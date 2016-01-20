@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>路径描边与填充</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d');
+
+	function drawArcs(){
+		ctx.beginPath();
+		ctx.arc(300,190,150,0,Math.PI*2,false);//顺时针
+		ctx.arc(300,190,100,0,Math.PI*2,true);//逆时针
+		//使用arc方法向当前路径中增加子路径时，必须将上一条子路径的终点与所画圆弧的起点相连
+		ctx.fill();
+		ctx.shadowColor='rgba(0,0,0,0.9)';
+		ctx.shadowOffsetX=12;
+		ctx.shadowOffsetY=12;
+		ctx.shadowBlur=15;
+		ctx.stroke();
+	}
+
+	function drawGrid(color,stepx,stepy){
+		ctx.lineWidth=0.5;
+		ctx.strokeStyle=color;
+
+		for(var i=stepx+0.5;i<ctx.canvas.width;i+=stepx){
+			ctx.beginPath();
+			ctx.moveTo(i,0);
+			ctx.lineTo(i,ctx.canvas.height);
+			ctx.stroke();
+		}
+
+		for(var i=stepy+0.5;i<ctx.canvas.height;i+=stepy){
+			ctx.beginPath();
+			ctx.moveTo(0,i);
+			ctx.lineTo(ctx.canvas.width,i);
+			ctx.stroke();
+		}
+	}
+
+	ctx.strokeStyle=ctx.fillStyle='rgba(100,140,230,0.5)';
+	drawArcs();
+	drawGrid('red',10,10);
+
+</script>
+</body>
+</html>

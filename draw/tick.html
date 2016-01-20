@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>draw tick</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="500"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+
+		CentroidRadius=10,
+		CentroidStrokeStyle='rgba(0,0,0,0.5)',
+		CentroidFillStyle='rgba(80,190,240,0.6)';
+
+		RingInnerRadius=35,
+		RingOuterRadius=55,
+
+		AnnotationsFillStyle='rgba(0,0,230,0.9)',
+		AnnotationsTextSize=12,
+
+		TickWidth=10,
+		TickLongStrokeStyle='rgba(100,140,230,0.9)',
+		TickShortStrokeStyle='rgba(100,140,230,0.7)',
+
+		TrackingDialStrokingStyle='rgba(100,140,230,0.5)',
+
+		GuideWireStrokeStyle='goldenrod',
+		GuideWireFillStyle='rgba(250,250,0,0.6)',
+
+		circle={
+			x:canvas.width/2,
+			y:canvas.height/2,
+			radius:150
+		};
+
+	function drawGrid(color,stepx,stepy){
+		ctx.save();
+		ctx.shadowColor=undefined;
+		ctx.shadowOffsetX=0;
+		ctx.shadowOffsetY=0;
+		ctx.strokeStyle=color;
+		ctx.fillStyle='#fff';
+		ctx.lineWidth=0.5;
+		ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+
+		for(var i=stepx+0.5;i<ctx.canvas.width;i+=stepx){
+			ctx.beginPath();
+			ctx.moveTo(i,0);
+			ctx.lineTo(i,ctx.canvas.height);
+			ctx.stroke();
+		}
+
+		for(var i=stepy+0.5;i<ctx.canvas.height;i+=stepy){
+			ctx.beginPath();
+			ctx.moveTo(0,i);
+			ctx.lineTo(ctx.canvas.width,i);
+			ctx.stroke();
+		}
+		ctx.restore();
+	}
+
+	function drawDial(){
+		var loc={x:circle.x,y:circle.y};
+		drawCentroid();
+		drawCentroidGuidwire(loc);
+		drawRing();
+		drawTickInnerCircle();
+		drawTicks();
+		drawAnnotations();
+	}
+
+	//画出中心的圆点
+	function drawCentroid(){
+		ctx.beginPath();
+		ctx.save();
+		ctx.strokeStyle=CentroidStrokeStyle;
+		ctx.fillStyle=CentroidFillStyle;
+		ctx.arc(circle.x,circle.y,CentroidRadius,0,Math.PI*2,false);
+		ctx.stroke();
+		ctx.fill();
+		ctx.restore();
+	}
+
+	//画出指针
+	function drawCentroidGuidwire(loc){
+		var angle=-Math.PI/4,
+			radius,endpt;
+		radius=circle.radius+RingOuterRadius;
+
+		if(loc.x>=circle.x){
+			endpt={
+				x:circle.x+radius*Math.cos(angle),
+				y:circle.y+radius*Math.sin(angle)
+			};
+		} else {
+			endpt={
+				x:circle.x-radius*Math.cos(angle),
+				y:circle.y-radius*Math.sin(angle)
+			};
+		}
+
+		ctx.save();
+		ctx.strokeStyle=GuideWireStrokeStyle;
+		ctx.fillStyle=GuideWireFillStyle;
+
+		//画出指针
+		ctx.beginPath();
+		ctx.moveTo(circle.x,circle.y);
+		ctx.lineTo(endpt.x,endpt.y);
+		ctx.stroke();
+
+		//画出针顶部的小球
+		ctx.beginPath();
+		ctx.strokeStyle=TickLongStrokeStyle;
+		ctx.arc(endpt.x,endpt.y,5,0,Math.PI*2,false);
+		ctx.fill();
+		ctx.stroke();
+	}
+
+	//画出内圈的环，同时填充内外圈之前的空间
+	function drawRing(){
+		drawRingOuterCircle();
+		ctx.strokeStyle='rgba(0,0,0,0.1)';
+		ctx.arc(circle.x,circle.y,circle.radius+RingInnerRadius,0,Math.PI*2,false);
+
+		ctx.fillStyle='rgba(100,140,230,0.1)';
+		ctx.fill();
+		ctx.stroke();
+	}
+
+	//画出最外圈的环
+	function drawRingOuterCircle(){
+		ctx.shadowColor='rgba(0,0,0,0.7)';
+		ctx.shadowOffsetX=3;
+		ctx.shadowOffsetY=3;
+		ctx.shadowBlur=6;
+		ctx.strokeStyle=TrackingDialStrokingStyle;
+		ctx.beginPath();
+		ctx.arc(circle.x,circle.y,circle.radius+RingOuterRadius,0,Math.PI*2,true);
+		ctx.stroke();
+	}
+
+	//再重复画一次内圆
+	function drawTickInnerCircle(){
+		ctx.save();
+		ctx.beginPath();
+		ctx.strokeStyle='rgba(0,0,0,0.1)';
+		ctx.arc(circle.x,circle.y,circle.radius+RingInnerRadius,0,Math.PI*2,false);
+		ctx.stroke();
+		ctx.restore();
+	}
+
+	//画出刻度
+	function drawTick(angle,radius,cnt){
+		var tickWidth=cnt%4==0?TickWidth:TickWidth/2;
+		ctx.beginPath();
+		ctx.moveTo(circle.x+Math.cos(angle)*(radius-tickWidth),circle.y+Math.sin(angle)*(radius-tickWidth));
+		ctx.lineTo(circle.x+Math.cos(angle)*(radius),circle.y+Math.sin(angle)*(radius));
+		ctx.strokeStyle=TickShortStrokeStyle;
+		ctx.stroke();
+	}
+
+	function drawTicks(){
+		var radius=circle.radius+RingInnerRadius,
+			AngleMax=2*Math.PI,
+			AngleDelta=Math.PI/64,
+			tickWidth;
+
+		ctx.save();
+
+		for(var angle=0,cnt=0;angle<AngleMax;angle+=AngleDelta,cnt++){
+			drawTick(angle,radius,cnt++);
+		}
+		ctx.restore();
+	}
+
+	//画出数字
+	function drawAnnotations(){
+		var radius=circle.radius+RingInnerRadius;
+		ctx.save();
+		ctx.fillStyle=AnnotationsFillStyle;
+		ctx.font=AnnotationsTextSize+'px Helvetica';
+
+		for(var angle=0;angle<2*Math.PI;angle+=Math.PI/8){
+			ctx.beginPath();
+			ctx.fillText((angle*180/Math.PI).toFixed(0),circle.x+Math.cos(angle)*(radius-TickWidth*2),circle.y-Math.sin(angle)*(radius-TickWidth*2));
+		}
+		ctx.restore();
+	}
+
+	ctx.shadowColor='rgba(0,0,0,0.4)';
+	ctx.shadowOffsetX=2;
+	ctx.shadowOffsetY=2;
+	ctx.shadowBlur=4;
+
+	ctx.textAlign='center';
+	ctx.textBaseline='middle';
+
+	drawGrid('lightgray',10,10);
+	drawDial();
+</script>
+</body>
+</html>
