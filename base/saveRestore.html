@@ -34,21 +34,21 @@
 	var img=canvas.toDataURL('image/jpeg');//将canvas转换为base64图像
 	console.log(img);
 
-// 先用save方法，保存了当前设置，然后绘制了一个有阴影的矩形。接着，使用restore方法，恢复了保存前的设置，绘制了一个没有阴影的矩形。
-ctx.save(); 
+	// 先用save方法，保存了当前设置，然后绘制了一个有阴影的矩形。接着，使用restore方法，恢复了保存前的设置，绘制了一个没有阴影的矩形。
+	ctx.save(); 
 
-ctx.shadowOffsetX = 10;
-ctx.shadowOffsetY = 10;
-ctx.shadowBlur = 5;
-ctx.shadowColor = "rgba(0,0,0,0.5)";
+	ctx.shadowOffsetX = 10;
+	ctx.shadowOffsetY = 10;
+	ctx.shadowBlur = 5;
+	ctx.shadowColor = "rgba(0,0,0,0.5)";
 
-ctx.fillStyle = "#CC0000";
-ctx.fillRect(10,10,150,100);
+	ctx.fillStyle = "#CC0000";
+	ctx.fillRect(10,10,150,100);
 
-ctx.restore(); 
+	ctx.restore(); 
 
-ctx.fillStyle = "#000000";
-ctx.fillRect(180,10,150,100); 
+	ctx.fillStyle = "#000000";
+	ctx.fillRect(180,10,150,100); 
 </script>
 </body>
 </html>

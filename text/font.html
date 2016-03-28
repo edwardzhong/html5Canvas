@@ -5,11 +5,51 @@
 	<title>字体</title>
 </head>
 <body>
-<canvas id="canvas"></canvas>
+<canvas id="canvas" width="600" height="600"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
-		ctx.getContext('2d');
+		ctx=canvas.getContext('2d');
 
+	var textFillStyle='rgba(100,130,240,0.5)',
+		textStrokeStyle='rgba(200,0,0,0.7)'
+		textSize=64,
+		circle={
+			x:canvas.width/2,y:canvas.height/2,radius:200
+		};
+
+	function drawCircleText(string,startAngle,endAngle){
+		var radius=circle.radius,
+			angleDec=(startAngle-endAngle)/(string.length-1),
+			angle=parseFloat(startAngle,10),
+			index=0,
+			character;
+
+		ctx.save();
+		ctx.fillStyle=textFillStyle;
+		ctx.strokeStyle=textStrokeStyle;
+		ctx.font=textSize+'px Lucida Sans';
+
+		while(index<string.length){
+			character=string.charAt(index);
+			ctx.save();
+			ctx.beginPath();
+
+			ctx.translate(circle.x+Math.cos(angle)*radius,circle.y-Math.sin(angle)*radius);
+			ctx.rotate(Math.PI/2-angle);
+
+			ctx.fillText(character,0,0);
+			ctx.strokeText(character,0,0);
+
+			angle-=angleDec;
+			index++;
+			ctx.restore();
+		}
+		ctx.restore();
+	}
+	ctx.textAlign='center';
+	ctx.textBaseline='middle';
+
+	drawCircleText('clockwise around the circle',Math.PI*2,Math.PI/8);
 	
 </script>
 </body>

@@ -11,6 +11,9 @@
 
         canvas {
 			background-color:rgba(0,0,0,0);
+            -webkit-transition: background-color 1s ease-in-out;
+            -o-transition: background-color 1s ease-in-out;
+            transition: background-color 1s ease-in-out;
         }
     </style>
     <title>canvas粒子特效</title>
@@ -21,41 +24,44 @@
 </div>
 <script>
 	(function(){
+        var requestAnimFrame=window.requestAnimationFrame 
+            || window.webkitRequestAnimationFrame 
+            || window.mozRequestAnimationFrame 
+            || window.oRequestAnimationFrame 
+            || window.msRequestAnimationFrame 
+            || function(callback) {return window.setTimeout(callback, 16); };
+
 		var canvas=document.getElementById('canvas'),
 			ctx=canvas.getContext('2d'),
-			zRadius = 250;
-			text='粒子效果';
+            gradient=ctx.createLinearGradient(0,0,canvas.width,0),
+			zRadius = 200,
+			text='文字特效',
+            points=[];
+        var vpx = canvas.width/2;
+            vpy = canvas.height/2;
+		// function PointEffect(opt){
+		// 	var options={
+		// 		canvas:null,
+		// 		zRadius:250,
+		// 		text:'粒子特效'
+		// 	};
+		// 	for(var prop in opt){
+		// 		opt[prop]&&(options[prop]=opt[prop]);
+		// 	}
+		// 	this.canvas=options.canvas;
+		// 	this.ctx=this.canvas.getContext('2d');
+		// 	this.zRadius=options.zRadius;
+		// 	this.poionts=[];
+		// }
+		// PointEffect.prototype={
+		// 	init:function(){
 
-		function PointEffect(opt){
-			var options={
-				canvas:null,
-				zRadius:250,
-				text:'粒子特效'
-			};
-			for(var prop in opt){
-				opt[prop]&&(options[prop]=opt[prop]);
-			}
-			this.canvas=options.canvas;
-			this.ctx=this.canvas.getContext('2d');
-			this.zRadius=options.zRadius;
-			this.poionts=[];
-		}
-		PointEffect.prototype={
-			init:function(){
-
-			},
-			animate:function(){
+		// 	},
+		// 	animate:function(){
 				
-			}
-		};
-		var requestAnimFrame=window.requestAnimationFrame 
-			|| window.webkitRequestAnimationFrame 
-			|| window.mozRequestAnimationFrame 
-			|| window.oRequestAnimationFrame 
-			|| window.msRequestAnimationFrame 
-			|| function(callback) {
-				return window.setTimeout(callback, 1000 / 60);
-			};
+		// 	}
+		// };
+
 
 		function getImgData(text) {
 			drawText(text);
@@ -65,8 +71,8 @@
 			for (var x = 0; x < imgData.width; x += 6) {
 				for (var y = 0; y < imgData.height; y += 6) {
 					var i = (y * imgData.width + x) * 4;
-					if (imgData.data[i] >= 128) {
-						var point = new Point(x - 3, y - 3, 0, 3);
+					if (imgData.data[i] >= 50) {
+						var point = new Point(x, y, 0, 3,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]});
 						points.push(point);
 					}
 				}
@@ -76,8 +82,16 @@
 
 		function drawText(text) {
 			ctx.save()
-			ctx.font = "200px 微软雅黑 bold";
-			ctx.fillStyle = "rgba(168,168,168,1)";
+			ctx.font = "200px Microsoft YaHei bold";
+            // 设置渐变
+            gradient.addColorStop(0,'#00ff00');
+            gradient.addColorStop(0.3,'purple');
+            gradient.addColorStop(0.5,'red');
+            gradient.addColorStop(0.6,'orange');
+            gradient.addColorStop(1,'yellow');
+
+            ctx.fillStyle=gradient;
+            ctx.globalCompositeOperation='lighter';
 			ctx.textAlign = "center";
 			ctx.textBaseline = "middle";
 			ctx.fillText(text, canvas.width / 2, canvas.height / 2);
@@ -85,10 +99,97 @@
 		}
 
 		function animate(){
+            var isStop=true,
+                stage=0,
+                zoom=0.05,
+                startTime=new Date();
+            (function(){
+                isStop=true;
+                points.forEach(function(item,i){
+                    switch(stage){
+                        case 0:
+                            if(Math.abs(item.x-item.dx)<0.1&&Math.abs(item.y-item.dy)<0.1&&Math.abs(item.z-item.dz)<0.1){
+                                item.x=item.dx;
+                                item.y=item.dy;
+                                item.z=item.dz;
+                            } else {
+                                item.x=item.x+(item.dx-item.x)*zoom;
+                                item.y=item.y+(item.dy-item.y)*zoom;
+                                item.z=item.z+(item.dz-item.z)*zoom;
+                                isStop=false;
+                            }
+                            break;
+                        case 1:
+                            if(Math.abs(item.x-item.fx)<0.1&&Math.abs(item.y-item.fy)<0.1&&Math.abs(item.z-item.fz)<0.1){
+                                item.x=item.fx;
+                                item.y=item.fy;
+                                item.z=item.fz;
+                            } else {
+                                item.x=item.x+(item.fx-item.x)*zoom;
+                                item.y=item.y+(item.fy-item.y)*zoom;
+                                item.z=item.z+(item.fz-item.z)*zoom;
+                                isStop=false;
+                            }
+                            break;
+                        case 2:
+                            rotateY(item,Math.PI/500);
+                            if(new Date()-startTime<5000){
+                                stop=false;
+                            }
+                            break;
+                        default:break;
+                    }
+                });
+                points.sort(function(a,b){
+                    return b.z-a.z;
+                });
 
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                points.forEach(function(item,i){item.paint(); });
+
+                if(isStop&&stage==2){
+                    return false;
+                }
+                if(isStop&&stage!=2){
+                    stage++;
+                    if(stage==1){
+                        canvas.style.backgroundColor='rgba(0,0,0,0.9)';
+                    }
+                    if(stage==2){
+                        startTime=new Date();
+                    }
+                }
+                requestAnimFrame(arguments.callee);
+            }());
 		}
 
-		function Point(x,y,z,radius){
+        // function rotateY(ball, angleY) {
+        //     // 把角度三角函数化，以便看起来是绕圆旋转
+        //     var cosy = Math.cos(angleY),
+        //         siny = Math.sin(angleY),
+        //     // 把 z方向影响算进来
+        //         x1 = ball.xpos * cosy - ball.zpos * siny,
+        //         z1 = ball.zpos * cosy + ball.xpos * siny;
+        //     ball.xpos = x1;
+        //     ball.zpos = z1;
+
+        //     // z坐标扁平化，并赋给小球影响
+        //     var scale = focalLength / (focalLength + ball.zpos);
+        //     ball.x = vpx + ball.xpos * scale;
+        //     ball.y = vpy + ball.ypos * scale;
+        //     ball.width = ballR*2*scale;
+        // }
+
+        function rotateY(item,angleY){
+            var cos = Math.cos(angleY),
+                sin = Math.sin(angleY),
+                x1 = item.x * cos - item.z * sin,
+                z1 = item.z * cos + item.x * sin;
+            item.x = x1;
+            item.z = z1;
+        }
+
+		function Point(x,y,z,radius,rgb){
 			// 点在字体中的坐标
 			this.dx=x;
 			this.dy=y;
@@ -102,13 +203,14 @@
 			this.fy=Math.floor(Math.random()*canvas.height);
 			this.fz=Math.floor(Math.random()*zRadius*2-zRadius);
 			this.radius=radius;
+            this.rgb=rgb;
 		}
 		Point.prototype.paint=function(){
             ctx.save();
             ctx.beginPath();
             var scale = zRadius / (zRadius + this.z);
             ctx.arc(canvas.width / 2 + (this.x - canvas.width / 2) * scale, canvas.height / 2 + (this.y - canvas.height / 2) * scale, this.radius * scale, 0, 2 * Math.PI);
-            ctx.fillStyle = "rgba(50,50,50," + scale + ")";
+            ctx.fillStyle = 'rgba('+this.rgb.r+','+this.rgb.g+','+this.rgb.b+',' + scale*0.5 + ')';
             ctx.fill();
             ctx.restore();
 		};
@@ -116,217 +218,13 @@
 		function init(){
 			canvas.width=window.innerWidth;
 			canvas.height=window.innerHeight;
-			var points=getImgData(text);
-			points.forEach(function(item,i){
-				item.paint();
-			});
+			points=getImgData(text);
+			animate();
 		}
 
 		init();
 
 	}())
-
-
-    // (function(){
-    //     var dr;
-    //     var canvas = document.getElementById("cas"),
-    //         ele = document.querySelectorAll(".ele"),
-    //         context = canvas.getContext('2d');
-
-    //     var focallength = 250,index = 0;
-    //     var img = new Image();
-    //     var pause = false;
-    //     var dots = [];
-
-    //     canvas.width = window.innerWidth;
-    //     canvas.height = window.innerHeight;
-
-    //     var RAF = (function() {
-    //         return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback) {
-    //                     return window.setTimeout(callback, 1000 / 60);
-    //                 };
-    //     })();
-
-    //     var Dot = function (centerX, centerY, centerZ, radius, color) {
-    //         this.dx = centerX;
-    //         this.dy = centerY;
-    //         this.dz = centerZ;
-    //         this.tx = 0;
-    //         this.ty = 0;
-    //         this.tz = 0;
-    //         this.z = centerZ;
-    //         this.x = centerX;
-    //         this.y = centerY;
-    //         this.radius = radius;
-    //         this.color = color;
-    //     };
-
-    //     Dot.prototype = {
-    //         paint: function () {
-    //             context.save();
-    //             var scale = (this.z + focallength) / (2 * focallength);
-    //             context.fillStyle = "rgba(" + this.color.a + "," + this.color.b + "," + this.color.c + "," + scale + ")";
-    //             context.fillRect(canvas.width / 2 + (this.x - canvas.width / 2) * scale, canvas.height / 2 + (this.y - canvas.height / 2) * scale, this.radius * scale*2 , this.radius * scale*2)
-    //             context.restore();
-    //         }
-    //     };
-
-    //     Array.prototype.forEach = function (callback) {
-    //         for (var i = 0; i < this.length; i++) {
-    //             callback.call(this[i]);
-    //         }
-    //     }
-
-    //     eachEle();
-
-    //     function eachEle() {
-    //         dr = 3;
-    //         if (ele[index].getAttribute('data-dr') !== null) {
-    //             dr = parseInt(ele[index].getAttribute('data-dr'))
-    //         }
-    //         context.clearRect(0, 0, canvas.width, canvas.height);
-    //         if (ele[index].innerHTML.indexOf("img") >= 0) {
-    //             img.src = ele[index].getElementsByTagName("img")[0].src;
-    //             imgload(img, function () {
-    //                 context.drawImage(img, canvas.width / 2 - img.width / 2, canvas.height / 2 - img.height / 2);
-    //                 dots = getimgData();
-    //                 initAnimate();
-    //             })
-    //         } else {
-    //             var text = ele[index].innerHTML;
-    //             for (var i = 0; i < text.length; i++) {
-    //                 context.save();
-    //                 var fontSize = Math.random() * 100 + 100;
-    //                 context.font = fontSize + "px bold";
-    //                 context.textAlign = "center";
-    //                 context.textBaseline = "middle";
-    //                 var code = text.charAt(i);
-    //                 context.fillStyle = "rgba(" + parseInt(Math.random() * 125 + 130) + "," + parseInt(Math.random() * 125 + 130) + "," + parseInt(Math.random() * 125 + 130) + " , 1)";
-    //                 context.fillText(code, canvas.width / 2 - ((text.length / 2 - i) * 150), canvas.height / 2);
-    //                 context.restore();
-    //             }
-    //             dots = getimgData();
-    //             initAnimate();
-    //         }
-    //         index < (ele.length - 1) ? index++ : index = 0;
-    //     }
-
-    //     function imgload(img, callback) {
-    //         if (img.complete) {
-    //             callback.call(img);
-    //         }
-    //         else {
-    //             img.onload = function () {
-    //                 callback.call(this);
-    //             }
-    //         }
-    //     }
-
-    //     var lastTime;
-
-    //     function initAnimate() {
-    //         dots.forEach(function () {
-    //             this.x = getRandom(0, canvas.width);
-    //             this.y = getRandom(0, canvas.height);
-    //             this.z = getRandom(-focallength, focallength);
-
-    //             this.tx = getRandom(0, canvas.width);
-    //             this.ty = getRandom(0, canvas.height);
-    //             this.tz = getRandom(-focallength, focallength);
-    //         });
-    //         dots.sort(function (a, b) {
-    //             return b.z - a.z;
-    //         });
-    //         dots.forEach(function () {
-    //             this.paint();
-    //         });
-    //         lastTime = new Date();
-    //         animate();
-    //     }
-
-    //     var derection = true;
-
-    //     function animate() {
-    //         animateRunning = true;
-    //         var thisTime = +new Date();
-    //         context.save();
-    //         context.globalCompositeOperation = 'destination-out';
-    //         context.globalAlpha = 0.1;
-    //         context.fillRect(0, 0, canvas.width, canvas.height);
-    //         context.restore();
-
-    //         var sulv = 0.1;
-    //         dots.forEach(function () {
-    //             var dot = this;
-    //             if (derection) {
-    //                 if (Math.abs(dot.dx - dot.x) < 0.1 && Math.abs(dot.dy - dot.y) < 0.1 && Math.abs(dot.dz - dot.z) < 0.1) {
-    //                     dot.x = dot.dx;
-    //                     dot.y = dot.dy;
-    //                     dot.z = dot.dz;
-    //                     if (thisTime - lastTime > 300) derection = false;
-    //                 } else {
-    //                     dot.x = dot.x + (dot.dx - dot.x) * sulv;
-    //                     dot.y = dot.y + (dot.dy - dot.y) * sulv;
-    //                     dot.z = dot.z + (dot.dz - dot.z) * sulv;
-    //                     lastTime = +new Date()
-    //                 }
-    //             } else {
-    //                 if (Math.abs(dot.tx - dot.x) < 0.1 && Math.abs(dot.ty - dot.y) < 0.1 && Math.abs(dot.tz - dot.z) < 0.1) {
-    //                     dot.x = dot.tx;
-    //                     dot.y = dot.ty;
-    //                     dot.z = dot.tz;
-    //                     pause = true;
-    //                 } else {
-    //                     dot.x = dot.x + (dot.tx - dot.x) * sulv;
-    //                     dot.y = dot.y + (dot.ty - dot.y) * sulv;
-    //                     dot.z = dot.z + (dot.tz - dot.z) * sulv;
-    //                     pause = false;
-    //                 }
-    //             }
-    //         });
-    //         dots.sort(function (a, b) {
-    //             return b.z - a.z;
-    //         });
-    //         dots.forEach(function () {
-    //             this.paint();
-    //         });
-
-    //         if (!pause){
-    //             RAF(animate)
-    //         }else {
-    //             context.clearRect(0, 0, canvas.width, canvas.height);
-    //             eachEle();
-    //             derection = true;
-    //             pause = false;
-    //         }
-    //     }
-
-    //     function getRandom(a, b) {
-    //         return Math.random() * (b - a) + a
-    //     }
-
-    //     function getimgData() {
-    //         var imgData = context.getImageData(0, 0, canvas.width, canvas.height);
-    //         context.clearRect(0, 0, canvas.width, canvas.height);
-    //         var dots = [];
-    //         var canbreak = false;
-    //         for (var x = 0; x < imgData.width; x += dr) {
-    //             for (var y = 0; y < imgData.height; y += dr) {
-    //                 var i = (y * imgData.width + x) * 4;
-    //                 if (imgData.data[i + 3] > 128) {
-    //                     var dot = new Dot(x - dr, y - dr, 0, dr, {
-    //                         a: imgData.data[i],
-    //                         b: imgData.data[i + 1],
-    //                         c: imgData.data[i + 2]
-    //                     });
-    //                     dots.push(dot);
-    //                 }
-    //             }
-    //         }
-    //         console.log(dots.length)
-    //         return dots;
-    //     }
-    // }())
 </script>
 </body>
 </html>
