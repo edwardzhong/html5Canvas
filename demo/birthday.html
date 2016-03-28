@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <style>
         html,body {
             padding: 0;
             margin: 0;
-            overflow: hidden;
         }
 
         canvas {
@@ -35,9 +35,10 @@
 			ctx=canvas.getContext('2d'),
             gradient=ctx.createLinearGradient(0,0,canvas.width,0),
 			zRadius = 200,
-			text='文字特效',
-            points=[];
-        var vpx = canvas.width/2;
+			arr=['粒子特效','jeff.zhong','happy birthday'],
+			index=0,
+            points=[],
+            vpx = canvas.width/2,
             vpy = canvas.height/2;
 		// function PointEffect(opt){
 		// 	var options={
@@ -71,7 +72,7 @@
 			for (var x = 0; x < imgData.width; x += 6) {
 				for (var y = 0; y < imgData.height; y += 6) {
 					var i = (y * imgData.width + x) * 4;
-					if (imgData.data[i] >= 50) {
+					if (imgData.data[i] >= 20) {
 						var point = new Point(x, y, 0, 3,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]});
 						points.push(point);
 					}
@@ -103,6 +104,7 @@
                 stage=0,
                 zoom=0.05,
                 startTime=new Date();
+
             (function(){
                 isStop=true;
                 points.forEach(function(item,i){
@@ -131,12 +133,7 @@
                                 isStop=false;
                             }
                             break;
-                        case 2:
-                            rotateY(item,Math.PI/500);
-                            if(new Date()-startTime<5000){
-                                stop=false;
-                            }
-                            break;
+                  
                         default:break;
                     }
                 });
@@ -147,47 +144,26 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 points.forEach(function(item,i){item.paint(); });
 
-                if(isStop&&stage==2){
+                if(isStop&&stage==1){
+                	// canvas.style.backgroundColor='rgba(0,0,0,0)';
+                	ctx.clearRect(0, 0, canvas.width, canvas.height);
+                	points=getImgData(arr[++index%arr.length]);
+                	canvas.style.backgroundColor='rgba(0,0,0,1)';
+                	animate();
                     return false;
                 }
-                if(isStop&&stage!=2){
+                if(isStop&&stage!=1){
                     stage++;
                     if(stage==1){
-                        canvas.style.backgroundColor='rgba(0,0,0,0.9)';
+                        canvas.style.backgroundColor='rgba(0,0,0,0.7)';
                     }
-                    if(stage==2){
-                        startTime=new Date();
-                    }
+                    // if(stage==2){
+                    //     startTime=new Date();
+                    // }
                 }
                 requestAnimFrame(arguments.callee);
             }());
 		}
-
-        // function rotateY(ball, angleY) {
-        //     // 把角度三角函数化，以便看起来是绕圆旋转
-        //     var cosy = Math.cos(angleY),
-        //         siny = Math.sin(angleY),
-        //     // 把 z方向影响算进来
-        //         x1 = ball.xpos * cosy - ball.zpos * siny,
-        //         z1 = ball.zpos * cosy + ball.xpos * siny;
-        //     ball.xpos = x1;
-        //     ball.zpos = z1;
-
-        //     // z坐标扁平化，并赋给小球影响
-        //     var scale = focalLength / (focalLength + ball.zpos);
-        //     ball.x = vpx + ball.xpos * scale;
-        //     ball.y = vpy + ball.ypos * scale;
-        //     ball.width = ballR*2*scale;
-        // }
-
-        function rotateY(item,angleY){
-            var cos = Math.cos(angleY),
-                sin = Math.sin(angleY),
-                x1 = item.x * cos - item.z * sin,
-                z1 = item.z * cos + item.x * sin;
-            item.x = x1;
-            item.z = z1;
-        }
 
 		function Point(x,y,z,radius,rgb){
 			// 点在字体中的坐标
@@ -208,8 +184,11 @@
 		Point.prototype.paint=function(){
             ctx.save();
             ctx.beginPath();
+            
             var scale = zRadius / (zRadius + this.z);
-            ctx.arc(canvas.width / 2 + (this.x - canvas.width / 2) * scale, canvas.height / 2 + (this.y - canvas.height / 2) * scale, this.radius * scale, 0, 2 * Math.PI);
+            // ctx.arc(vpx + (this.x - vpx) * scale, vpy + (this.y - vpy) * scale, this.radius * scale, 0, 2 * Math.PI);
+            // var scale = 2*zRadius / (2*zRadius - this.z);
+            ctx.arc(vpx + (this.x - vpx) * scale, vpy + (this.y - vpy) * scale, this.radius * scale, 0, 2 * Math.PI);
             ctx.fillStyle = 'rgba('+this.rgb.r+','+this.rgb.g+','+this.rgb.b+',' + scale*0.5 + ')';
             ctx.fill();
             ctx.restore();
@@ -218,7 +197,9 @@
 		function init(){
 			canvas.width=window.innerWidth;
 			canvas.height=window.innerHeight;
-			points=getImgData(text);
+			vpx=canvas.width/2;
+			vpy=canvas.height/2
+			points=getImgData(arr[0]);
 			animate();
 		}
 

@@ -14,93 +14,75 @@ p {text-align: center; font-size:12px;color:#454545;}
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
-		zRadius=200
+		zPos=200,
+		radius=20,
 		num=10,
-		zPos=0,
 		vpx = canvas.width/2,
 		vpy = canvas.height/2,
-		balls=[];
-    var requestAnimFrame=window.requestAnimationFrame 
+		balls=[],
+		requestAnimFrame=window.requestAnimationFrame 
         || window.webkitRequestAnimationFrame 
         || window.mozRequestAnimationFrame 
         || window.oRequestAnimationFrame 
         || window.msRequestAnimationFrame 
         || function(callback) {return window.setTimeout(callback, 16); };
 
-	function createBall(){
-		for(var i=0;i<num;i++){
-			var ball=new Ball();
-			balls.push(ball);
-			ctx.save();
-			ctx.beginPath();
-			var scale=zRadius/(zRadius+ball.dz);
-			ctx.arc(ball.dx,ball.dy,ball.radius*scale,0,Math.PI*2,false);
-			ctx.fillStyle='rgba('+ball.r+','+ball.g+','+ball.b+','+scale+')';
-			ctx.fill();
-			ctx.restore();
-		}
+	function rotateY(ball, angleY) {
+		var cos = Math.cos(angleY),
+			sin = Math.sin(angleY),
+			x1 = ball.x * cos - ball.z * sin,
+			z1 = ball.z * cos + ball.x * sin;
+		ball.x =x1;
+		ball.z =z1;
 	}
 
-	function bindEvent(){
-		document.addEventListener('keydown',function(evt){
-			if(evt.keyCode==38){
-				zPos+=5
-			} else if(evt.keyCode==40){
-				zPos-=5;
-			}
-		});
+	function roteteX(ball,angleX){
+		var cos = Math.cos(angleX),
+			sin = Math.sin(angleX),
+			y1 = ball.y * cos - ball.z * sin,
+			z1 = ball.z * cos + ball.y * sin;
+		ball.y = y1;
+		ball.z = z1;
+	}
+
+	function Ball(x,y,z){
+		this.x=x;
+		this.y=y;
+		this.z=z;
+
+		this.r=Math.floor(Math.random()*250);
+		this.g=Math.floor(Math.random()*250);
+		this.b=Math.floor(Math.random()*250);
+	}
+
+	Ball.prototype.paint=function(){
+		ctx.save();
+		ctx.beginPath();
+		ctx.fillStyle='rgba('+this.r+','+this.g+','+this.b+',0.5)';
+		// var scale=zPos/(zPos+this.z);
+		var scale=2*zPos/(2*zPos-this.z);
+		ctx.arc(vpx+this.x,vpy+this.y,radius*scale,0,Math.PI*2,false);//canvas.width / 2 + (this.x - canvas.width / 2) * scale
+		ctx.fill();
+		ctx.restore();
+	};
+	for(var i=0;i<num;i++){
+		balls.push(new Ball(Math.random()*canvas.width-canvas.width/2,Math.random()*canvas.height-canvas.height/2,Math.random()*zPos*2-zPos));
 	}
 
 	function animate(){
 		(function(){
+			ctx.clearRect(0,0,canvas.width,canvas.height)
 			balls.forEach(function(item,i){
-				rotateY(item,Math.PI/100);
-				ctx.save();
-				ctx.beginPath();
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				ctx.arc(Math.floor(item.x),Math.floor(item.y),item.radius,0,Math.PI*2,false);
-				ctx.fillStyle='rgba('+item.r+','+item.g+','+item.b+',0.5)';
-				ctx.fill();
-				ctx.restore();
+				rotateY(item,Math.PI/500);
+				roteteX(item,Math.PI/200);
+				item.paint();
 			});
 			requestAnimFrame(arguments.callee);
-		}())
+		}());
 	}
 
-	function rotateY(ball, angleY) {
-		var cosy = Math.cos(angleY),
-			siny = Math.sin(angleY),
-			x1 = ball.dx * cosy - ball.dz * siny,
-			z1 = ball.dz * cosy + ball.dx * siny;
-		ball.dx = x1;
-		ball.dz = z1;
+	animate();
 
-		var scale = zRadius / (zRadius + ball.dz);
-		ball.x = vpx + ball.dx * scale;
-		ball.y = vpy + ball.dy * scale;
-		// ball.radius = Math.ceil(ball.radius*scale);
-	}
- 
-
-	function Ball(){
-		this.dx=Math.random()*canvas.width;
-		this.dy=Math.random()*canvas.height;
-		this.dz=Math.random()*zRadius*2-zRadius;
-		this.x=0;
-		this.y=0;
-		this.z=0;
-		this.radius=20,
-		this.r=Math.floor(Math.random()*255);
-		this.g=Math.floor(Math.random()*255);
-		this.b=Math.floor(Math.random()*255);
-	}
-
-	function init(){
-		createBall();
-		animate();
-		bindEvent();
-	}
-	init();
 </script>
 </body>
 </html>
