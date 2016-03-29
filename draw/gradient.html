@@ -25,12 +25,14 @@
 	rdGradient.addColorStop(0.75,'red');
 	rdGradient.addColorStop(1,'orange');
 
-	ctx.fillStyle=gradient;
-	ctx.fillRect(0,0,canvas.width,canvas.height);
-
-	ctx.fillStyle=rdGradient;
+	// 应用线性渐变
+	// ctx.fillStyle=gradient;
 	// ctx.fillRect(0,0,canvas.width,canvas.height);
-	ctx.rect(0,0,canvas.width,canvas.height);//fillRect和rect，fill等效
+
+	// 应用放射渐变
+	ctx.fillStyle=rdGradient;
+	// ctx.fillRect(0,0,canvas.width,canvas.height);//fillRect和rect，fill等效
+	ctx.rect(0,0,canvas.width,canvas.height);
 	ctx.fill();
 </script>
 </body>

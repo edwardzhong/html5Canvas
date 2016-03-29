@@ -18,7 +18,7 @@
 		ctx.lineTo(10,100);
 		ctx.lineTo(60,100);
 		// ctx.lineTo(10,60);
-		ctx.closePath();
+		ctx.closePath(); //闭合路径，形成多边形
 		ctx.fill();
 
 		ctx.lineWidth=10;
@@ -32,7 +32,7 @@
 		//ctx.clearRect(0,0,canvas.width,canvas.height);
 
 		//圆形
-		ctx.beginPath();
+		ctx.beginPath();  //告诉canvas咱们要重新绘制一条全新的路径了，之前画的东西从此再无关系
 		ctx.arc(80,80,50,0,180*Math.PI/180,true);//逆时针
 		// ctx.closePath();
 		ctx.fillStyle='gray';

@@ -10,7 +10,7 @@
         }
 
         canvas {
-            background-color:rgba(0,0,0,0);
+			background-color:rgba(0,0,0,0);
             -webkit-transition: background-color 1s ease-in-out;
             -o-transition: background-color 1s ease-in-out;
             transition: background-color 1s ease-in-out;
@@ -23,8 +23,8 @@
     <canvas id='canvas' width="1200" height="800">浏览器不支持canvas</canvas>
 </div>
 <script>
-    (function(){
-        var RequestAnimFrame=window.requestAnimationFrame 
+	(function(){
+		var RequestAnimFrame=window.requestAnimationFrame 
             || window.webkitRequestAnimationFrame 
             || window.mozRequestAnimationFrame 
             || window.oRequestAnimationFrame 
@@ -64,8 +64,8 @@
                 opt[prop]&&(options[prop]=opt[prop]);
             }
 
-            this.zRadius=options.zRadius;//z轴的半径
-            this.zPos=options.zPos;//控制距离
+            this.zRadius=options.zRadius;
+            this.zPos=options.zPos;
             this.txts=options.txts;
             this.poionts=[];
         }
@@ -77,7 +77,7 @@
                 CVS.ctx.save()
                 CVS.ctx.font = "200px Microsoft YaHei bold";
                 // 设置渐变
-                var gradient=CVS.ctx.createLinearGradient(-CVS.vpx,0,CVS.vpx,0);
+                var gradient=CVS.ctx.createLinearGradient(-CVS.vpx,-CVS.vpy,CVS.canvas.width,0);
                 gradient.addColorStop(0,'#00ff00');
                 gradient.addColorStop(0.3,'purple');
                 gradient.addColorStop(0.5,'red');
@@ -104,40 +104,11 @@
                     }
                 }
             },
-            // 绕x轴旋转
-            rotateX:function (ball,angleX){
-                var cos = Math.cos(angleX),
-                    sin = Math.sin(angleX),
-                    y1 = ball.y * cos - ball.z * sin,
-                    z1 = ball.z * cos + ball.y * sin;
-                ball.y = y1;
-                ball.z = z1;
-            },
-            // 绕y轴旋转
-            rotateY:function (ball, angleY) {
-                var cos = Math.cos(angleY),
-                    sin = Math.sin(angleY),
-                    x1 = ball.x * cos - ball.z * sin,
-                    z1 = ball.z * cos + ball.x * sin;
-                ball.x =x1;
-                ball.z =z1;
-            },
-            // 绕z轴旋转
-            rotateZ:function(ball,angleZ){
-                var cos = Math.cos(angleZ),
-                    sin = Math.sin(angleZ),
-                    x1 = ball.x * cos - ball.y * sin,
-                    y1 = ball.y * cos + ball.x * sin;
-                ball.x = x1;
-                ball.y = y1;
-            },
             animate:function(index){
                 var isStop=true,
                     stage=0,
                     zoom=0.05,
                     startTime=new Date(),
-                    angle=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
-                    angle2=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
                     self=this;
 
                 this.drawText(this.txts[index]);
@@ -148,7 +119,7 @@
                     self.points.forEach(function(item,i){
                         switch(stage){
                             case 0:
-                                if(Math.abs(item.x-item.dx)<0.3&&Math.abs(item.y-item.dy)<0.3&&Math.abs(item.z-item.dz)<0.3){
+                                if(Math.abs(item.x-item.dx)<0.1&&Math.abs(item.y-item.dy)<0.1&&Math.abs(item.z-item.dz)<0.1){
                                     item.x=item.dx;
                                     item.y=item.dy;
                                     item.z=item.dz;
@@ -160,15 +131,7 @@
                                 }
                                 break;
                             case 1:
-                                item.zPos-=0.5;//视角前进
-                                self.rotateY(item,angle);
-                                self.rotateX(item,angle2);
-                                if(new Date()-startTime<3000){
-                                    isStop=false;
-                                }
-                                break;
-                            case 2:
-                                if(Math.abs(item.x-item.fx)<0.3&&Math.abs(item.y-item.fy)<0.3&&Math.abs(item.z-item.fz)<0.3){
+                                if(Math.abs(item.x-item.fx)<0.1&&Math.abs(item.y-item.fy)<0.1&&Math.abs(item.z-item.fz)<0.1){
                                     item.x=item.fx;
                                     item.y=item.fy;
                                     item.z=item.fz;
@@ -179,14 +142,7 @@
                                     isStop=false;
                                 }
                                 break;
-                            case 3:
-                                self.rotateY(item,Math.PI/1000);
-                                self.rotateX(item,Math.PI/1000);
-                                self.rotateZ(item,Math.PI/1000);
-                                if(new Date()-startTime<3000){
-                                    isStop=false;
-                                }
-                                break;
+                      
                             default:break;
                         }
                     });
@@ -197,45 +153,46 @@
                     CVS.clearRect();
                     self.points.forEach(function(item,i){item.paint(); });
 
-                    if(isStop&&stage==3){
+                    if(isStop&&stage==1){
+                        // CVS.canvas.style.backgroundColor='rgba(0,0,0,0)';
                         CVS.clearRect();
                         CVS.canvas.style.backgroundColor='rgba(0,0,0,1)';
                         self.animate(++index%self.txts.length);
                         return false;
                     }
-                    if(isStop&&stage!=3){
+                    if(isStop&&stage!=1){
                         stage++;
                         if(stage==1){
                             CVS.canvas.style.backgroundColor='rgba(0,0,0,0.7)';
                         }
-                        if(stage==1||stage==3){
-                            startTime=new Date();
-                        }
+                        // if(stage==2){
+                        //     startTime=new Date();
+                        // }
                     }
                     RequestAnimFrame(arguments.callee);
                 }());
             },
         };
 
-        function Point(zRadius,zPos,x,y,z,radius,rgb){
-            // 点在字体中的坐标
-            this.dx=x-CVS.vpx;
-            this.dy=y-CVS.vpy;
-            this.dz=z;
-            // 点当前的坐标
-            this.x=Math.floor(Math.random()*CVS.canvas.width-CVS.vpx);
-            this.y=Math.floor(Math.random()*CVS.canvas.height-CVS.vpy);
-            this.z=Math.floor(Math.random()*zRadius*2-zRadius);
-            // 点最终飞离的坐标
-            this.fx=Math.floor(Math.random()*CVS.canvas.width-CVS.vpx);
-            this.fy=Math.floor(Math.random()*CVS.canvas.height-CVS.vpy);
-            this.fz=Math.floor(Math.random()*zRadius*2-zRadius);
-            this.radius=radius;
+		function Point(zRadius,zPos,x,y,z,radius,rgb){
+			// 点在字体中的坐标
+			this.dx=x-CVS.vpx;
+			this.dy=y-CVS.vpy;
+			this.dz=z;
+			// 点当前的坐标
+			this.x=Math.floor(Math.random()*CVS.canvas.width-CVS.vpx);
+			this.y=Math.floor(Math.random()*CVS.canvas.height-CVS.vpy);
+			this.z=Math.floor(Math.random()*zRadius*2-zRadius);
+			// 点最终飞离的坐标
+			this.fx=Math.floor(Math.random()*CVS.canvas.width-CVS.vpx);
+			this.fy=Math.floor(Math.random()*CVS.canvas.height-CVS.vpy);
+			this.fz=Math.floor(Math.random()*zRadius*2-zRadius);
+			this.radius=radius;
             this.rgb=rgb;
             this.zRadius=zRadius;
             this.zPos=zPos;
-        }
-        Point.prototype.paint=function(){
+		}
+		Point.prototype.paint=function(){
             var scale = Math.abs(this.zRadius/(this.zRadius-this.z+this.zPos));
             CVS.ctx.save();
             CVS.ctx.beginPath();
@@ -243,11 +200,11 @@
             CVS.ctx.fillStyle = 'rgba('+this.rgb.r+','+this.rgb.g+','+this.rgb.b+',' + scale*0.5 + ')';
             CVS.ctx.fill();
             CVS.ctx.restore();
-        };
+		};
 
         var effect=new PointEffect({txts:['粒子特效','jeff.zhong','Hello,Canvas']});
         effect.init();
-    }());
+	}());
 </script>
 </body>
 </html>
