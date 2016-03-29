@@ -10,7 +10,7 @@
         }
 
         canvas {
-            background-color:rgba(0,0,0,0);
+            background-color:rgba(0,0,0,1);
             -webkit-transition: background-color 1s ease-in-out;
             -o-transition: background-color 1s ease-in-out;
             transition: background-color 1s ease-in-out;
@@ -23,6 +23,7 @@
     <canvas id='canvas' width="1200" height="800">浏览器不支持canvas</canvas>
 </div>
 <script>
+// 粉红，绿色，天蓝色，白色，紫色
     (function(){
         var RequestAnimFrame=window.requestAnimationFrame 
             || window.webkitRequestAnimationFrame 
@@ -54,6 +55,10 @@
             }
         }());
 
+        function getRandom(a, b) {
+            return Math.floor(Math.random() * (b - a)) + a
+        }
+
         function PointEffect(opt){
             var options={
                 zRadius:200,
@@ -67,20 +72,32 @@
             this.zRadius=options.zRadius;//z轴的半径
             this.zPos=options.zPos;//控制距离
             this.txts=options.txts;
+            this.angleX=Math.PI/3000,
+            this.angleY=Math.PI/3000,
             this.poionts=[];
         }
         PointEffect.prototype={
             init:function(){
+            	this.bindEvent();
                 this.animate(0);
+            },
+            bindEvent:function(){
+            	var self=this;
+            	document.addEventListener('mousemove', function(event){
+					var x = event.clientX - CVS.vpx;
+					var y = event.clientY - CVS.vpy;
+					self.angleY = x*0.00001;
+					self.angleX = y*0.00001;
+            	});
             },
             drawText:function(txt){
                 CVS.ctx.save()
-                CVS.ctx.font = "200px Microsoft YaHei bold";
+                CVS.ctx.font = "180px Microsoft YaHei bold";
                 // 设置渐变
                 var gradient=CVS.ctx.createLinearGradient(-CVS.vpx,0,CVS.vpx,0);
-                gradient.addColorStop(0,'#00ff00');
+                gradient.addColorStop(0,'#0f0');
                 gradient.addColorStop(0.3,'purple');
-                gradient.addColorStop(0.5,'red');
+                gradient.addColorStop(0.5,'pink');
                 gradient.addColorStop(0.6,'orange');
                 gradient.addColorStop(1,'yellow');
 
@@ -94,11 +111,11 @@
                 var imgData = CVS.ctx.getImageData(0,0, CVS.canvas.width, CVS.canvas.height);
                 CVS.clearRect();
                 this.points = [];
-                for (var x = 0; x < imgData.width; x += 6) {
-                    for (var y = 0; y < imgData.height; y += 6) {
+                for (var x = 0; x < imgData.width; x += 8) {
+                    for (var y = 0; y < imgData.height; y += 8) {
                         var i = (y * imgData.width + x) * 4;
                         if (imgData.data[i] >= 20) {
-                            this.points.push(new Point(this.zRadius,this.zPos,x, y, 0, 3,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]}));
+                            this.points.push(new Point(this.zRadius,this.zPos,x, y, 0, 4,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]}));
                         }
                     }
                 }
@@ -108,18 +125,34 @@
                 var cos = Math.cos(angleX),
                     sin = Math.sin(angleX),
                     y1 = ball.y * cos - ball.z * sin,
-                    z1 = ball.z * cos + ball.y * sin;
+                    z1 = ball.z * cos + ball.y * sin,
+                    y2 = ball.dy * cos - ball.dz * sin,
+                    z2 = ball.dz * cos + ball.dy * sin,
+                    y3 = ball.fy * cos - ball.fz * sin,
+                    z3 = ball.fz * cos + ball.fy * sin;
                 ball.y = y1;
                 ball.z = z1;
+                ball.dy = y2;
+                ball.dz = z2;
+                ball.fy = y3;
+                ball.fz = z3;
             },
             // 绕y轴旋转
             rotateY:function (ball, angleY) {
                 var cos = Math.cos(angleY),
                     sin = Math.sin(angleY),
                     x1 = ball.x * cos - ball.z * sin,
-                    z1 = ball.z * cos + ball.x * sin;
+                    z1 = ball.z * cos + ball.x * sin,
+                    x2 = ball.dx * cos - ball.dz * sin,
+                    z2 = ball.dz * cos + ball.dx * sin,
+                    x3 = ball.fx * cos - ball.fz * sin,
+                    z3 = ball.fz * cos + ball.fx * sin;
                 ball.x =x1;
                 ball.z =z1;
+                ball.dx =x2;
+                ball.dz =z2;
+                ball.fx =x3;
+                ball.fz =z3;
             },
             // 绕z轴旋转
             rotateZ:function(ball,angleZ){
@@ -135,20 +168,36 @@
                     stage=0,
                     zoom=0.05,
                     startTime=new Date(), 
-                    angleX=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
-                    angleY=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
-                    angleZ=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
+                    angleZ=index%2?Math.PI/300:-Math.PI/300,
                     self=this;
 
                 this.drawText(this.txts[index]);
                 this.getImgData(this.txts[index]);
-
+                for(var i=0;i<150;i++){
+                	var point=new Point(self.zRadius,self.zPos,0, 0, 10, 4,{r:getRandom(50,250),g:getRandom(50,250),b:getRandom(50,250)},true);
+                	point.x=getRandom(-self.zRadius*2,self.zRadius*2);
+                	point.y=getRandom(-self.zRadius*2,self.zRadius*2);
+                	point.z=getRandom(-self.zRadius*3,self.zRadius*3);
+                	self.points.unshift(point);
+                }
                 (function(){
                     isStop=true;
                     self.points.forEach(function(item,i){
                         switch(stage){
-                            case 0:
-                                if(Math.abs(item.x-item.dx)<0.3&&Math.abs(item.y-item.dy)<0.3&&Math.abs(item.z-item.dz)<0.3){
+                        	case 0:
+                        		if(item.isBg){
+                        			self.rotateZ(item,angleZ);
+                        			item.zPos+=3;//视角后退
+                        		}
+                                if(new Date()-startTime<2000){
+                                    isStop=false;
+                                }
+                        		break;
+                            case 1:
+	                            self.rotateY(item,self.angleY);
+	                        	self.rotateX(item,self.angleX);
+                            	if(item.isBg){return true;}
+                                if(Math.abs(item.x-item.dx)<0.1&&Math.abs(item.y-item.dy)<0.1&&Math.abs(item.z-item.dz)<0.1){
                                     item.x=item.dx;
                                     item.y=item.dy;
                                     item.z=item.dz;
@@ -159,17 +208,11 @@
                                     isStop=false;
                                 }
                                 break;
-                            case 1:
-                                item.zPos-=0.4;//视角前进
-                                self.rotateY(item,angleY);
-                                self.rotateX(item,angleX);
-                                self.rotateZ(item,angleZ);
-                                if(new Date()-startTime<3000){
-                                    isStop=false;
-                                }
-                                break;
                             case 2:
-                                if(Math.abs(item.x-item.fx)<0.3&&Math.abs(item.y-item.fy)<0.3&&Math.abs(item.z-item.fz)<0.3){
+	                            self.rotateY(item,self.angleY);
+	                            self.rotateX(item,self.angleX);
+                            	if(item.isBg){return true;}
+                                if(Math.abs(item.x-item.fx)<0.1&&Math.abs(item.y-item.fy)<0.1&&Math.abs(item.z-item.fz)<0.1){
                                     item.x=item.fx;
                                     item.y=item.fy;
                                     item.z=item.fz;
@@ -177,15 +220,6 @@
                                     item.x=item.x+(item.fx-item.x)*zoom;
                                     item.y=item.y+(item.fy-item.y)*zoom;
                                     item.z=item.z+(item.fz-item.z)*zoom;
-                                    isStop=false;
-                                }
-                                break;
-                            case 3:
-                                item.zPos+=0.4;
-                                self.rotateZ(item,-angleZ);
-                                self.rotateY(item,-angleY);
-                                self.rotateX(item,-angleX);
-                                if(new Date()-startTime<3000){
                                     isStop=false;
                                 }
                                 break;
@@ -197,45 +231,42 @@
                     });
 
                     CVS.clearRect();
-                    self.points.forEach(function(item,i){item.paint(); });
+                    self.points.forEach(function(item,i){
+                    	if(stage==0&&!item.isBg){return true;}
+                    	item.paint(); 
+                    });
 
-                    if(isStop&&stage==3){
+                    if(isStop&&stage==2){
                         CVS.clearRect();
-                        CVS.canvas.style.backgroundColor='rgba(0,0,0,1)';
                         self.animate(++index%self.txts.length);
                         return false;
                     }
-                    if(isStop&&stage!=3){
+                    if(isStop&&stage!=2){
                         stage++;
-                        if(stage==1){
-                            CVS.canvas.style.backgroundColor='rgba(0,0,0,0.7)';
-                        }
-                        if(stage==1||stage==3){
-                            startTime=new Date();
-                        }
                     }
                     RequestAnimFrame(arguments.callee);
                 }());
             },
         };
 
-        function Point(zRadius,zPos,x,y,z,radius,rgb){
+        function Point(zRadius,zPos,x,y,z,radius,rgb,isBg){
             // 点在字体中的坐标
             this.dx=x-CVS.vpx;
             this.dy=y-CVS.vpy;
             this.dz=z;
             // 点当前的坐标
-            this.x=Math.floor(Math.random()*CVS.canvas.width-CVS.vpx);
-            this.y=Math.floor(Math.random()*CVS.canvas.height-CVS.vpy);
-            this.z=Math.floor(Math.random()*zRadius*2-zRadius);
+            this.x=getRandom(-CVS.vpx,CVS.vpx);
+            this.y=getRandom(-CVS.vpy,CVS.vpy);
+            this.z=getRandom(-zRadius,zRadius);
             // 点最终飞离的坐标
-            this.fx=Math.floor(Math.random()*CVS.canvas.width-CVS.vpx);
-            this.fy=Math.floor(Math.random()*CVS.canvas.height-CVS.vpy);
-            this.fz=Math.floor(Math.random()*zRadius*2-zRadius);
+            this.fx=getRandom(-CVS.vpx,CVS.vpx);
+            this.fy=getRandom(-CVS.vpy,CVS.vpy);
+            this.fz=getRandom(-zRadius,zRadius);
             this.radius=radius;
             this.rgb=rgb;
             this.zRadius=zRadius;
             this.zPos=zPos;
+            this.isBg=isBg||false;
         }
         Point.prototype.paint=function(){
             var scale = Math.abs(this.zRadius/(this.zRadius-this.z+this.zPos));
@@ -247,7 +278,7 @@
             CVS.ctx.restore();
         };
 
-        var effect=new PointEffect({txts:['粒子特效','jeff.zhong','Hello,Canvas']});
+        var effect=new PointEffect({zPos:0,txts:['粒子特效','canvas','jeff.zhong','生日快乐']});
         effect.init();
     }());
 </script>
