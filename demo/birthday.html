@@ -91,15 +91,14 @@
                 CVS.ctx.restore();
             },
             getImgData:function(txt){
-                var imgData = CVS.ctx.getImageData(0, 0, CVS.canvas.width, CVS.canvas.height);
+                var imgData = CVS.ctx.getImageData(0,0, CVS.canvas.width, CVS.canvas.height);
                 CVS.clearRect();
                 this.points = [];
                 for (var x = 0; x < imgData.width; x += 6) {
                     for (var y = 0; y < imgData.height; y += 6) {
                         var i = (y * imgData.width + x) * 4;
                         if (imgData.data[i] >= 20) {
-                            var point = new Point(this.zRadius,this.zPos,x, y, 0, 3,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]});
-                            this.points.push(point);
+                            this.points.push(new Point(this.zRadius,this.zPos,x, y, 0, 3,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]}));
                         }
                     }
                 }
@@ -135,9 +134,10 @@
                 var isStop=true,
                     stage=0,
                     zoom=0.05,
-                    startTime=new Date(),
-                    angle=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
-                    angle2=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
+                    startTime=new Date(), 
+                    angleX=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
+                    angleY=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
+                    angleZ=Math.floor(Math.random()*2)?Math.PI/2000:-Math.PI/2000,
                     self=this;
 
                 this.drawText(this.txts[index]);
@@ -160,9 +160,10 @@
                                 }
                                 break;
                             case 1:
-                                item.zPos-=0.5;//视角前进
-                                self.rotateY(item,angle);
-                                self.rotateX(item,angle2);
+                                item.zPos-=0.4;//视角前进
+                                self.rotateY(item,angleY);
+                                self.rotateX(item,angleX);
+                                self.rotateZ(item,angleZ);
                                 if(new Date()-startTime<3000){
                                     isStop=false;
                                 }
@@ -180,9 +181,10 @@
                                 }
                                 break;
                             case 3:
-                                self.rotateY(item,Math.PI/1000);
-                                self.rotateX(item,Math.PI/1000);
-                                self.rotateZ(item,Math.PI/1000);
+                                item.zPos+=0.4;
+                                self.rotateZ(item,-angleZ);
+                                self.rotateY(item,-angleY);
+                                self.rotateX(item,-angleX);
                                 if(new Date()-startTime<3000){
                                     isStop=false;
                                 }
@@ -240,7 +242,7 @@
             CVS.ctx.save();
             CVS.ctx.beginPath();
             CVS.ctx.arc(this.x*scale,this.y*scale, this.radius * scale, 0, 2 * Math.PI);
-            CVS.ctx.fillStyle = 'rgba('+this.rgb.r+','+this.rgb.g+','+this.rgb.b+',' + scale*0.5 + ')';
+            CVS.ctx.fillStyle = 'rgba('+this.rgb.r+','+this.rgb.g+','+this.rgb.b+',' + scale*0.8 + ')';
             CVS.ctx.fill();
             CVS.ctx.restore();
         };
