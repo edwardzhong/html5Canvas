@@ -54,6 +54,29 @@
                 }
             }
         }());
+        /**
+         * 动画公式
+         * @param    {Number}                 t  current time 当前时间点（当前时间-开始时间）
+         * @param    {Number}                 b  beginning value 初始值
+         * @param    {Number}                 c  change in value 需要移动的距离（结束点坐标-开始点坐标）
+         * @param    {Number}                 d  duration 持续时间（多少时间内完成动画）
+         * @return   {Number}                 返回当前时间点的位置
+         */
+        var tween={
+            linear:function(t,b,c,d){ 
+                return c*t/d + b; 
+            },
+            easeIn: function(t,b,c,d){
+                return c*(t/=d)*t*t*t*t + b;
+            },
+            easeOut: function(t,b,c,d){
+                return c*((t=t/d-1)*t*t*t*t + 1) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+                return c/2*((t-=2)*t*t*t*t + 2) + b;
+            }
+        };
 
         function getRandom(a, b) {
             return Math.floor(Math.random() * (b - a)) + a
@@ -75,6 +98,7 @@
             this.angleX=Math.PI/3000,
             this.angleY=Math.PI/3000,
             this.poionts=[];
+            this.bgPoints=[];
         }
         PointEffect.prototype={
             init:function(){
@@ -120,6 +144,17 @@
                     }
                 }
             },
+            getBgData:function(){
+                this.bgPoints=[];
+                for(var i=0;i<150;i++){
+                    var point=new Point(this.zRadius,this.zPos,0, 0, 10, 4,{r:getRandom(50,250),g:getRandom(50,250),b:getRandom(50,250)},true);
+                    point.x=getRandom(-this.zRadius*2,this.zRadius*2);
+                    point.y=getRandom(-this.zRadius*2,this.zRadius*2);
+                    point.z=getRandom(-this.zRadius*3,this.zRadius*3);
+                    this.bgPoints.push(point);
+                }
+            },
+            eachPoint:function(){},
             // 绕x轴旋转
             rotateX:function (ball,angleX){
                 var cos = Math.cos(angleX),
@@ -129,13 +164,17 @@
                     y2 = ball.dy * cos - ball.dz * sin,
                     z2 = ball.dz * cos + ball.dy * sin,
                     y3 = ball.fy * cos - ball.fz * sin,
-                    z3 = ball.fz * cos + ball.fy * sin;
+                    z3 = ball.fz * cos + ball.fy * sin,
+                    y4 = ball.sy * cos - ball.sz * sin,
+                    z4 = ball.sz * cos + ball.sy * sin;
                 ball.y = y1;
                 ball.z = z1;
                 ball.dy = y2;
                 ball.dz = z2;
                 ball.fy = y3;
                 ball.fz = z3;
+                ball.sy = y4;
+                ball.sz = z4;
             },
             // 绕y轴旋转
             rotateY:function (ball, angleY) {
@@ -146,13 +185,17 @@
                     x2 = ball.dx * cos - ball.dz * sin,
                     z2 = ball.dz * cos + ball.dx * sin,
                     x3 = ball.fx * cos - ball.fz * sin,
-                    z3 = ball.fz * cos + ball.fx * sin;
+                    z3 = ball.fz * cos + ball.fx * sin,
+                    x4 = ball.sx * cos - ball.sz * sin,
+                    z4 = ball.sz * cos + ball.sx * sin;
                 ball.x =x1;
                 ball.z =z1;
                 ball.dx =x2;
                 ball.dz =z2;
                 ball.fx =x3;
                 ball.fz =z3;
+                ball.sx =x4;
+                ball.sz =z4;
             },
             // 绕z轴旋转
             rotateZ:function(ball,angleZ){
@@ -162,6 +205,88 @@
                     y1 = ball.y * cos + ball.x * sin;
                 ball.x = x1;
                 ball.y = y1;
+            },
+            setBg:function(cb){
+                var self=this,
+                    angleZ=Math.PI/300,
+                    startTime=new Date();
+                (function(){
+                    if(new Date()-startTime>2000){
+                        cb&&cb();
+                    }
+                    self.bgPoints.forEach(function(item,i){
+                        self.rotateZ(item,angleZ);
+                        item.zPos+=3;//视角后退
+                    });
+                    CVS.clearRect();
+                    self.bgPoints.forEach(function(item,i){
+                        item.paint();
+                    });
+                    RequestAnimFrame(arguments.callee);
+                }());
+            },
+            backCenter:function(cb){
+                var self=this,
+                    startTime=new Date();
+                (function(){
+                    if(new Date()-startTime>2000){
+                        cb&&cb();
+                    }
+                    self.bgPoints.forEach(function(item,i){
+                        self.rotateY(item,self.angleY);
+                        self.rotateX(item,self.angleX);
+                    });
+                    self.points.forEach(function(item,i){
+                        self.rotateY(item,self.angleY);
+                        self.rotateX(item,self.angleX);
+                        item.x=tween.easeInOut(new Date()-startTime,item.sx,item.dx-item.sx,1500);
+                        item.y=tween.easeInOut(new Date()-startTime,item.sy,item.dy-item.sy,1500);
+                        item.z=tween.easeInOut(new Date()-startTime,item.sz,item.dz-item.sz,1500);
+                    });
+                    CVS.clearRect();
+
+                    self.bgPoints.forEach(function(item,i){
+                        item.paint();
+                    });
+                    self.points.sort(function(a,b){
+                        return b.z-a.z;
+                    });
+                    self.points.forEach(function(item,i){
+                        item.paint(); 
+                    });
+                    RequestAnimFrame(arguments.callee);
+                }());
+            },
+            boom:function(cb){
+                var self=this,
+                    startTime=new Date();
+                (function(){
+                    if(new Date()-startTime>3000){
+                        cb&&cb();
+                    }
+                    self.bgPoints.forEach(function(item,i){
+                        self.rotateY(item,self.angleY);
+                        self.rotateX(item,self.angleX);
+                    });
+                    self.points.forEach(function(item,i){
+                        self.rotateY(item,self.angleY);
+                        self.rotateX(item,self.angleX);
+                        item.x=tween.easeOut(new Date()-startTime,item.dx,item.fx-item.dx,2500);
+                        item.y=tween.easeOut(new Date()-startTime,item.dy,item.fy-item.dy,2500);
+                        item.z=tween.easeOut(new Date()-startTime,item.dz,item.fz-item.dz,2500);
+                    });
+                    CVS.clearRect();
+                    self.bgPoints.forEach(function(item,i){
+                        item.paint();
+                    });
+                    self.points.sort(function(a,b){
+                        return b.z-a.z;
+                    });
+                    self.points.forEach(function(item,i){
+                        item.paint(); 
+                    });
+                    RequestAnimFrame(arguments.callee);
+                }());
             },
             animate:function(index){
                 var isStop=true,
@@ -173,79 +298,88 @@
 
                 this.drawText(this.txts[index]);
                 this.getImgData(this.txts[index]);
-                for(var i=0;i<150;i++){
-                	var point=new Point(self.zRadius,self.zPos,0, 0, 10, 4,{r:getRandom(50,250),g:getRandom(50,250),b:getRandom(50,250)},true);
-                	point.x=getRandom(-self.zRadius*2,self.zRadius*2);
-                	point.y=getRandom(-self.zRadius*2,self.zRadius*2);
-                	point.z=getRandom(-self.zRadius*3,self.zRadius*3);
-                	self.points.unshift(point);
-                }
-                (function(){
-                    isStop=true;
-                    self.points.forEach(function(item,i){
-                        switch(stage){
-                        	case 0:
-                        		if(item.isBg){
-                        			self.rotateZ(item,angleZ);
-                        			item.zPos+=3;//视角后退
-                        		}
-                                if(new Date()-startTime<2000){
-                                    isStop=false;
-                                }
-                        		break;
-                            case 1:
-	                            self.rotateY(item,self.angleY);
-	                        	self.rotateX(item,self.angleX);
-                            	if(item.isBg){return true;}
-                                if(Math.abs(item.x-item.dx)<0.1&&Math.abs(item.y-item.dy)<0.1&&Math.abs(item.z-item.dz)<0.1){
-                                    item.x=item.dx;
-                                    item.y=item.dy;
-                                    item.z=item.dz;
-                                } else {
-                                    item.x=item.x+(item.dx-item.x)*zoom;
-                                    item.y=item.y+(item.dy-item.y)*zoom;
-                                    item.z=item.z+(item.dz-item.z)*zoom;
-                                    isStop=false;
-                                }
-                                break;
-                            case 2:
-	                            self.rotateY(item,self.angleY);
-	                            self.rotateX(item,self.angleX);
-                            	if(item.isBg){return true;}
-                                if(Math.abs(item.x-item.fx)<0.1&&Math.abs(item.y-item.fy)<0.1&&Math.abs(item.z-item.fz)<0.1){
-                                    item.x=item.fx;
-                                    item.y=item.fy;
-                                    item.z=item.fz;
-                                } else {
-                                    item.x=item.x+(item.fx-item.x)*zoom;
-                                    item.y=item.y+(item.fy-item.y)*zoom;
-                                    item.z=item.z+(item.fz-item.z)*zoom;
-                                    isStop=false;
-                                }
-                                break;
-                            default:break;
-                        }
-                    });
-                    self.points.sort(function(a,b){
-                        return b.z-a.z;
-                    });
+                this.getBgData();
+                var stage1=new Stage(self.setBg,self),
+                    stage2=new Stage(self.backCenter,self),
+                    stage3=new Stage(self.boom,self);
+                stage1.next=stage2;
+                stage2.next=stage3;
+                stage3.end=function(){
+                    self.animate(++index%self.txts.length);
+                };
+                stage1.init();
+                // (function(){
+                //     isStop=false;
+                //     switch(stage){
+                //         case 0:
+                //             if(new Date()-startTime>2000){
+                //                 isStop=true;break;
+                //             }
+                //             self.bgPoints.forEach(function(item,i){
+                //                 self.rotateZ(item,angleZ);
+                //                 item.zPos+=3;//视角后退
+                //             });
+                //             break;
+                //         case 1:
+                //             if(new Date()-startTime>2000){
+                //                 isStop=true;break;
+                //             }
+                //             self.bgPoints.forEach(function(item,i){
+                //                 self.rotateY(item,self.angleY);
+                //                 self.rotateX(item,self.angleX);
+                //             });
+                //             self.points.forEach(function(item,i){
+                //                 self.rotateY(item,self.angleY);
+                //                 self.rotateX(item,self.angleX);
+                //                 item.x=tween.easeInOut(new Date()-startTime,item.sx,item.dx-item.sx,1500);
+                //                 item.y=tween.easeInOut(new Date()-startTime,item.sy,item.dy-item.sy,1500);
+                //                 item.z=tween.easeInOut(new Date()-startTime,item.sz,item.dz-item.sz,1500);
+                //             });
+                //             break;
+                //         case 2:
+                //             if(new Date()-startTime>3000){
+                //                 isStop=true;break;
+                //             }
+                //             self.bgPoints.forEach(function(item,i){
+                //                 self.rotateY(item,self.angleY);
+                //                 self.rotateX(item,self.angleX);
+                //             });
+                //             self.points.forEach(function(item,i){
+                //                 self.rotateY(item,self.angleY);
+                //                 self.rotateX(item,self.angleX);
+                //                 item.x=tween.easeOut(new Date()-startTime,item.dx,item.fx-item.dx,2500);
+                //                 item.y=tween.easeOut(new Date()-startTime,item.dy,item.fy-item.dy,2500);
+                //                 item.z=tween.easeOut(new Date()-startTime,item.dz,item.fz-item.dz,2500);
+                //             });
+                //             break;
+                //         default:break;
+                //     }
 
-                    CVS.clearRect();
-                    self.points.forEach(function(item,i){
-                    	if(stage==0&&!item.isBg){return true;}
-                    	item.paint(); 
-                    });
+                //     CVS.clearRect();
+                //     self.bgPoints.forEach(function(item,i){
+                //         item.paint();
+                //     });
 
-                    if(isStop&&stage==2){
-                        CVS.clearRect();
-                        self.animate(++index%self.txts.length);
-                        return false;
-                    }
-                    if(isStop&&stage!=2){
-                        stage++;
-                    }
-                    RequestAnimFrame(arguments.callee);
-                }());
+                //     if(stage>0){
+                //         self.points.sort(function(a,b){
+                //             return b.z-a.z;
+                //         });
+                //         self.points.forEach(function(item,i){
+                //             item.paint(); 
+                //         });
+                //     }
+
+                //     if(isStop&&stage==2){
+                //         CVS.clearRect();
+                //         self.animate(++index%self.txts.length);
+                //         return false;
+                //     }
+                //     if(isStop&&stage!=2){
+                //         startTime=new Date();
+                //         stage++;
+                //     }
+                //     RequestAnimFrame(arguments.callee);
+                // }());
             },
         };
 
@@ -254,14 +388,18 @@
             this.dx=x-CVS.vpx;
             this.dy=y-CVS.vpy;
             this.dz=z;
-            // 点当前的坐标
-            this.x=getRandom(-CVS.vpx,CVS.vpx);
-            this.y=getRandom(-CVS.vpy,CVS.vpy);
-            this.z=getRandom(-zRadius,zRadius);
+            // 点第一次随机的坐标
+            this.sx=getRandom(-CVS.vpx,CVS.vpx);
+            this.sy=getRandom(-CVS.vpy,CVS.vpy);
+            this.sz=getRandom(-zRadius,zRadius);
             // 点最终飞离的坐标
             this.fx=getRandom(-CVS.vpx,CVS.vpx);
             this.fy=getRandom(-CVS.vpy,CVS.vpy);
             this.fz=getRandom(-zRadius,zRadius);
+            // 点当前位置
+            this.x=this.sx;
+            this.y=this.sy;
+            this.z=this.sz;
             this.radius=radius;
             this.rgb=rgb;
             this.zRadius=zRadius;
@@ -278,7 +416,22 @@
             CVS.ctx.restore();
         };
 
-        var effect=new PointEffect({zPos:0,txts:['粒子特效','canvas','jeff.zhong','生日快乐']});
+        function Stage(fn,ctx){
+            this.ctx=ctx;
+            this.fn=fn;
+            this.next=null;
+            this.end=null;
+        }
+
+        Stage.prototype.init=function(){
+            var self=this;
+            this.fn.call(this.ctx,function(){
+                self.next&&self.next.init();
+                self.end&&self.end();
+            });
+        };
+
+        var effect=new PointEffect({zPos:0,txts:['粒子特效','canvas','jeff.zhong']});
         effect.init();
     }());
 </script>
