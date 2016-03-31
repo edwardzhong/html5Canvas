@@ -358,6 +358,7 @@
                 }());
             },
         };
+
         var rects=[];
         function Rect(zRadius,zPos,x,y,z,radius,rgb) {
             // 点在字体中的坐标
@@ -382,7 +383,7 @@
             this.zPos=zPos;
         };
         Rect.prototype.paint=function(){
-            var scale = Math.abs(this.zRadius/(this.zRadius-this.z+this.zPos));
+            var scale = Math.abs(this.zRadius/(2*this.zRadius+this.z+this.zPos));
             CVS.ctx.save();
             CVS.ctx.beginPath();
             CVS.ctx.fillStyle = 'rgba('+this.rgb.r+','+this.rgb.g+','+this.rgb.b+',' + scale*0.8 + ')';
@@ -390,49 +391,60 @@
             CVS.ctx.restore();
         };
         function getImgData(){
-        	var imgData = CVS.ctx.getImageData(0,0, CVS.canvas.width, CVS.canvas.height);
-        	CVS.clearRect();
-        	for (var x = 0; x < imgData.width; x += 8) {
-        		for (var y = 0; y < imgData.height; y += 8) {
-        			var i = (y * imgData.width + x) * 4;
-        			if (imgData.data[i+3] >= 128) {
-        				rects.push(new Rect(200,0,x, y, 0, 4,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]}));
-        			}
-        		}
-        	}
+            var imgData = CVS.ctx.getImageData(0,0, CVS.canvas.width, CVS.canvas.height);
+            CVS.clearRect();
+            for (var x = 0; x < imgData.width; x += 3) {
+                for (var y = 0; y < imgData.height; y += 3) {
+                    var i = (y * imgData.width + x) * 4;
+                    if (imgData.data[i+3] >= 128) {
+                        rects.push(new Rect(200,0,x-3, y-3, 0, 3,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]}));
+                    }
+                }
+            }
         }
-        var img=new Image(); img.src='cake.png';
-        var img2=new Image(); img2.src='cake2.png';
-        var img3=new Image(); img3.src='love2.ong';
-        img.onload=function(){
-        	CVS.ctx.drawImage(img, - img.width / 2, - img.height / 2);
-        	getImgData();
-        	var stage=0,
-        		startTime=new Date();
-        	(function(){
-        		rects.forEach(function(item,i){
-        			if(stage==0){
-        				if(new Date()-startTime>3000){
-        					stage++;
-        					startTime=new Date();
-        					return false;
-        				}
-                        item.x=tween.easeOut(new Date()-startTime,item.sx,item.dx-item.sx,3000);
-                        item.y=tween.easeOut(new Date()-startTime,item.sy,item.dy-item.sy,3000);
-                        item.z=tween.easeOut(new Date()-startTime,item.sz,item.dz-item.sz,3000);
+        var img=new Image(); img.src='imgs/cake.png';
+        var img2=new Image(); img2.src='imgs/cake2.png';
+        var img3=new Image(); img3.src='imgs/love2.png';
+        img3.onload=function(){
+            CVS.ctx.drawImage(img3, - img3.width / 2, - img3.height / 2);
+            getImgData();
+            var stage=0,
+                startTime=new Date(),
+                sulv=0.1;
 
-        			} else {
+
+            (function(){
+                CVS.ctx.save();
+                CVS.ctx.globalCompositeOperation = 'destination-out';
+                CVS.ctx.globalAlpha = 0.1;
+                CVS.ctx.fillRect(-CVS.vpx, -CVS.vpy, canvas.width, canvas.height);
+                CVS.ctx.restore();
+                rects.forEach(function(item,i){
+                    if(stage==0){
+                        if(new Date()-startTime>900){
+                            stage++;
+                            CVS.clearRect();
+                            startTime=new Date();
+                            return false;
+                        }
+                        item.x=tween.linear(new Date()-startTime,item.sx,item.dx-item.sx,900);
+                        item.y=tween.linear(new Date()-startTime,item.sy,item.dy-item.sy,900);
+                        item.z=tween.linear(new Date()-startTime,item.sz,item.dz-item.sz,900);
+                    } else {
+                        if(new Date()-startTime>2500){
+                            return false;
+                        }
                         item.x=tween.easeInOut(new Date()-startTime,item.dx,item.fx-item.dx,2500);
                         item.y=tween.easeInOut(new Date()-startTime,item.dy,item.fy-item.dy,2500);
                         item.z=tween.easeInOut(new Date()-startTime,item.dz,item.fz-item.dz,2500);
-        			}
-        		});
-        		CVS.clearRect();
-        		rects.forEach(function(item,i){
-        			item.draw();
-        		});
-        		RequestAnimFrame(arguments.callee);
-        	}())
+                    }
+                });
+
+                rects.forEach(function(item,i){
+                    item.paint();
+                });
+                RequestAnimFrame(arguments.callee);
+            }())
         }
 
         var effect=new PointEffect({
