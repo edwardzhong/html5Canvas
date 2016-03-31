@@ -7,6 +7,9 @@
 <body>
 	<canvas id="canvas" width="500" height="500">不支持canvas!</canvas>
 	<script type="text/javascript">
+
+	// ctx.beginPath() 重新规划一条路径
+	// ctx.closePath() 关闭路径，如果该路径没有闭合，则连接开始和结尾进行闭合，但只对stroke，fill默认都会闭合	
 	(function() {
 		var canvas=document.getElementById('canvas');
 		var ctx=canvas.getContext('2d');
@@ -32,7 +35,7 @@
 		//ctx.clearRect(0,0,canvas.width,canvas.height);
 
 		//圆形
-		ctx.beginPath();  //告诉canvas咱们要重新绘制一条全新的路径了，之前画的东西从此再无关系
+		ctx.beginPath();  //告诉canvas要重新绘制一条全新的路径，之前画的东西从此再无关系
 		ctx.arc(80,80,50,0,180*Math.PI/180,true);//逆时针
 		// ctx.closePath();
 		ctx.fillStyle='gray';
@@ -43,6 +46,7 @@
 		ctx.closePath();
 		ctx.fillStyle='gray';
 		ctx.fill();
+
 	}())
 	</script>
 </body>
