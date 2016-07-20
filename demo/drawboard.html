@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>简单画板</title>
+</head>
+<body>
+	<canvas id='canvas' width="800" height="600">浏览器不支持canvas</canvas>
+	<button id="cls">Clear All</button>
+	<label for="color">color：</label><input type="color" name="color" id="color" value="#000000">
+	<label for="size">size:</label><input type="range" name="size" id="size" step="0.1" min="1" max="5" value="1">
+	<label for="type">type:</label>
+	<select name="type" id="type">
+		<option value="pen">pen</option>
+		<option value="line">line</option>
+		<option value="rect">rect</option>
+		<option value="arc">arc</option>
+		<option value="bezier">bezier</option>
+	</select>
+<script>
+	var canvas=document.getElementById('canvas'),
+		clsBtn=document.getElementById('cls'),
+		colorInput=document.getElementById('color'),
+		sizeInput=document.getElementById('size'),
+		typeSel=document.getElementById('type'),
+		ctx=canvas.getContext('2d'),
+		locStart={},locEnd={},
+		surfaceImgData,
+		isDrawing=false,
+		draw={
+			background:function(){
+				ctx.save();
+				// 设置渐变
+		        // var gradient=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+		        // gradient.addColorStop(0,'#000');
+		        // gradient.addColorStop(1,'#fff');
+		        ctx.fillStyle='#ddd';
+		        ctx.fillRect(0,0,canvas.width,canvas.height);
+		        ctx.restore();
+			},
+			pen:function(){//画笔
+				ctx.moveTo(locStart.x,locStart.y);
+				ctx.lineTo(locEnd.x,locEnd.y);
+				ctx.stroke();
+				locStart=locEnd;//移动后的坐标替换开始坐标
+			},
+			line:function(){//直线
+				ctx.moveTo(locStart.x,locStart.y);
+				ctx.lineTo(locEnd.x,locEnd.y);
+				ctx.stroke();
+			},
+			rect:function(){//矩形
+				ctx.moveTo(locStart.x,locStart.y);
+				ctx.strokeRect(locStart.x,locStart.y,locEnd.x-locStart.x,locEnd.y-locStart.y);
+			},
+			arc:function(){//圆形
+				var radius=Math.sqrt(Math.pow(locEnd.x-locStart.x,2)+Math.pow(locEnd.y-locStart.y,2));
+				ctx.arc(locStart.x,locStart.y,radius,0,Math.PI*2,true);//逆时针
+				ctx.stroke();
+			},
+			bezier:function(){//贝塞尔曲线
+
+			}
+		};
+
+	//将鼠标位置定位到canvas坐标
+	function windowToCanvas(x,y){
+		var box=canvas.getBoundingClientRect();
+		return {
+			x:x-box.left*(canvas.width/box.width),
+			y:y-box.top*(canvas.height/box.height)
+		};
+	}
+
+	function getDrawingData(){
+		surfaceImgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+	}
+
+	//将当前canvas数据写回ctx
+	function putDrawingData(){
+		ctx.putImageData(surfaceImgData,0,0);
+	}
+
+	canvas.onmousedown=function(e){
+		isDrawing=true;
+		ctx.strokeStyle=colorInput.value;
+		ctx.lineWidth=sizeInput.value;
+		locStart=windowToCanvas(e.clientX,e.clientY);
+		getDrawingData();
+	};
+	canvas.onmousemove=function(e){
+		if(!isDrawing){return;}
+		locEnd=windowToCanvas(e.clientX,e.clientY);
+		if(typeSel.value!='pen'){
+			putDrawingData();
+		}
+		ctx.save();
+		ctx.beginPath();
+		draw[typeSel.value]();
+		ctx.restore();
+	};
+	canvas.onmouseup=function(e){
+		isDrawing=false;
+	};
+	clsBtn.onclick=function(e){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+	};
+	draw.background();
+</script>
+</body>
+</html>
