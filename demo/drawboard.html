@@ -24,7 +24,7 @@
 		sizeInput=document.getElementById('size'),
 		typeSel=document.getElementById('type'),
 		ctx=canvas.getContext('2d'),
-		locStart={},locEnd={},
+		locStart={},locEnd={},locBez={},
 		surfaceImgData,
 		isDrawing=false,
 		draw={
@@ -59,7 +59,7 @@
 				ctx.stroke();
 			},
 			bezier:function(){//贝塞尔曲线
-
+				ctx.moveTo(locStart.x,locStart.y);
 			}
 		};
 
