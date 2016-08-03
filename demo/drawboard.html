@@ -15,7 +15,7 @@
 		<option value="line">line</option>
 		<option value="rect">rect</option>
 		<option value="arc">arc</option>
-		<option value="bezier">bezier</option>
+		<!-- <option value="bezier">bezier</option> -->
 	</select>
 <script>
 	var canvas=document.getElementById('canvas'),
@@ -104,6 +104,7 @@
 	};
 	clsBtn.onclick=function(e){
 		ctx.clearRect(0,0,canvas.width,canvas.height);
+		draw.background();
 	};
 	draw.background();
 </script>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>measureText</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="600"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d');
+		txt='hello canvas';
+
+	ctx.fillStyle='#555';
+	ctx.textAlign='center';
+	ctx.textBaseLine='bottom';
+	ctx.font='40px bold Lucida Sans';
+	//测量text的宽度
+	var txtWidth=ctx.measureText(txt).width;
+	var txtHeight=txtWidth/txt.length;
+	ctx.fillText('width:'+txtWidth,canvas.width/2,canvas.height/2+txtHeight+20);
+	ctx.fillText(txt,canvas.width/2,canvas.height/2);
+
+</script>
+</body>
+</html>

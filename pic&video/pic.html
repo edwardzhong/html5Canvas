@@ -14,7 +14,8 @@
 
 	img.src='../img/Lighthouse.jpg';
 	img.onload=function(){
-		ctx.drawImage(img,0,0,1200,800);//(img,x,y,width,height)  
+		// ctx.drawImage(img,0,0);//(img,dx,dy) 将图像画到canvas指定位置 
+		ctx.drawImage(img,0,0,600,400);//(img,dx,dy,dw,dh) 将图像画到canvas指定位置 ,同时指定图像高宽
 		// ctx.drawImage(img,300,300,200,200,0,0,100,100);//(图像,源图像x,源图像y,源图像宽,源图像高,目的图x,目的图y,缩放宽,缩放高)
 	};
 
