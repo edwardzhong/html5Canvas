@@ -5,49 +5,154 @@
 	<title>贝塞尔曲线</title>
 </head>
 <body>
-<canvas id="canvas" width="500" height="400"></canvas>
+<button id="clear">clear</button><br>
+<canvas id="canvas" width="600" height="400"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
-		endPoints=[{x:130,y:70},{x:430,y:270}],
-		controlPoints=[{x:130,y:250},{x:450,y:70}];
+		clearBtn=document.getElementById('clear');
+		isDragging=false,
+		startPoint={},
+		currBezier=null,
+		dragIndex=-1,
+		beziers=[];
 
-	function drawBezierCurve(){
-		ctx.strokeStyle='blue';
-		ctx.beginPath();
-		ctx.moveTo(endPoints[0].x,endPoints[0].y);
-		ctx.bezierCurveTo(controlPoints[0].x,controlPoints[0].y,controlPoints[1].x,controlPoints[1].y,endPoints[1].x,endPoints[1].y);
-		ctx.stroke();
+	/**
+	 * points＝[开始连接点，结束连接点，控制点1，控制点2]
+	 */
+	function BezierCurve(){
+		this.points=[];
 	}
 
-	function drawEndPoints(){
-		ctx.strokeStyle='blue';
-		ctx.fillStyle='red';
+	BezierCurve.prototype={
+		//判断鼠标是否在点上面
+		isInPoint:function(x,y){
+			var index=-1;
+			this.points.forEach(function(point,i){
+				ctx.beginPath();
+				ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+				if(ctx.isPointInPath(x,y)){
+					index=i;return false;
+				}
+			});
+			return index;
+		},
+		drawPoint:function(){
+			ctx.save();
+			ctx.lineWidth=0.5;
+			ctx.strokeStyle='#a00';
 
-		endPoints.forEach(function(point){
-			ctx.beginPath();
-			ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+			//画控制点的连线
+			ctx.beginPath();//别忘了beginPath
+			ctx.moveTo(this.points[2].x, this.points[2].y);
+			ctx.lineTo(this.points[3].x, this.points[3].y);
 			ctx.stroke();
-			ctx.fill();
-		});	
-	}
 
-	function drawControlPoints(){
-		ctx.strokeStyle='yellow';
-		ctx.fillStyle='blue';
-
-		controlPoints.forEach(function(point){
+			//画连接点和控制点
+			this.points.forEach(function(point,i){
+				ctx.fillStyle=i<2?'#00f':'#ff0';
+				ctx.beginPath();
+				ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+				ctx.stroke();
+				ctx.fill();
+			});
+			ctx.restore();
+			return this;
+		},
+		drawBezier:function(){
+			ctx.save();
+			ctx.lineWidth=0.5;
+			ctx.strokeStyle='#00f';
 			ctx.beginPath();
-			ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+			ctx.moveTo(this.points[0].x, this.points[0].y);
+			ctx.bezierCurveTo(this.points[2].x,this.points[2].y,this.points[3].x,this.points[3].y,this.points[1].x,this.points[1].y);
 			ctx.stroke();
-			ctx.fill();
+			ctx.restore();
+			return this;
+		}
+	};
+
+	canvas.onmousedown=function(e){
+		isDragging=true;
+		startPoint=windowToCanvas(e.clientX,e.clientY);
+		for(var i=0,bz;bz=beziers[i++];){
+			dragIndex=bz.isInPoint(startPoint.x,startPoint.y);
+			if(dragIndex>-1){
+				currBezier=bz;
+				break;
+			}
+		}
+		if(dragIndex>-1){return;}
+		currBezier=new BezierCurve();
+		currBezier.points=[startPoint,startPoint,startPoint,startPoint];
+		beziers.push(currBezier);
+	};
+
+	canvas.onmousemove=function(e){
+		if(!isDragging){return;}
+		var endPoint=windowToCanvas(e.clientX,e.clientY);
+		if(dragIndex>-1){
+			currBezier.points[dragIndex]=endPoint;
+		} else {
+			currBezier.points[1]=endPoint;
+			currBezier.points[2]={x:endPoint.x,y:startPoint.y};
+			currBezier.points[3]={x:startPoint.x,y:endPoint.y};
+		}
+		clear();
+		beziers.forEach(function(bz,i){
+			bz.drawPoint().drawBezier();
 		});
+	};
+
+	canvas.onmouseup=function(e){
+		isDragging=false;
+		dragIndex=-1;
+		currBezier=null;
 	}
 
-	drawControlPoints();
-	drawEndPoints();
-	drawBezierCurve();
+	clearBtn.onclick=function(){
+		clear();
+		beziers=[];
+		dragIndex=-1;
+		currBezier=null;
+	}
 
+	//将鼠标位置定位到canvas坐标
+	function windowToCanvas(x,y){
+		var box=canvas.getBoundingClientRect();
+		return {
+			x:x-box.left*(canvas.width/box.width),
+			y:y-box.top*(canvas.height/box.height)
+		};
+	}
+	//画网格线
+	function drawGrid(color,stepx,stepy){
+		ctx.save();
+		ctx.lineWidth=0.5;
+		ctx.strokeStyle=color;
+
+		for(var i=stepx+0.5;i<ctx.canvas.width;i+=stepx){
+			ctx.beginPath();
+			ctx.moveTo(i,0);
+			ctx.lineTo(i,ctx.canvas.height);
+			ctx.stroke();
+		}
+
+		for(var i=stepy+0.5;i<ctx.canvas.height;i+=stepy){
+			ctx.beginPath();
+			ctx.moveTo(0,i);
+			ctx.lineTo(ctx.canvas.width,i);
+			ctx.stroke();
+		}
+		ctx.restore();
+	}
+
+	function clear(){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		drawGrid('lightgray',10,10);
+	}
+
+	clear();
 </script>
 </body>
 </html>

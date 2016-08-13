@@ -36,13 +36,13 @@
 
 		//圆形
 		ctx.beginPath();  //告诉canvas要重新绘制一条全新的路径，之前画的东西从此再无关系
-		ctx.arc(80,80,50,0,180*Math.PI/180,true);//逆时针
+		ctx.arc(80,80,50,0,180*Math.PI/180,true);//顺时针
 		// ctx.closePath();
 		ctx.fillStyle='gray';
 		ctx.fill();
 
 		ctx.beginPath();
-		ctx.arc(180,180,50,180*Math.PI/180,false);//顺时针
+		ctx.arc(180,180,50,180*Math.PI/180,false);//逆时针
 		ctx.closePath();
 		ctx.fillStyle='gray';
 		ctx.fill();

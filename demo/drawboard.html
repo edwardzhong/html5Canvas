@@ -5,7 +5,6 @@
 	<title>简单画板</title>
 </head>
 <body>
-	<canvas id='canvas' width="800" height="600">浏览器不支持canvas</canvas>
 	<button id="cls">Clear All</button>
 	<label for="color">color：</label><input type="color" name="color" id="color" value="#000000">
 	<label for="size">size:</label><input type="range" name="size" id="size" step="0.1" min="1" max="5" value="1">
@@ -17,6 +16,8 @@
 		<option value="arc">arc</option>
 		<!-- <option value="bezier">bezier</option> -->
 	</select>
+	<br>
+	<canvas id='canvas' width="800" height="600">浏览器不支持canvas</canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
 		clsBtn=document.getElementById('cls'),

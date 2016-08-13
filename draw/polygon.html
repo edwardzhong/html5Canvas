@@ -14,7 +14,7 @@
 </head>
 <body>
 <div class="control">
-<label for="sideSel">Sides</label>
+<label for="sideSel">sides</label>
 <select name="sideSel" id="sideSel">
 	<option value="3" selected="selected">3</option>
 	<option value="4">4</option>
@@ -23,42 +23,84 @@
 	<option value="7">7</option>
 	<option value="8">8</option>
 </select>
-angle:<input type="text" id="angleTxt" value="0" style="width:20px;">
-<label for="fillModeCb">fillMode</label> <input type="checkbox" name="fillModeCb" id="fillModeCb">
+<label for="angleTxt">angle:</label>
+<input type="number" name="angleTxt" id="angleTxt" style="width:50px;" value="0">
+<label for="color">color</label>
+<input type="color" name="color" id="color" value="#b6b3b7">
+<label for="fillModeCb">fillMode</label>
+<input type="checkbox" name="fillModeCb" id="fillModeCb">
 <button id="clearBtn">Clear All</button>
+<label for="isEdit">isEdit</label>
+<input type="checkbox" name="isEdit" id="isEdit">
 </div>
 <canvas id="canvas" width="600" height="400"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
 		sideSel=document.getElementById('sideSel'),
-		dashLineCb=document.getElementById('dashLineCb'),
+		color=document.getElementById('color'),
 		fillModeCb=document.getElementById('fillModeCb'),
 		angleTxt=document.getElementById('angleTxt'),
 		clearBtn=document.getElementById('clearBtn'),
+		isEditCb=document.getElementById('isEdit'),
 		isDragging=false,
+		currPolygon=null,
 		imgData=null,
-		mousedown={};
+		polygons=[],
+		startPos={};
 
-	function drawPolygon(){
-		var points=getPoints();
-		ctx.strokeStyle='red';
-		ctx.fillStyle='orange';
 
-		ctx.beginPath();
-		ctx.moveTo(points[0].x,points[0].y);
-		for(var i=0,len=points.length;i<len;i++){
-			ctx.lineTo(points[(i+1)%len].x,points[(i+1)%len].y);
-		}
-		ctx.stroke();
+	function Polygon(sx,sy,ex,ey,sides,angle,strokeStyle,fillStyle,isFill){
+		this.sx=sx;
+		this.sy=sy;
+		this.ex=ex;
+		this.ey=ey;
+		this.sides=sides;
+		this.angle=angle;
+		this.strokeStyle=strokeStyle;
+		this.fillStyle=fillStyle;
+		this.isFill=isFill;
+		this.points=[];
+	}
 
-		if(fillModeCb.checked){
-			ctx.fill();
+	Polygon.prototype={
+		getPoints:function(){
+			var sides=this.sides,
+				angle=this.angle,
+				radius=Math.sqrt(Math.pow((this.ex-this.sx),2)+Math.pow((this.ey-this.sy),2));
+				this.points=[];
+			for(var i=0;i<sides;i++){
+				angle+=2*Math.PI/sides;
+				this.points.push({x:this.sx+radius*Math.sin(angle),y:this.sy-radius*Math.cos(angle)});
+			}
+			return this;
+		},
+		createPath:function(){
+			this.getPoints();
+			ctx.beginPath();
+			ctx.moveTo(this.points[0].x,this.points[0].y);
+			for(var i=0,len=this.points.length;i<len;i++){
+				ctx.lineTo(this.points[(i+1)%len].x,this.points[(i+1)%len].y);
+			}
+			ctx.closePath();
+			return this;
+		},
+		draw:function(){
+			ctx.save();
+			ctx.strokeStyle=this.strokeStyle;
+			ctx.fillStyle=this.fillStyle;
+			ctx.stroke();
+			if(this.isFill){
+				ctx.fill();
+			}
+			ctx.restore();
+			return this;
 		}
 	}
 
 	//画网格线
 	function drawGrid(color,stepx,stepy){
+		ctx.save();
 		ctx.lineWidth=0.5;
 		ctx.strokeStyle=color;
 
@@ -75,55 +117,78 @@ angle:<input type="text" id="angleTxt" value="0" style="width:20px;">
 			ctx.lineTo(ctx.canvas.width,i);
 			ctx.stroke();
 		}
+		ctx.restore();
 	}
 
 	//获取坐标
 	function windowToCanvas(x,y){
-		var bbox=canvas.getBoundingClientRect();
+		var box=canvas.getBoundingClientRect();
 		return {
-			x:x-bbox.left*(canvas.width/bbox.width),
-			y:y-bbox.top*(canvas.height/bbox.height)
+			x:x-box.left*(canvas.width/box.width),
+			y:y-box.top*(canvas.height/box.height)
 		};
 	}
 
-	//获取多边形的所有顶点
-	function getPoints(){
-		var sides=parseInt(sideSel.value,10)||3,
-			angle=parseInt(angleTxt.value,10)||0,
-			radius=Math.sqrt(Math.pow((mousedown.x2-mousedown.x1),2)+Math.pow((mousedown.y2-mousedown.y1),2)),
-			points=[];
-		for(var i=0;i<sides;i++){
-			angle+=2*Math.PI/sides;
-			points.push({x:mousedown.x1+radius*Math.sin(angle),y:mousedown.y1-radius*Math.cos(angle)});
-		}
-
-		return points;
+	function clear(){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		drawGrid('lightgray',10,10);
 	}
 
+
 	canvas.onmousedown=function(e){
-		var loc=windowToCanvas(e.clientX,e.clientY);
-		mousedown={x1:loc.x,y1:loc.y};
-		imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+		startPos=windowToCanvas(e.clientX,e.clientY);
+		if(!isEdit.checked){
+			canvas.style.cursor='pointer'
+			imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+			polygons.push(new Polygon(startPos.x,startPos.y,startPos.x,startPos.y,parseInt(sideSel.value,10)||3,Math.PI/180*(parseInt(angleTxt.value,10)||0),'#f00',color.value,fillModeCb.checked));
+		} else{
+			canvas.style.cursor='crosshair';
+			polygons.forEach(function(item,i){
+				item.createPath();//创建路径时才能检测点是否在当前路径中
+				if(ctx.isPointInPath(startPos.x,startPos.y)){
+					currPolygon=item;
+					console.log(currPolygon);
+				}
+			});
+		}
 		isDragging=true;
 	};
 
 	canvas.onmousemove=function(e){
-		var loc;
+		var loc=windowToCanvas(e.clientX,e.clientY);
 		if(isDragging){
-			loc=windowToCanvas(e.clientX,e.clientY);
-			mousedown.x2=loc.x;
-			mousedown.y2=loc.y;
-			ctx.putImageData(imgData,0,0);
-			drawPolygon();
+			if(isEdit.checked){
+				if(!currPolygon){return;}			
+				var w=loc.x-currPolygon.sx,
+					h=loc.y-currPolygon.sy;
+				currPolygon.sx=loc.x;
+				currPolygon.sy=loc.y;
+				currPolygon.ex+=w;
+				currPolygon.ey+=h;
+				clear();
+				polygons.forEach(function(item,i){
+					item.createPath().draw();
+				});
+			} else {
+				ctx.putImageData(imgData,0,0);
+				currPolygon=polygons[polygons.length-1];
+				currPolygon.ex=loc.x;
+				currPolygon.ey=loc.y;
+				currPolygon.createPath().draw();		
+			}
 		}
 	};
 	
 	canvas.onmouseup=function(e){
 		isDragging=false;
+		currPolygon=null;
+		canvas.style.cursor='pointer';
 	};
 
 	clearBtn.onclick=function(e){
-		ctx.clearRect(0,0,canvas.width,canvas.height);
+		clear();
+		currPolygon=null;
+		polygons=[];
 	};
 
 	drawGrid('lightgray',10,10);

@@ -12,8 +12,8 @@
 
 	function drawArcs(){
 		ctx.beginPath();
-		ctx.arc(300,190,150,0,Math.PI*2,false);//顺时针
-		ctx.arc(300,190,100,0,Math.PI*2,true);//逆时针
+		ctx.arc(300,190,150,0,Math.PI*2,true);//顺时针
+		ctx.arc(300,190,100,0,Math.PI*2,false);//逆时针
 		//使用arc方法向当前路径中增加子路径时，必须将上一条子路径的终点与所画圆弧的起点相连
 		ctx.fill();
 		ctx.shadowColor='rgba(0,0,0,0.9)';
@@ -43,9 +43,9 @@
 	}
 
 	ctx.strokeStyle=ctx.fillStyle='rgba(100,140,230,0.5)';
-	drawArcs();
+	
 	drawGrid('red',10,10);
-
+	drawArcs();
 </script>
 </body>
 </html>
