@@ -5,13 +5,13 @@
 	<title>坐标变换</title>
 </head>
 <body>
-<canvas id="canvas"></canvas>
+<canvas id="canvas" width="600" height="400"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d');
 
+	ctx.save();
 	ctx.strokeStyle='red';
-
 	ctx.rotate(Math.PI/4);//旋转45度
 	ctx.translate(50,50);//平移到指定位置
 	ctx.scale(2,2);//缩放
@@ -20,6 +20,25 @@
 	ctx.moveTo(10,10);
 	ctx.lineTo(100,10);
 	ctx.stroke();
+	ctx.restore();
+
+	//画镜像
+	ctx.save();
+	ctx.strokeStyle='#990';
+	drawArrow(ctx);
+	ctx.translate(canvas.width/2+20,0);
+	ctx.scale(-1,1);
+	drawArrow(ctx);
+	ctx.restore();
+
+	function drawArrow(ctx){
+		ctx.beginPath();
+		ctx.moveTo(100, 100);
+		ctx.lineTo(150, 50);
+		ctx.lineTo(150,150);
+		ctx.closePath();
+		ctx.stroke();
+	}
 </script>
 </body>
 </html>

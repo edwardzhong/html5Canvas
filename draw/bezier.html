@@ -5,19 +5,25 @@
 	<title>贝塞尔曲线</title>
 </head>
 <body>
+<label for="QuadraticCurve">QuadraticCurve</label><input type="radio" name="bezier" id="QuadraticCurve" value="QuadraticCurve" checked="checked">
+<label for="BezierCurve">BezierCurve</label><input type="radio" name="bezier" id="BezierCurve" value="BezierCurve">
 <button id="clear">clear</button><br>
 <canvas id="canvas" width="600" height="400"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
-		clearBtn=document.getElementById('clear');
+		clearBtn=document.getElementById('clear'),
+		types=document.getElementsByName('bezier'),
 		isDragging=false,
 		startPoint={},
 		currBezier=null,
 		dragIndex=-1,
 		beziers=[];
 
+
+	ctx.lineCap='round';
 	/**
+	 * 三次贝塞尔曲线
 	 * points＝[开始连接点，结束连接点，控制点1，控制点2]
 	 */
 	function BezierCurve(){
@@ -44,7 +50,9 @@
 
 			//画控制点的连线
 			ctx.beginPath();//别忘了beginPath
-			ctx.moveTo(this.points[2].x, this.points[2].y);
+			ctx.moveTo(this.points[0].x, this.points[0].y);
+			ctx.lineTo(this.points[2].x, this.points[2].y);
+			ctx.moveTo(this.points[1].x, this.points[1].y);
 			ctx.lineTo(this.points[3].x, this.points[3].y);
 			ctx.stroke();
 
@@ -54,7 +62,7 @@
 				ctx.beginPath();
 				ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
 				ctx.stroke();
-				ctx.fill();
+				// ctx.fill();
 			});
 			ctx.restore();
 			return this;
@@ -72,6 +80,52 @@
 		}
 	};
 
+	/**
+	 * 二次贝塞尔曲线
+	 * points＝[开始连接点，结束连接点，控制点]
+	 */
+	function QuadraticCurve(){
+		this.points=[];
+	}
+
+	inherits(QuadraticCurve,BezierCurve);
+	QuadraticCurve.prototype.drawPoint=function(){
+		ctx.save();
+		ctx.lineWidth=0.5;
+		ctx.strokeStyle='#a00';
+
+		//画控制点的连线
+		ctx.beginPath();//别忘了beginPath
+		ctx.moveTo(this.points[0].x, this.points[0].y);
+		ctx.lineTo(this.points[2].x, this.points[2].y);
+		ctx.moveTo(this.points[1].x, this.points[1].y);
+		ctx.lineTo(this.points[2].x, this.points[2].y);
+		ctx.stroke();
+
+		//画连接点和控制点
+		this.points.forEach(function(point,i){
+			ctx.fillStyle=i<2?'#00f':'#ff0';
+			ctx.beginPath();
+			ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+			ctx.stroke();
+			// ctx.fill();
+		});
+		ctx.restore();
+		return this;
+	};
+	QuadraticCurve.prototype.drawBezier=function(){
+		ctx.save();
+		ctx.lineWidth=0.5;
+		ctx.strokeStyle='#00f';
+		ctx.beginPath();
+		ctx.moveTo(this.points[0].x, this.points[0].y);
+		ctx.quadraticCurveTo(this.points[2].x,this.points[2].y,this.points[1].x,this.points[1].y);
+		ctx.stroke();
+		ctx.restore();
+		return this;
+	}
+
+
 	canvas.onmousedown=function(e){
 		isDragging=true;
 		startPoint=windowToCanvas(e.clientX,e.clientY);
@@ -83,8 +137,14 @@
 			}
 		}
 		if(dragIndex>-1){return;}
-		currBezier=new BezierCurve();
-		currBezier.points=[startPoint,startPoint,startPoint,startPoint];
+		if(types[0].checked){
+			currBezier=new QuadraticCurve();
+			currBezier.points=[startPoint,startPoint,startPoint];
+		} else {
+			currBezier=new BezierCurve();
+			currBezier.points=[startPoint,startPoint,startPoint,startPoint];
+		}
+
 		beziers.push(currBezier);
 	};
 
@@ -92,11 +152,18 @@
 		if(!isDragging){return;}
 		var endPoint=windowToCanvas(e.clientX,e.clientY);
 		if(dragIndex>-1){
+			canvas.style.cursor='crosshair';
 			currBezier.points[dragIndex]=endPoint;
 		} else {
 			currBezier.points[1]=endPoint;
-			currBezier.points[2]={x:endPoint.x,y:startPoint.y};
-			currBezier.points[3]={x:startPoint.x,y:endPoint.y};
+			if(currBezier instanceof QuadraticCurve){
+				var a=Math.sqrt(Math.pow(endPoint.x-startPoint.x,2)+Math.pow(endPoint.y-startPoint.y,2))/2;
+				currBezier.points[2]={x:startPoint.x+a,y:endPoint.y-a<10?10:endPoint.y-a};
+			} else {
+				currBezier.points[2]={x:endPoint.x,y:startPoint.y};
+				currBezier.points[3]={x:startPoint.x,y:endPoint.y};
+			}
+
 		}
 		clear();
 		beziers.forEach(function(bz,i){
@@ -108,6 +175,7 @@
 		isDragging=false;
 		dragIndex=-1;
 		currBezier=null;
+		canvas.style.cursor='pointer';
 	}
 
 	clearBtn.onclick=function(){
@@ -115,6 +183,16 @@
 		beziers=[];
 		dragIndex=-1;
 		currBezier=null;
+	}
+
+	/**
+	 * 继承
+	 */
+	function inherits(child,parent){
+		var f=function(){};
+		f.prototype=parent.prototype;
+		child.prototype=new f();
+		child.prototype.constructor=child;//注意修正constructor
 	}
 
 	//将鼠标位置定位到canvas坐标

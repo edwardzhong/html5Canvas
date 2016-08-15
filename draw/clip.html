@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>擦除功能</title>
+	<title>clip实现擦除功能</title>
 
 </head>
 <body>
@@ -44,42 +44,59 @@
 	}
 
 	function init(){
+		ctx.save();
 		ctx.beginPath();
 		ctx.fillStyle='orange';
 		ctx.strokeStyle='red';
 		ctx.arc(200,200,100,0,Math.PI*2,false);
-		ctx.fill();
+		ctx.arc(250,250,100,0,Math.PI,false);
+		ctx.closePath();
 		ctx.stroke();
+		ctx.fill();
+		ctx.restore();
 	}
 
-	function drawRect(x,y){
+	function clearRect(x,y){
+		ctx.save();
 		ctx.beginPath();
+		ctx.fillStyle='white';	
+		ctx.rect(x-20,y-20,40,40);
+		ctx.clip();//限定要擦除的区域
+		clear(x-20,y-20,40,40);
+		ctx.restore();
+	}
+
+	function drawRubber(x,y){
+		ctx.save();
 		ctx.fillStyle='white';
 		ctx.strokeStyle='gray';
-
+		ctx.lineWidth=0.5;
+		ctx.lineJoin='round';
+		// ctx.shadowColor='#fff';
+		// ctx.shadowBlur=10;
+		// ctx.shadowOffsetX=0;
+		// ctx.shadowOffsetY=0;
+		ctx.beginPath();
 		ctx.rect(x-20,y-20,40,40);
+		// ctx.clip();
 		ctx.stroke();
 		ctx.fill();
+		ctx.restore();
 	}
 
-	function clearRect(loc){
-		ctx.clearRect(loc.x-20,loc.y-20,40,40);
-	}
 
 	canvas.onmousedown=function(e){
-		var loc=windowToCanvas(e.clientX,e.clientY);
-		// mouseData={x1:loc.x,y1:loc.y};
-		drawRect(loc.x,loc.y);
+		imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
 		isDragging=true;
 	};
 
 	canvas.onmousemove=function(e){
 		var loc=windowToCanvas(e.clientX,e.clientY);
-		if(isDragging){
-			// mouseData.x2=loc.x;
-			// mouseData.y2=loc.y;
 			ctx.save();
-			drawRect(loc.x,loc.y);
+		if(isDragging){
+			// ctx.putImageData(imgData,0,0);
+			drawRubber(loc.x,loc.y);
+			clearRect(loc.x,loc.y);
 			ctx.restore();
 		}
 	};
@@ -87,6 +104,11 @@
 	canvas.onmouseup=function(e){
 		isDragging=false;
 	};
+
+	function clear(x,y,w,h){
+		ctx.clearRect(x,y,w,h);
+		drawGrid('lightgray',10,10);
+	}
 
 	drawGrid('lightgray',10,10);
 	init();
