@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>剪纸</title>
+	<title>使用非零环绕原则绘制剪纸</title>
 </head>
 <body>
 <canvas width="600" height="400"></canvas>
@@ -32,6 +32,12 @@
 	ctx.strokeStyle='#999';
 	ctx.lineWidth='1px';
 	ctx.fillStyle='#880';
+	//添加阴影
+	ctx.shadowColor='#555';
+	ctx.shadowBlur=10;
+	ctx.shadowOffsetX=5
+	ctx.shadowOffsetY=5
+	
 	rect(50,50,400,300,true);
 	ctx.stroke();
 	rect(100,100,100,80);

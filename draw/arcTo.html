@@ -27,6 +27,7 @@
 			ctx.arcTo(cx,cy,cx-cRadius,cy,cRadius);
 		}
 	}
+
 	/**
 	 * arcTo 创建圆角矩形
 	 */
@@ -43,6 +44,12 @@
 	drawRoundedRect('purple','green',275,40,-100,100,20);
 	drawRoundedRect('red','white',300,140,100,-100,30);
 	drawRoundedRect('white','blue',525,140,-100,-100,40);
+
+	ctx.strokeStyle='red';
+	ctx.moveTo(280, 200);
+	ctx.lineTo(300, 200);
+	ctx.arcTo(320,200,320,240,20);//端点x相差20，如果设置半径大于20，则端点1所在的线段会外露
+	ctx.stroke();
 </script>
 </body>
 </html>

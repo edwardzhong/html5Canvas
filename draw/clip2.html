@@ -13,6 +13,9 @@
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d');
 
+	ctx.lineWidth=0.5;
+	ctx.font='128pt Comic-sans';
+
 	function drawText(){
 		// ctx.save();
 		ctx.shadowColor='rgba(100,100,150,0.8)';
@@ -36,7 +39,6 @@
 	function fillCanvas(color){
 		ctx.fillStyle=color;
 		ctx.fillRect(0,0,canvas.width,canvas.height);
-
 	}
 
 	function endAnimation(loop){
@@ -48,9 +50,11 @@
 	}
 
 	function drawAnimationFrame(radius){
+		ctx.save();
 		setClipingRegin(radius);
 		fillCanvas('lightgray');
 		drawText();
+		ctx.restore();
 	}
 
 	function animate(){
@@ -62,9 +66,7 @@
 			fillCanvas('charcoal');
 
 			if(radius>0){
-				ctx.save();
 				drawAnimationFrame(radius);
-				ctx.restore();
 			} else {
 				endAnimation(loop);
 			}
@@ -75,8 +77,6 @@
 		animate();
 	};
 
-	ctx.lineWidth=0.5;
-	ctx.font='128pt Comic-sans';
 	drawText();
 </script>
 </body>

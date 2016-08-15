@@ -5,28 +5,63 @@
 	<title>图像合成</title>
 </head>
 <body>
-<div>
-	
-</div>
-<canvas id="canvas"></canvas>
+<select name="mode" id="mode">
+	<option value="source-atop" checked>source-atop</option>
+	<option value="source-in">source-in</option>
+	<option value="source-out">source-out</option>
+	<option value="source-over">source-over</option>
+	<option value="destination-atop">destination-atop</option>
+	<option value="destination-in">destination-in</option>
+	<option value="destination-out">destination-out</option>
+	<option value="destination-over">destination-over</option>
+	<option value="lighter">lighter</option>
+	<option value="copy">copy</option>
+	<option value="xor">xor</option>
+</select>
+<canvas id="canvas" width="600" height="400"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
-		ctx=canvas.getContext('2d');
+		ctx=canvas.getContext('2d'),
+		mode=document.getElementById('mode');;
 
-	ctx.fillStyle='orange';
-	ctx.strokeStyle='red';
-	ctx.globalCompositeOperation='source-atop';
-	
-	ctx.fillRect(10,10,100,100);
-	ctx.save();
 
-	ctx.beginPath();
-	ctx.fillStyle='red';
-	ctx.arc(100,100,50,0,Math.PI*2,false);
-	ctx.stroke();
-	ctx.fill();
+	function draw(modeValue){
+		ctx.fillStyle='cornflowerblue';
+		// ctx.strokeStyle='#555';
+		ctx.lineWidth=2;
 
-	ctx.restore();
+		// ctx.shadowColor='#555';
+		// ctx.shadowBlur=10;
+		// ctx.shadowOffsetX=5;
+		// ctx.shadowOffsetY=5;
+
+		ctx.font='50px Lucida Sans';
+		ctx.textAlign='center';
+		ctx.textBaseline="middle";
+
+		// ctx.strokeText('html5 canvas',300,200);
+		ctx.fillText('html5 canvas',300,200);
+
+		ctx.globalCompositeOperation=modeValue;
+
+		ctx.save();
+		ctx.beginPath();
+		ctx.fillStyle='red';
+		// ctx.strokeStyle='orange';
+		ctx.arc(300,200,50,0,Math.PI*2,false);
+		// ctx.stroke();
+		ctx.fill();
+		ctx.restore();
+	}
+
+
+	mode.onchange=function(){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		draw(this.value);
+		console.log(this.value);
+	}
+
+	draw(mode.value);
 </script>
 </body>
 </html>
