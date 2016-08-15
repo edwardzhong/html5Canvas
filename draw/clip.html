@@ -10,9 +10,25 @@
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
-		imgData=null,
-		mouseData={},
-		isDragging=false;;
+		rubberWidth=30,
+		rubberHeight=30,
+		rubberLineWidth=1,
+		lastX=0,
+		lastY=0,
+		isDragging=false;
+
+	function init(){
+		ctx.save();
+		ctx.beginPath();
+		ctx.fillStyle='orange';
+		ctx.strokeStyle='red';
+		ctx.arc(200,200,100,0,Math.PI*2,false);
+		ctx.arc(250,250,100,0,Math.PI,false);
+		ctx.closePath();
+		ctx.stroke();
+		ctx.fill();
+		ctx.restore();
+	}
 
 	//画网格线
 	function drawGrid(color,stepx,stepy){
@@ -43,74 +59,71 @@
 		};
 	}
 
-	function init(){
-		ctx.save();
+	//设置要擦除的上一次的位置
+	function setLastClip(){
 		ctx.beginPath();
-		ctx.fillStyle='orange';
-		ctx.strokeStyle='red';
-		ctx.arc(200,200,100,0,Math.PI*2,false);
-		ctx.arc(250,250,100,0,Math.PI,false);
-		ctx.closePath();
-		ctx.stroke();
-		ctx.fill();
-		ctx.restore();
-	}
-
-	function clearRect(x,y){
-		ctx.save();
-		ctx.beginPath();
-		ctx.fillStyle='white';	
-		ctx.rect(x-20,y-20,40,40);
+		ctx.rect(lastX-rubberWidth/2-rubberLineWidth,lastY-rubberHeight/2-rubberLineWidth,rubberWidth+2*rubberLineWidth,rubberHeight+2*rubberLineWidth);
 		ctx.clip();//限定要擦除的区域
-		clear(x-20,y-20,40,40);
+	}
+
+	//清除
+	function clear(){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		drawGrid('lightgray',10,10);
+	}
+
+	//清除上一次的位置
+	function clearLast(){
+		ctx.save();
+		setLastClip();
+		clear();
 		ctx.restore();
 	}
 
+	//画当前位置的橡皮擦
 	function drawRubber(x,y){
 		ctx.save();
 		ctx.fillStyle='white';
 		ctx.strokeStyle='gray';
-		ctx.lineWidth=0.5;
+		ctx.lineWidth=rubberLineWidth;
 		ctx.lineJoin='round';
-		// ctx.shadowColor='#fff';
-		// ctx.shadowBlur=10;
-		// ctx.shadowOffsetX=0;
-		// ctx.shadowOffsetY=0;
 		ctx.beginPath();
-		ctx.rect(x-20,y-20,40,40);
+		ctx.rect(x-rubberWidth/2,y-rubberHeight/2,rubberWidth,rubberHeight);
 		// ctx.clip();
-		ctx.stroke();
 		ctx.fill();
+		ctx.stroke();
 		ctx.restore();
 	}
 
 
 	canvas.onmousedown=function(e){
-		imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+		e.preventDefault();
+		var loc=windowToCanvas(e.clientX,e.clientY);
+		lastX=loc.x;
+		lastY=loc.y;
+		// imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
 		isDragging=true;
 	};
 
 	canvas.onmousemove=function(e){
+		e.preventDefault();
 		var loc=windowToCanvas(e.clientX,e.clientY);
-			ctx.save();
 		if(isDragging){
 			// ctx.putImageData(imgData,0,0);
+			clearLast();
 			drawRubber(loc.x,loc.y);
-			clearRect(loc.x,loc.y);
-			ctx.restore();
+			lastX=loc.x;
+			lastY=loc.y;
 		}
 	};
 
 	canvas.onmouseup=function(e){
+		e.preventDefault();
+		clearLast();
 		isDragging=false;
 	};
 
-	function clear(x,y,w,h){
-		ctx.clearRect(x,y,w,h);
-		drawGrid('lightgray',10,10);
-	}
-
-	drawGrid('lightgray',10,10);
+	clear();
 	init();
 </script>
 </body>

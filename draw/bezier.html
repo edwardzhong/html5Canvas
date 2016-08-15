@@ -69,7 +69,7 @@
 		},
 		drawBezier:function(){
 			ctx.save();
-			ctx.lineWidth=0.5;
+			ctx.lineWidth=1;
 			ctx.strokeStyle='#00f';
 			ctx.beginPath();
 			ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -115,7 +115,7 @@
 	};
 	QuadraticCurve.prototype.drawBezier=function(){
 		ctx.save();
-		ctx.lineWidth=0.5;
+		ctx.lineWidth=1;
 		ctx.strokeStyle='#00f';
 		ctx.beginPath();
 		ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -192,7 +192,7 @@
 		var f=function(){};
 		f.prototype=parent.prototype;
 		child.prototype=new f();
-		child.prototype.constructor=child;//注意修正constructor
+		child.prototype.constructor=child;
 	}
 
 	//将鼠标位置定位到canvas坐标
