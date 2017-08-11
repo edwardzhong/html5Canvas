@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>sunglassFilter</title>
+</head>
+<body>
+	<canvas id="canvas"></canvas>
+	<button id="sunglass">sunglass</button>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		offCanvas=document.createElement('canvas'),
+		offCtx=offCanvas.getContext('2d'),
+		img=new Image(),
+		btn=document.getElementById('sunglass'),
+		filter=new Worker('sunglassFilter.js'),
+		sunglassOn=false,
+		LensRadius=canvas.width/5;
+
+	function drawOriginalImage(){
+		ctx.drawImage(img,0,0,img.width,img.height,0,0,canvas.width,canvas.height);
+	}
+
+	function putSunglassOn(){
+		var center={
+			x:canvas.width/2,
+			y:canvas.height/2
+		},
+		leftLensLoc={
+			x:center.x-LensRadius-10,
+			y:center.y
+		},
+		rightLensLoc={
+			x:center.x+LensRadius+10,
+			y:center.y
+		},
+		imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+
+		filter.postMessage(imgData);
+		filter.onmessage=function(event){
+			offCtx.putImageData(event.data,0,0);
+			drawLenses(leftLensLoc,rightLensLoc);
+			drawWire(center);
+			drawConnectors(center);
+		};
+	}
+
+	function drawLenses(leftLensLoc,rightLensLoc){
+		ctx.save();
+		ctx.beginPath();
+		ctx.arc(leftLensLoc.x,leftLensLoc.y,LensRadius,0,Math.PI*2,false);
+		ctx.stroke();
+		ctx.moveTo(rightLensLoc.x,rightLensLoc.y);
+		ctx.arc(rightLensLoc.x,rightLensLoc.y,LensRadius,0,Math.PI*2,false);
+		ctx.stroke();
+		ctx.clip();
+		// ctx.drawImage(offCanvas,0,0,img.width,img.height,0,0,canvas.width,canvas.height);
+		ctx.drawImage(offCanvas,0,0,canvas.width,canvas.height);
+		ctx.restore();
+	}
+
+	function drawWire(center){
+		ctx.beginPath();
+		ctx.moveTo(center.x-LensRadius/4,center.y-LensRadius/2);
+		ctx.quadraticCurveTo(center.x,center.y-LensRadius+20,center.x+LensRadius/4,center.y-LensRadius/2);
+		ctx.stroke();
+	}
+
+	function drawConnectors(center){
+		ctx.beginPath();
+		ctx.fillStyle='silver';
+		ctx.strokeStyle='rgba(0,0,0,0.4)';
+		ctx.lineWidth=2;
+
+		ctx.arc(center.x-LensRadius/4,center.y-LensRadius/2,4,0,Math.PI*2,false);
+		ctx.fill();
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(center.x+LensRadius/4,center.y-LensRadius/2,4,0,Math.PI*2,false);
+		ctx.fill();
+		ctx.stroke();
+	}
+
+	img.src='../img/Lighthouse.jpg';
+	img.onload=function(e){
+		// canvas.width=img.width;
+		// canvas.height=img.height;
+		drawOriginalImage();
+	}
+
+	btn.onclick=function(){
+		if(sunglassOn){
+			btn.value='sunglass';
+			drawOriginalImage();
+			sunglassOn=false;
+		} else {
+			btn.value='original picture';
+			putSunglassOn();
+			sunglassOn=true;
+		}
+	};
+</script>
+</body>
+</html>

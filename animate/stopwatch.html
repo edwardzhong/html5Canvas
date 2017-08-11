@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>stop-watch</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d');
+	 	StopWatch=function(){};
+	StopWatch.prototype={
+		startTime:0,
+		running:false,
+		elapsed:undefined,
+		start:function(){
+			this.startTime=+new Date();
+			this.elapsed=undefined;
+			this.running=false;
+		},
+		stop:function(){
+			this.elapsed=(+new Date())-this.startTime;
+			this.running=false;
+		},
+		getElapsedTime:function(){
+			if(this.running){
+				return (+new Date())-this.startTime;
+			} else {
+				return this.elapsed;
+			}
+		},
+		isRunning:function(){
+			return this.running;
+		},
+		reset:function(){
+			this.elapsed=0;
+		}
+	};
+	watch=new StopWatch();
+	watch.start();
+	setTimeout(function() {
+		watch.stop();
+		console.log(watch.getElapsedTime());
+	}, 5000);
+
+	var AnimationTimer=function(duration){
+		this.duration=duration;
+	};
+	AnimationTimer.prototype={
+		duration:undefined,
+		stopWatch:new StopWatch(),
+		start:function(){
+			this.stopWatch.start();
+		},
+		stop:function(){
+			this.stopWatch.stop();
+		},
+		getElapsedTime:function(){
+			var elapsedTime=this.stopWatch.getElapsedTime();
+			if(!this.stopWatch.isRunning()) return undefined;
+			else return elapsedTime;
+		},
+		isRunning:function(){
+			return this.stopWatch.isRunning();
+		},
+		isOver:function(){
+			return this.stopWatch.getElapsedTime()>this.duration;
+		}
+	};
+</script>
+</body>
+</html>

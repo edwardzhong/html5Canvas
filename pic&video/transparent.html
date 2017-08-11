@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>淡入动画</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<button id="fade">fade</button>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		offCanvas=document.createElement('canvas'),
+		offCtx=offCanvas.getContext('2d'),
+		offImgData,
+		timer=null,
+		img=new Image(),
+		btn=document.getElementById('fade');
+
+	function fadeIn(ctx,imgData,steps,millisecondPerStep){
+		var frame=0;
+		for(var i=3,len=imgData.data.length;i<len;i+=4){
+			imgData.data[i]=0;
+		}
+		timer=setInterval(function(){
+			frame++;
+			if(frame>steps){
+				clearInterval(timer);
+			} else {
+				increaseTransparencey(imgData,steps);
+				ctx.putImageData(imgData,0,0);
+			}
+		},millisecondPerStep);
+	}
+
+	function increaseTransparencey(imgData,steps){
+		var alpha,
+			currAlpha,
+			step,
+			length=imgData.data.length;
+		for(var i=3;i<length;i+=4){
+			alpha=offImgData.data[i];
+			if(alpha>0){
+				currAlpha=imgData.data[i];
+				step=Math.ceil(alpha/steps);
+				if(currAlpha+step<=alpha){
+					imgData.data[i]+=step;
+				} else {
+					imgData.data[i]=alpha;
+				}
+			}
+		}
+	}
+
+	img.src='../img/Lighthouse.jpg';
+	img.onload=function(){
+		offCanvas.width=canvas.width;
+		offCanvas.height=canvas.height;
+		offCtx.drawImage(img,0,0);
+	};
+	btn.onclick=function(){
+		offImgData=offCtx.getImageData(0,0,canvas.width,canvas.height);
+		fadeIn(ctx,offCtx.getImageData(0,0,canvas.width,canvas.height),50,1000/60);
+	};
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>精灵表绘制器</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<button id=btn>Paused</button>
+<script src="sprite.js"></script>
+<script>
+	// 精灵表绘制器
+	var SpriteSheetPainter=function(cells){
+		this.cells=cells||[];
+		this.cellIndex=0;
+	};
+	SpriteSheetPainter.prototype={
+		advance:function(){
+			this.cellIndex=(++this.cellIndex)%this.cells.length;
+		},
+		paint:function(sprite,context){
+			var cell=this.cells[this.cellIndex];
+			context.drawImage(spriteSheet,cell.left,cell.top,cell.w,cell.h,sprite.left,sprite.top,cell.w,cell.h);
+		}
+	};
+	var canvas=document.getElementById('canvas'),
+		context=canvas.getContext('2d'),
+		btn=document.getElementById('btn'),
+		spriteSheet=new Image(),
+		runnerCells=[
+			{left:0,top:0,w:162,h:265},
+			{left:162,top:0,w:162,h:265},
+			{left:320,top:0,w:162,h:265},
+			{left:480,top:0,w:162,h:265},
+			{left:640,top:0,w:162,h:265},
+			{left:800,top:0,w:162,h:265},
+			{left:960,top:0,w:162,h:265},
+			{left:0,top:265,w:162,h:265},
+			{left:162,top:265,w:162,h:265},
+			{left:320,top:265,w:162,h:265},
+			{left:480,top:265,w:162,h:265},
+			{left:640,top:265,w:162,h:265},
+			{left:800,top:265,w:162,h:265},
+			{left:960,top:265,w:162,h:265},
+			{left:0,top:520,w:162,h:265},
+			{left:162,top:520,w:162,h:265},
+			{left:320,top:520,w:162,h:265},
+			{left:480,top:520,w:162,h:265},
+			{left:640,top:520,w:162,h:265},
+			{left:800,top:520,w:162,h:265},
+			{left:960,top:520,w:162,h:265}
+		],
+		runInPlace={
+			lastAdvance:0,
+			PAGEFLIP_INTERVAL:100,
+			execute:function(sprite,context,now){
+				if(now-this.lastAdvance>this.PAGEFLIP_INTERVAL){
+					sprite.painter.advance();
+					this.lastAdvance=now;
+				}
+			}
+		},
+		sprite =new Sprite('runner',new SpriteSheetPainter(runnerCells),[runInPlace]),
+		interval,
+		paused=false;
+
+	function drawBackground(){
+		var stepY=12,
+			i=context.canvas.height;
+		while(i<stepY*4){
+			context.beginPath();
+			context.moveTo(0,i);
+			context.lineTo(context.canvas.width,i);
+			context.stroke();
+			i-=stepY;
+		}
+	}
+
+	function pauseAnimation(){
+		btn.innerHTML='Animate';
+		paused=true;
+	}
+
+	function startAnimation(){
+		btn.innerHTML='Paused';
+		paused=false;
+		lastAdvance=0;
+		animate();
+	}
+
+	btn.onclick=function(){
+		if(!paused) pauseAnimation();
+		else startAnimation();
+	};
+
+	function animate(){
+		if(!paused){
+			context.clearRect(0,0,canvas.width,canvas.height);
+			drawBackground();
+			sprite.update(context,new Date());
+			sprite.paint(context);
+			requestAnimationFrame(animate);
+		}
+	}
+
+	spriteSheet.src='../img/run.jpg';
+	spriteSheet.onload=function(){
+		// context.drawImage(spriteSheet,0,0);
+		animate();
+	};
+
+	// sprite.left=0;
+	// sprite.top=0;
+	// sprite.width=160;
+	// sprite.height=260;
+	// context.strokeStyle='lightgray';
+	// context.lineWidth=0.5;
+	// drawBackground();
+</script>
+</body>
+</html>

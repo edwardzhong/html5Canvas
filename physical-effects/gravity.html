@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>重力效果</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="600"></canvas>
+<button id=btn>start</button>
+<script src="../sprite/sprite.js"></script>
+<script>
+	var canvas=document.getElementById('canvas'),
+		context=canvas.getContext('2d'),
+		isRunning=false,
+		btn=document.getElementById('btn'),
+		GRAVITY=9.81,
+		HEIGHT_IN_METERS=60,
+		BALL_RADIUS=20,
+		pixelsPerMeter=canvas.height/HEIGHT_IN_METERS,
+		startTime=0,
+		fps=24,
+		moveBall={
+			execute:function(sprite,context,time){
+				if(isRunning){
+					sprite.velocityY=GRAVITY*(new Date()-startTime)/1000*pixelsPerMeter;
+					sprite.top+=sprite.velocityY/fps;
+					sprite.top=Math.min(canvas.height-BALL_RADIUS*2,sprite.top);
+					if(sprite.top>=canvas.height-BALL_RADIUS*2){
+						isRunning=false;
+						btn.innerHTML = 'start';
+					}
+				}
+			}
+		},
+		ball =new Sprite('ball',{
+			paint:function(sprite,context){
+				context.save();
+				context.shadowColor='rgb(0,0,0)';
+				context.shadowOffsetX=-4;
+				context.shadowOffsetY=-4;
+				context.shadowBlur=8;
+				context.lineWidth=2;
+				context.strokeStyle='rgb(100,100,195)';
+				context.fillStyle='rgba(30,144,255,0.15)';
+				context.beginPath();
+				context.arc(sprite.left,sprite.top+BALL_RADIUS,BALL_RADIUS,0,Math.PI*2,false);
+				context.clip();
+				context.stroke();
+				context.fill();
+				context.restore();
+			}
+		},[moveBall]);
+
+	function animate(){
+		if(isRunning){
+			context.clearRect(0,0,canvas.width,canvas.height);
+			drawGrid('lightgray',10,10);
+			ball.update(context,0);
+			ball.paint(context);
+			requestAnimationFrame(animate);
+		}
+	}
+
+
+	function init(){
+		ball.left=canvas.width/2;
+		ball.top=0;
+		ball.velocityY=0;
+		drawGrid('lightgray',10,10);
+		ball.paint(context);
+	}
+
+	function drawGrid(color,stepX,stepY){
+		context.save();
+		context.lineWidth=0.5;
+		context.strokeStyle=color;
+
+		for(var i=stepX+0.5;i<context.canvas.width;i+=stepX){
+			context.beginPath();
+			context.moveTo(i,0);
+			context.lineTo(i,context.canvas.height);
+			context.stroke();
+		}
+
+		for(var i=stepY+0.5;i<context.canvas.height;i+=stepY){
+			context.beginPath();
+			context.moveTo(0,i);
+			context.lineTo(context.canvas.width,i);
+			context.stroke();
+		}
+		context.restore();
+	}
+
+	btn.onclick=function(){
+		if(isRunning) return;
+		isRunning=true;
+		startTime=new Date();
+		btn.innerHTML = 'running';
+		init();
+		animate();
+	};
+	
+	init();
+
+</script>
+</body>
+</html>

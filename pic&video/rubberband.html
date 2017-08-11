@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>修改图像数据的橡皮式选取框</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<button id="reset">reset</button>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		resetBtn=document.getElementById('reset'),
+		img=new Image(),
+		imgData,
+		imgDataCopy=ctx.createImageData(canvas.width,canvas.height),
+		mousedown={},
+		rubberbandRect={},
+		dragging=false;
+
+		function windowToCanvas(canvas,x,y){
+			var canvasRect=canvas.getBoundingClientRect();
+			return {
+				x:x-canvasRect.left,
+				y:y-canvasRect.top
+			};
+		}
+
+		function copyCanvasPixels(){
+			var i=0;
+			for(i=0;i<3;i++){
+				imgDataCopy.data[i]=imgData.data[i];
+			}
+
+			for(i=3;i<imgData.data.length-4;i+=4){
+				imgDataCopy.data[i]=imgData.data[i]/2;//alpha
+				imgDataCopy.data[i+1]=imgData.data[i+1];//red
+				imgDataCopy.data[i+2]=imgData.data[i+2];//green
+				imgDataCopy.data[i+3]=imgData.data[i+3];//blue
+			}
+		}
+
+		function captureCanvasPixels(){
+			imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+			copyCanvasPixels();
+		}
+
+		function restoreRubberbandPixels(){
+			var devWidthOverCssPixels=imgData.width/canvas.width,
+				devHeightOverCssPixels=imgData.height/canvas.height;
+
+			ctx.putImageData(imgData,0,0);
+
+			ctx.putImageData(imgDataCopy,0,0,rubberbandRect.left+ctx.lineWidth,rubberbandRect.top+ctx.lineWidth,(rubberbandRect.width-2*ctx.lineWidth)*devWidthOverCssPixels,(rubberbandRect.height-2*ctx.lineWidth)*devHeightOverCssPixels);
+
+		}
+
+		function setRubberbandRect(x,y){
+			rubberbandRect.left=Math.min(x,mousedown.x);
+			rubberbandRect.top=Math.min(y,mousedown.y);
+			rubberbandRect.width=Math.abs(x-mousedown.x);
+			rubberbandRect.height=Math.abs(y-mousedown.y);
+		}
+
+		function drawRubberband(){
+			ctx.strokeRect(rubberbandRect.left+ctx.lineWidth,rubberbandRect.top+ctx.lineWidth,rubberbandRect.width-2*ctx.lineWidth,rubberbandRect.height-2*ctx.lineWidth);
+		}
+
+		function rubberbandStart(x,y){
+			mousedown.x=x;
+			mousedown.y=y;
+			rubberbandRect.left=mousedown.x;
+			rubberbandRect.top=mousedown.y;
+			rubberbandRect.width=0;
+			rubberbandRect.height=0;
+
+			dragging=true;
+			captureCanvasPixels();
+		}
+
+		function rubberbandStretch(x,y){
+			if(rubberbandRect.width>2*ctx.lineWidth&&rubberbandRect.height>2*ctx.lineWidth){
+				if(imgData){
+					restoreRubberbandPixels();
+				}
+			}
+
+			setRubberbandRect(x,y);
+
+			if(rubberbandRect.width>2*ctx.lineWidth&&rubberbandRect.height>2*ctx.lineWidth){
+				drawRubberband();
+			}
+
+		}
+
+		function rubberbandEnd(){
+			ctx.putImageData(imgData,0,0);
+			ctx.drawImage(canvas,rubberbandRect.left+ctx.lineWidth*2,rubberbandRect.top+ctx.lineWidth*2,rubberbandRect.width-4*ctx.lineWidth,rubberbandRect.height-4*ctx.lineWidth,0,0,canvas.width,canvas.height);
+
+			dragging=false;
+			imgData=undefined;
+		}
+
+		canvas.onmousedown=function(e){
+			var loc=windowToCanvas(canvas,e.clientX,e.clientY);
+			e.preventDefault();
+			rubberbandStart(loc.x,loc.y);
+		};
+
+		canvas.onmousemove=function(e){
+			var loc;
+			if(dragging){
+				loc=windowToCanvas(canvas,e.clientX,e.clientY);
+				rubberbandStretch(loc.x,loc.y);
+			}
+
+		};
+
+		canvas.onmouseup=function(e){
+			rubberbandEnd();
+		};
+
+		img.src='../img/Lighthouse.jpg';
+		img.onload=function(e){
+			ctx.drawImage(img,0,0,canvas.width,canvas.height);
+		}
+
+		resetBtn.onclick=function(){
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+			ctx.drawImage(img,0,0,canvas.width,canvas.height);
+		};
+		ctx.lineWidth=1.0;
+		ctx.strokeStyle='navy';
+
+</script>
+</body>
+</html>

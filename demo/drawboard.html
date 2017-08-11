@@ -73,12 +73,12 @@
 		};
 	}
 
-	function getDrawingData(){
+	function saveImageData(){
 		surfaceImgData=ctx.getImageData(0,0,canvas.width,canvas.height);
 	}
 
 	//将当前canvas数据写回ctx
-	function putDrawingData(){
+	function restoreImageData(){
 		ctx.putImageData(surfaceImgData,0,0);
 	}
 
@@ -87,13 +87,13 @@
 		ctx.strokeStyle=colorInput.value;
 		ctx.lineWidth=sizeInput.value;
 		locStart=windowToCanvas(e.clientX,e.clientY);
-		getDrawingData();
+		saveImageData();
 	};
 	canvas.onmousemove=function(e){
 		if(!isDrawing){return;}
 		locEnd=windowToCanvas(e.clientX,e.clientY);
 		if(typeSel.value!='pen'){
-			putDrawingData();
+			restoreImageData();
 		}
 		ctx.save();
 		ctx.beginPath();

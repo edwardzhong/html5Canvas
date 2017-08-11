@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>放大镜特效</title>
+</head>
+<body>
+	<canvas id="canvas" width="600" height="400"></canvas>
+	<script>
+		var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		imgData,
+		image=new Image(),
+		scale=2,
+		magifyRect={ w:120, h:120 },
+		scaleMagnifyRect={ w:magifyRect.w*scale, h:magifyRect.h*scale },
+		dragging=false;
+
+		function drawMagnifyingGlass(mouse){
+			magifyRect.x=mouse.x;
+			magifyRect.y=mouse.y;
+			imgData=ctx.getImageData(magifyRect.x-magifyRect.w/2,magifyRect.y-magifyRect.h/2,magifyRect.w,magifyRect.h);
+			ctx.save();
+			setClip();
+			//画出放大后的图
+			ctx.drawImage(canvas,magifyRect.x-magifyRect.w/2,magifyRect.y-magifyRect.h/2,magifyRect.w,magifyRect.h,magifyRect.x-scaleMagnifyRect.w/2,magifyRect.y-scaleMagnifyRect.h/2,scaleMagnifyRect.w,scaleMagnifyRect.h);
+			ctx.restore();
+		}
+
+		//抹去上次修改的图像区域
+		function eraseMagnifyingGlass(){
+			if(imgData){
+				ctx.putImageData(imgData,magifyRect.x-magifyRect.w/2,magifyRect.y-magifyRect.h/2);
+			}
+		}
+
+		//设置需要放大的区域
+		function setClip(){
+			ctx.beginPath();
+			ctx.arc(magifyRect.x,magifyRect.y,Math.min(magifyRect.w,magifyRect.h)/2,0,Math.PI*2,false);
+			ctx.clip();
+		}
+
+		// 转换为准确位置
+		function windowToCanvas(x,y){
+			var canvasRect=canvas.getBoundingClientRect();
+			return {
+				x:x-canvasRect.left,
+				y:y-canvasRect.top
+			};
+		}
+
+		canvas.onmousedown=function(e){
+			dragging=true;
+			drawMagnifyingGlass(windowToCanvas(e.clientX,e.clientY));
+		};
+
+		canvas.onmousemove=function(e){
+			if(dragging){
+				eraseMagnifyingGlass();
+				drawMagnifyingGlass(windowToCanvas(e.clientX,e.clientY));
+			}
+		}
+
+		canvas.onmouseup=function(e){
+			dragging=false;
+			eraseMagnifyingGlass();
+		};
+
+		image.src='../img/Lighthouse.jpg';
+		image.onload=function(e){
+			ctx.drawImage(image,0,0,canvas.width,canvas.height);
+		}
+	</script>
+</body>
+</html>

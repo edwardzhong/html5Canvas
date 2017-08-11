@@ -137,6 +137,7 @@
 			}
 		}
 		if(dragIndex>-1){return;}
+		// 不存在则创建新的曲线
 		if(types[0].checked){
 			currBezier=new QuadraticCurve();
 			currBezier.points=[startPoint,startPoint,startPoint];

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>图像滤镜</title>
+</head>
+<body>
+	<canvas id="canvas" width="600" height="400"></canvas>
+	<button id="negative">negative</button>
+	<button id="blackWhite">black white</button>
+	<button id="emboss">emboss</button>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		img=new Image(),
+		negativeBtn=document.getElementById('negative'),
+		blackWhiteBtn=document.getElementById('blackWhite'),
+		embossBtn=document.getElementById('emboss');
+
+	img.src='../img/Lighthouse.jpg';
+	img.onload=function(e){
+		ctx.drawImage(img,0,0,canvas.width,canvas.height);
+	}
+	// 负片滤镜
+	negativeBtn.onclick=function(){
+		var imgData=ctx.getImageData(0,0,canvas.width,canvas.height),
+			data=imgData.data;
+		for(var i=0;i<data.length-4;i+=4){
+			data[i]=255-data[i];
+			data[i+1]=255-data[i+1];
+			data[i+2]=255-data[i+2];
+		}
+		ctx.putImageData(imgData,0,0);
+	};
+	// 黑白滤镜
+	blackWhiteBtn.onclick=function(){
+		var imgData=ctx.getImageData(0,0,canvas.width,canvas.height),
+			data=imgData.data,
+			average;
+		for(var i=0;i<data.length-4;i+=4){
+			average=(data[i]+data[i+1]+data[i+2])/3;
+			data[i]=average;
+			data[i+1]=average;
+			data[i+2]=average;
+		}
+		ctx.putImageData(imgData,0,0);
+
+	};
+	// 浮雕滤镜
+	embossBtn.onclick=function(){
+		var imgData=ctx.getImageData(0,0,canvas.width,canvas.height),
+			data=imgData.data,
+			width=imgData.width,
+			length=data.length;
+		for(var i=0;i<length;i++){
+			if(i<=length-width*4){
+				if((i+1)%4!==0){
+					if((i+1)%(width*4)==0){
+						data[i]=data[i-4];
+						data[i+1]=data[i-3];
+						data[i+2]=data[i-2];
+						data[i+1]=data[i-1];
+						i+=4;
+					} else {
+						data[i]=255/2+2*data[i]-data[i+4]-data[i+width*4];
+					}
+				}
+			} else {
+				if((i+1)%4!==0){
+					data[i]=data[i-width*4];
+				}
+			}
+		}
+		ctx.putImageData(imgData,0,0);
+	};
+</script>
+</body>
+</html>

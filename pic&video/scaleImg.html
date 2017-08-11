@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>图像的缩放</title>
+	<title>图像的缩放-增加离屏canvas</title>
 </head>
 <body>
 <div id="controls">
@@ -12,6 +12,7 @@
 <canvas id="canvas" width="600" height="400"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
+		offscreenCanvas=document.createElement('canvas'),
 		ctx=canvas.getContext('2d'),
 		image=new Image(),
 
@@ -29,6 +30,7 @@
 
 		ctx.clearRect(0,0,canvas.width,canvas.height);
 		ctx.drawImage(image,w/2-sw/2,h/2-sh/2,sw,sh);
+		ctx.drawImage(offscreenCanvas,0,0,offscreenCanvas.width,offscreenCanvas.height,w/2-sw/2,h/2-sh/2,sw,sh);
 	}
 
 	function drawScaleText(value){
@@ -38,6 +40,25 @@
 		scaleOutput.innerText=text;
 		percent=percent<0.35?0.35:percent;
 		scaleOutput.style.fontSize=percent*MaxScale/1.5+'em';
+	}
+
+	function drawWhterMark(){
+		var lineOne='copy right',
+			lineTwo='By Jeff',
+			textMetrics,
+			FontHeight=128;
+		ctx.save();
+		ctx.font=FontHeight+'px Arial';
+		textMetrics=ctx.measureText(lineOne);
+		ctx.globalAlpha=0.6;
+		ctx.translate(canvas.width/2,canvas.height/2-FontHeight/2);
+		ctx.fillText(lineOne,-textMetrics.width/2,0);
+		ctx.strokeText(lineOne,-textMetrics.width/2,0);
+
+		textMetrics=ctx.measureText(lineTwo);
+		ctx.fillText(lineTwo,-textMetrics.width/2,FontHeight);
+		ctx.strokeText(lineTwo,-textMetrics.width/2,FontHeight);
+		ctx.restore();
 	}
 
 	scaleSlider.onchange=function(e){
@@ -50,6 +71,7 @@
 
 		drawScaleText(scale);
 		drawImage();
+		drawWhterMark();
 	}
 
 	ctx.fillStyle='cornflowblue';
@@ -58,10 +80,14 @@
 	ctx.shadowOffsetX=5;
 	ctx.shadowOffsetX=5;
 	ctx.shadowBlur=10;
-	
+	offscreenCanvas.width=canvas.width;
+	offscreenCanvas.height=canvas.height;
 	image.src='../img/Lighthouse.jpg';
 	image.onload=function(e){
 		drawImage();
+		// 填充到离屏canvas中
+		offscreenCanvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+		drawWhterMark();
 		drawScaleText(scaleSlider.value);
 	};
 </script>

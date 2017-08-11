@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>时钟</title>
+</head>
+<body>
+<canvas id="canvas" width="400" height="400"></canvas>
+<script src="sprite.js"></script>
+<script>
+	var canvas=document.getElementById('canvas'),
+		context=canvas.getContext('2d'),
+		CLOCK_RADIUS=canvas.width/2-15,
+		HOUR_HAND_TRUNCATION=35,
+		ballPainter={
+			paint:function(sprite,context){
+				var width=sprite.width,
+					height=sprite.height,
+					x=sprite.left+width/2,
+					y=sprite.top+height/2,
+					radius=width/2;
+
+				context.save();
+				context.beginPath();
+				context.arc(x,y,radius,0,Math.PI*2,false);
+				context.clip();
+
+				context.shadowColor='rgb(0,0,0)';
+				context.shadowOffsetX=-4;
+				context.shadowOffsetY=-4;
+				context.shadowBlur=8;
+
+				context.lineWidth=2;
+				context.fillStyle='rgba(218,165,32,0.1)';
+				context.strokeStyle='rgb(100,100,195)';
+				context.fill();
+				context.stroke();
+				context.restore();
+			}
+		},
+		ball = new Sprite('ball',ballPainter);
+
+	function drawGrid(color,stepX,stepY){
+		context.save();
+		context.lineWidth=0.5;
+		context.strokeStyle=color;
+
+		for(var i=stepX+0.5;i<context.canvas.width;i+=stepX){
+			context.beginPath();
+			context.moveTo(i,0);
+			context.lineTo(i,context.canvas.height);
+			context.stroke();
+		}
+
+		for(var i=stepY+0.5;i<context.canvas.height;i+=stepY){
+			context.beginPath();
+			context.moveTo(0,i);
+			context.lineTo(context.canvas.width,i);
+			context.stroke();
+		}
+		context.restore();
+	}
+
+	function drawHand(loc,isHour){
+		var angle =(Math.PI*2)*(loc/60)-Math.PI/2,
+			handRadius=isHour?CLOCK_RADIUS-HOUR_HAND_TRUNCATION:CLOCK_RADIUS,
+			lineEnd={
+				x:canvas.width/2+Math.cos(angle)*(handRadius-ball.width/2),
+				y:canvas.height/2+Math.sin(angle)*(handRadius-ball.width/2)
+			};
+		context.beginPath();
+		context.moveTo(canvas.width/2,canvas.height/2);
+		context.lineTo(lineEnd.x,lineEnd.y);
+		context.stroke();
+		ball.left=canvas.width/2+Math.cos(angle)*handRadius-ball.width/2;
+		ball.top=canvas.height/2+Math.sin(angle)*handRadius-ball.height/2;
+		ball.paint(context);
+	}
+
+	function drawClock(){
+		drawClockFace();
+		drawHands();
+	}
+
+	function drawHands(){
+		var date =new Date(),
+			hour= date.getHours();
+
+		ball.width=20;
+		ball.height=20;
+		drawHand(date.getSeconds(),false);
+
+		hour=hour>12?hour-12:hour;
+		ball.width=35;
+		ball.height=35;
+		drawHand(date.getMinutes(),false);
+
+		ball.width=50;
+		ball.height=50;
+		drawHand(hour*5+(date.getMinutes()/60)*5);
+
+		ball.width=10;
+		ball.height=10;
+		ball.left=canvas.width/2-ball.width/2;
+		ball.top=canvas.height/2-ball.height/2;
+		// ballPainter.paint(ball,context);
+		ball.paint(context);
+	}
+
+	function drawClockFace(){
+		context.beginPath();
+		context.arc(canvas.width/2,canvas.height/2,CLOCK_RADIUS,Math.PI*2,0,false);
+		context.save();
+		context.strokeStyle='rgba(0,0,0,0.2)';
+		context.stroke();
+		context.restore();
+	}
+
+	function animate(){
+		context.clearRect(0,0,canvas.width,canvas.height);
+		drawClock();
+		requestAnimationFrame(animate);
+	}
+	context.lineWidth=0.5;
+	context.strokeStyle='rgba(0,0,0,0.2)';
+	context.shadowColor='rgba(0,0,0,0.5)';
+	context.shadowOffsetX=2;
+	context.shadowOffsetY=2;
+	context.shadowBlur=4;
+	context.stroke();
+
+	animate();
+	drawGrid('lightgray',10,10);
+</script>
+</body>
+</html>
