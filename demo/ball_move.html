@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>缓动和弹性运动</title>
+<style>
+	canvas{
+		background: #eee;
+	}
+</style>
+</head>
+<body>
+ <canvas id="canvas" width="600" height="400"></canvas>
+ <script src="../js/canvas.js"></script>
+ <script src="../js/ball.js"></script>
+<script>
+    var canvas = document.getElementById('canvas'),
+        context = canvas.getContext('2d');
+    var mouse = mouse = {x:0,y:0}; //捕获鼠标位置
+    var ball = new Ball(20, "red");
+    var vx, vy, easing=0.05; //设定缓动参数
+       
+       (function drawFrame(){
+           window.requestAnimationFrame(drawFrame, canvas);
+           context.clearRect(0, 0, canvas.width, canvas.height);
+           
+           vx = (mouse.x - ball.x)*easing; //一样样的
+           vy = (mouse.y - ball.y)*easing; //一样样的
+           
+           ball.x += vx;
+           ball.y += vy;
+           
+           ball.draw(context);
+       }())
+ 
+
+  //   var canvas = document.getElementById('canvas'),
+		// context = canvas.getContext('2d'),
+		// mouse = {x:0,y:0},
+		// ball = new Ball(20,"orange"),
+		// spring = 0.03, //弹性系数
+		// friction = 0.95, //摩擦力
+		// vx = 0,
+		// vy = 0;
+
+	canvas.addEventListener('mousemove',function(event){
+	    mouse=WindowToCanvas(canvas,event.clientX,event.clientY);
+	},false);
+
+	// (function drawFrame () {
+	// 	window.requestAnimationFrame(drawFrame, canvas);
+	// 	context.clearRect(0, 0, canvas.width, canvas.height);
+
+	// 	var dx = mouse.x - ball.x,  //核心代码
+	// 	    dy = mouse.y - ball.y,
+	// 	    ax = dx * spring,//加速度
+	// 	    ay = dy * spring;//加速度
+
+	// 	vx += ax;
+	// 	vy += ay;
+	// 	vx *= friction;
+	// 	vy *= friction;
+	// 	ball.x += vx;
+	// 	ball.y += vy;
+	// 	ball.draw(context);
+	// 	context.save();
+	// 	context.beginPath();
+	// 	context.strokeStyle = "#f00";
+	// 	context.moveTo(ball.x, ball.y);
+	// 	context.lineTo(mouse.x, mouse.y);
+	// 	context.stroke();
+	// 	context.closePath();
+	// 	context.restore();
+	// }());
+</script>
+</body>
+</html>

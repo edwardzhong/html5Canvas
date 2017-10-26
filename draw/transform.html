@@ -12,10 +12,9 @@
 
 	ctx.save();
 	ctx.strokeStyle='red';
-	ctx.rotate(Math.PI/4);//旋转45度
-	ctx.translate(50,50);//平移到指定位置
+	ctx.rotate(Math.PI/6);//旋转45度
+	ctx.translate(100,100);//平移到指定位置
 	ctx.scale(2,2);//缩放
-
 	ctx.beginPath();
 	ctx.moveTo(10,10);
 	ctx.lineTo(100,10);
@@ -23,13 +22,13 @@
 	ctx.restore();
 
 	//画镜像
-	ctx.save();
-	ctx.strokeStyle='#990';
-	drawArrow(ctx);
-	ctx.translate(canvas.width/2+20,0);
-	ctx.scale(-1,1);
-	drawArrow(ctx);
-	ctx.restore();
+	// ctx.save();
+	// ctx.strokeStyle='#990';
+	// drawArrow(ctx);
+	// ctx.translate(canvas.width/2+20,0);
+	// ctx.scale(-1,1);
+	// drawArrow(ctx);
+	// ctx.restore();
 
 	function drawArrow(ctx){
 		ctx.beginPath();

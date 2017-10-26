@@ -46,6 +46,7 @@
 
 		return Class;
 	}
+	
  	/**
 	 * 定义一个可视图形的基本属性
 	 */
@@ -67,220 +68,220 @@
 	 * 交互对象
 	 */
 	var InteractiveClass = DisplayClass.extend({
-				init: function (option) {
-					this._super(option);
-					this.eventListener = {};
-				},
-				addEventListener: function (type, func) {
-					if (this.eventListener[type] === null || this.eventListener[type] === undefined) {
-						this.eventListener[type] = [];
-					}
-					this.eventListener[type].push(func);
-				},
-				removeEventListener: function (type, func) {
-					if (this.eventListener[type] === null || this.eventListener[type] === undefined) {
-						return;
-					}
-					for (var i=0; i<this.eventListener[type].length; i++) {
-						// 删除指定的监听器
-						if (this.eventListener[type][i] == func) {
-							delete this.eventListener[type][i];
-							this.eventListener[type].splice(i, 1);
-						}
-					}
-					// 如果这种类型没有监听器，删除它
-					if (this.eventListener[type].length === 0) {
-						delete this.eventListener[type];
-					}
-				},
-				removeAllEventListener: function (type) {
-					if (this.eventListener[type] === null || this.eventListener[type] === undefined) {
-						return;
-					}	
-					this.eventListener[type].splice();
-					delete this.eventListener[type];
-				},
-				hasEventListener: function (type) {
-					return (!!this.eventListener[type] && this.eventListener[type].length > 0);				 
+		init: function (option) {
+			this._super(option);
+			this.eventListener = {};
+		},
+		addEventListener: function (type, func) {
+			if (this.eventListener[type] === null || this.eventListener[type] === undefined) {
+				this.eventListener[type] = [];
+			}
+			this.eventListener[type].push(func);
+		},
+		removeEventListener: function (type, func) {
+			if (this.eventListener[type] === null || this.eventListener[type] === undefined) {
+				return;
+			}
+			for (var i=0; i<this.eventListener[type].length; i++) {
+				// 删除指定的监听器
+				if (this.eventListener[type][i] == func) {
+					delete this.eventListener[type][i];
+					this.eventListener[type].splice(i, 1);
 				}
-			});
+			}
+			// 如果这种类型没有监听器，删除它
+			if (this.eventListener[type].length === 0) {
+				delete this.eventListener[type];
+			}
+		},
+		removeAllEventListener: function (type) {
+			if (this.eventListener[type] === null || this.eventListener[type] === undefined) {
+				return;
+			}	
+			this.eventListener[type].splice();
+			delete this.eventListener[type];
+		},
+		hasEventListener: function (type) {
+			return (!!this.eventListener[type] && this.eventListener[type].length > 0);				 
+		}
+	});
 
 	/**
 	 * Sprite 容器
 	 */
 	var ObjectContainerClass = InteractiveClass.extend({
-				init: function (ctx, option) {
-					this._super(option);
-					this.ctx = ctx;
-					this.children = [];
-					this.maxWidth = 0;
-					this.maxHeight = 0;
-					this.hoverChildren = [];
-				},
-				addEventListener: function (type, func) { this._super(type, func) },
-				removeEventListener: function (type, func) { this._super(type, func) },
-				removeAllEventListener: function (type) { this._super(type) },
-				hasEventListener: function (type) { this._super(type) },
-				getContext: function () {
-					return this.ctx;
-				},
-				addChild: function (child) {
-					if (this.maxWidth < child.x + child.width) {
-						this.maxWidth = child.x + child.width;
-					}
-					if (this.maxHeight < child.y + child.height) {
-						this.maxHegiht = child.y + child.height;
-					}
-					child.stage = this;
+		init: function (ctx, option) {
+			this._super(option);
+			this.ctx = ctx;
+			this.children = [];
+			this.maxWidth = 0;
+			this.maxHeight = 0;
+			this.hoverChildren = [];
+		},
+		addEventListener: function (type, func) { this._super(type, func) },
+		removeEventListener: function (type, func) { this._super(type, func) },
+		removeAllEventListener: function (type) { this._super(type) },
+		hasEventListener: function (type) { this._super(type) },
+		getContext: function () {
+			return this.ctx;
+		},
+		addChild: function (child) {
+			if (this.maxWidth < child.x + child.width) {
+				this.maxWidth = child.x + child.width;
+			}
+			if (this.maxHeight < child.y + child.height) {
+				this.maxHegiht = child.y + child.height;
+			}
+			child.stage = this;
 
-					this.children.push(child);
-				},
-				addChildAt: function (child, index) {
-					if (this.maxWidth < child.x + child.width) {
-						this.maxWidth = child.x + child.width;
-					}			
-					if (this.maxHeight < child.y + child.height) {
-						this.maxHeight = child.y + child.height;
+			this.children.push(child);
+		},
+		addChildAt: function (child, index) {
+			if (this.maxWidth < child.x + child.width) {
+				this.maxWidth = child.x + child.width;
+			}			
+			if (this.maxHeight < child.y + child.height) {
+				this.maxHeight = child.y + child.height;
+			}
+			child.stage = this;
+			this.children.splice(index, 0, child);
+		},
+		removeChild: function (child) {
+			this.children.splice(this.getChildIndex(child), 1);	
+			// 如果是支撑最大宽高的child被移除了，重新处理最大宽高
+			if (this.maxWidth == child.x + child.width) {
+				this.maxWidth = 0;
+				for (var i=0; i<this.children.length; i++) {
+					if (this.maxWidth < this.children[i].x + this.children[i].width) {
+						this.maxWidth = this.children[i].x + this.children[i].width;
 					}
-					child.stage = this;
-					this.children.splice(index, 0, child);
-				},
-				removeChild: function (child) {
-					this.children.splice(this.getChildIndex(child), 1);	
-					// 如果是支撑最大宽高的child被移除了，重新处理最大宽高
-					if (this.maxWidth == child.x + child.width) {
-						this.maxWidth = 0;
-						for (var i=0; i<this.children.length; i++) {
-							if (this.maxWidth < this.children[i].x + this.children[i].width) {
-								this.maxWidth = this.children[i].x + this.children[i].width;
-							}
-						}
-					}
-					if (this.maxHeight == child.y + child.height) {
-						this.maxHeight = 0;
-						for (var i=0; i<this.children.length; i++) {
-							if (this.maxHeight < this.children[i].y + this.children[i].height) {
-								this.maxHeight = this.children[i].y + this.children[i].height;
-							}
-						}
-					}
-					child.stage = null;
-				},
-				removeChildAt: function (index) {
-					this.children[index].stage = null;
-					var child =	this.children.splice(index, 1);
-					// 最大宽高
-					if (this.maxWidth == child.x + child.width) {
-						this.maxWidth = 0;
-						for (var i=0; i<this.children.length; i++) {
-							if (this.maxWidth < this.children[i].x + this.children[i].width) {
-								this.maxWidth = this.children[i].x + this.children[i].width;
-							}
-						}
-					}
-					if (this.maxHeight == child.y + child.height) {
-						this.maxHeight = 0;
-						for (var i=0; i<this.children.length; i++) {
-							this.maxHeight = 0;
-							if (this.maxHeight < this.children[i].y + this.children[i].height) {
-								this.maxHeight = this.children[i].y + this.children[i].height;
-							}
-						}
-					}
-				}, 
-				getChildAt: function (index) {
-					return this.children[index];			
-				},
-				getChildIndex: function (child) {
-					for (var i=0; i<this.children.length; i++) {
-						if (this.children[i] == child) {
-							return i;
-						}
-					}			   
-					return -1;
-				},
-				contains: function (child) {
-					return (this.getChildIndex(child) != -1);		  
-				},
-
-				// 鼠标事件
-				dispatchMouseEvent: function (type, x, y) {
-					var mouseX = x, mouseY = y;
-					var _hoverChildren = [];
-					for (var i=0; i<this.children.length; i++) {
-						if (!!this.children[i].dispatchMouseEvent) {
-							this.children[i].dispatchMouseEvent(type, mouseX-this.children[i].x, mouseY-this.children[i].y);
-						}
-						//鼠标悬浮于子对象上面
-						if (mouseX > this.children[i].x && mouseX < this.children[i].x + this.children[i].width
-							&& mouseY > this.children[i].y && mouseY < this.children[i].y + this.children[i].height) {
-							type == 'mousemove' && _hoverChildren.push(this.children[i]);
-						
-						if (this.children[i].eventListener[type] == null
-							|| this.children[i].eventListener[type] == undefined) {
-							continue; // 没有事件监听器
-						}
-						// 有事件监听则遍历执行
-						for (var j=0, arr=this.children[i].eventListener[type]; j < arr.length; j++) {
-							arr[j](mouseX-this.children[i].x, mouseY-this.children[i].y);
-						}
-						}
-					};
-					if (type != 'mousemove') {
-						return; // 不是 mousemove事件则到此结束
-					}
-					// 以下是处理mousemove事件
-					for (var k=0; k<this.hoverChildren.length; k++) {
-						// 原来hoverChildren中有的，现在没有的，转而执行 mouseout
-						var has = false;
-						for (var m=0; m<_hoverChildren.length; m++) {
-							if (this.hoverChildren[k] == _hoverChildren[m]) {
-								has = true;
-							}
-						}
-						if (!has) {
-							//不存在了，处理 this.hoverChildren[k] 的mouseout
-							// 刚好又有事件在监听mouseout，则执行
-							if (!!this.hoverChildren[k].eventListener['mouseout']) {
-								for (var i=0, outObj = this.hoverChildren[k]; i<outObj.eventListener['mouseout'].length; i++) {
-									outObj.eventListener['mouseout'][i](mouseX-outObj.x, mouseY-outObj.y);
-								}
-							}
-							// 处理完后就销毁
-							delete this.hoverChildren[k];
-						}
-					};
-					// 原来hoverChildren中没有的，现在有了，证明mouseover
-					for (var k=0; k<_hoverChildren.length; k++) {
-						var has = false;
-						for (var m=0; m<this.hoverChildren.length; m++) {
-							if (_hoverChildren[k] == this.hoverChildren[m]) {
-								has = true;
-							}
-						};
-						if (!has) {
-							//证明鼠标刚进入，处理mouseenter或mouseover
-							this.hoverChildren.push(_hoverChildren[k]);
-							if (_hoverChildren[k].eventListener['mouseover']) {
-								for (var i=0, enterObj = _hoverChildren[k]; i<enterObj.eventListener['mouseover'].length; i++) {
-									enterObj.eventListener['mouseover'][i](mouseX-enterObj.x, mouseY-enterObj.y);
-								}
-							}
-						}
-					};
-					this.clearHoverChildren();
-				},
-				// 重新清理鼠标悬浮下的对象数组
-				clearHoverChildren: function () {
-					var tempArr = [];
-					for (var i=0; i<this.hoverChildren.length; i++) {
-						if (this.hoverChildren[i] != null && this.hoverChildren[i] != undefined) {
-							tempArr.push(this.hoverChildren[i]);
-						}
-					}
-					this.hoverChildren = tempArr;
 				}
-			});
+			}
+			if (this.maxHeight == child.y + child.height) {
+				this.maxHeight = 0;
+				for (var i=0; i<this.children.length; i++) {
+					if (this.maxHeight < this.children[i].y + this.children[i].height) {
+						this.maxHeight = this.children[i].y + this.children[i].height;
+					}
+				}
+			}
+			child.stage = null;
+		},
+		removeChildAt: function (index) {
+			this.children[index].stage = null;
+			var child =	this.children.splice(index, 1);
+			// 最大宽高
+			if (this.maxWidth == child.x + child.width) {
+				this.maxWidth = 0;
+				for (var i=0; i<this.children.length; i++) {
+					if (this.maxWidth < this.children[i].x + this.children[i].width) {
+						this.maxWidth = this.children[i].x + this.children[i].width;
+					}
+				}
+			}
+			if (this.maxHeight == child.y + child.height) {
+				this.maxHeight = 0;
+				for (var i=0; i<this.children.length; i++) {
+					this.maxHeight = 0;
+					if (this.maxHeight < this.children[i].y + this.children[i].height) {
+						this.maxHeight = this.children[i].y + this.children[i].height;
+					}
+				}
+			}
+		}, 
+		getChildAt: function (index) {
+			return this.children[index];			
+		},
+		getChildIndex: function (child) {
+			for (var i=0; i<this.children.length; i++) {
+				if (this.children[i] == child) {
+					return i;
+				}
+			}			   
+			return -1;
+		},
+		contains: function (child) {
+			return (this.getChildIndex(child) != -1);		  
+		},
+
+		// 鼠标事件
+		dispatchMouseEvent: function (type, x, y) {
+			var mouseX = x, mouseY = y;
+			var _hoverChildren = [];
+			for (var i=0; i<this.children.length; i++) {
+				if (!!this.children[i].dispatchMouseEvent) {
+					this.children[i].dispatchMouseEvent(type, mouseX-this.children[i].x, mouseY-this.children[i].y);
+				}
+				//鼠标悬浮于子对象上面
+				if (mouseX > this.children[i].x && mouseX < this.children[i].x + this.children[i].width
+					&& mouseY > this.children[i].y && mouseY < this.children[i].y + this.children[i].height) {
+					type == 'mousemove' && _hoverChildren.push(this.children[i]);
+				
+				if (this.children[i].eventListener[type] == null
+					|| this.children[i].eventListener[type] == undefined) {
+					continue; // 没有事件监听器
+				}
+				// 有事件监听则遍历执行
+				for (var j=0, arr=this.children[i].eventListener[type]; j < arr.length; j++) {
+					arr[j](mouseX-this.children[i].x, mouseY-this.children[i].y);
+				}
+				}
+			};
+			if (type != 'mousemove') {
+				return; // 不是 mousemove事件则到此结束
+			}
+			// 以下是处理mousemove事件
+			for (var k=0; k<this.hoverChildren.length; k++) {
+				// 原来hoverChildren中有的，现在没有的，转而执行 mouseout
+				var has = false;
+				for (var m=0; m<_hoverChildren.length; m++) {
+					if (this.hoverChildren[k] == _hoverChildren[m]) {
+						has = true;
+					}
+				}
+				if (!has) {
+					//不存在了，处理 this.hoverChildren[k] 的mouseout
+					// 刚好又有事件在监听mouseout，则执行
+					if (!!this.hoverChildren[k].eventListener['mouseout']) {
+						for (var i=0, outObj = this.hoverChildren[k]; i<outObj.eventListener['mouseout'].length; i++) {
+							outObj.eventListener['mouseout'][i](mouseX-outObj.x, mouseY-outObj.y);
+						}
+					}
+					// 处理完后就销毁
+					delete this.hoverChildren[k];
+				}
+			};
+			// 原来hoverChildren中没有的，现在有了，证明mouseover
+			for (var k=0; k<_hoverChildren.length; k++) {
+				var has = false;
+				for (var m=0; m<this.hoverChildren.length; m++) {
+					if (_hoverChildren[k] == this.hoverChildren[m]) {
+						has = true;
+					}
+				};
+				if (!has) {
+					//证明鼠标刚进入，处理mouseenter或mouseover
+					this.hoverChildren.push(_hoverChildren[k]);
+					if (_hoverChildren[k].eventListener['mouseover']) {
+						for (var i=0, enterObj = _hoverChildren[k]; i<enterObj.eventListener['mouseover'].length; i++) {
+							enterObj.eventListener['mouseover'][i](mouseX-enterObj.x, mouseY-enterObj.y);
+						}
+					}
+				}
+			};
+			this.clearHoverChildren();
+		},
+		// 重新清理鼠标悬浮下的对象数组
+		clearHoverChildren: function () {
+			var tempArr = [];
+			for (var i=0; i<this.hoverChildren.length; i++) {
+				if (this.hoverChildren[i] != null && this.hoverChildren[i] != undefined) {
+					tempArr.push(this.hoverChildren[i]);
+				}
+			}
+			this.hoverChildren = tempArr;
+		}
+	});
 
 	/**
 	 * Stage {Class}
@@ -477,97 +478,97 @@
 	 * 二维矢量类
 	 */
 	var Vector2 = Class.extend({
-				init: function (x, y) {
-					this.x = x;
-					this.y = y;
-				},
-				copy: function () {
-					return new Vector2(this.x, this.y);
-				},
-				length: function () {
-					return Math.sqrt(this.sqrLength());
-				},
-				sqrLength: function () {
-					return this.x*this.x + this.y*this.y;
-				},
-				/**
-				 * 标准化，单位长度为1
-				 */
-				normalize: function () {
-					var inv = 1/this.length();
-					return new Vector2(this.x*inv, this.y*inv);
-				},
-				// 反向
-				negate: function () {
-					return new Vector2(-this.x, -this.y);
-				},
-				add: function (v) {
-					return new Vector2(this.x+v.x, this.y+v.y);
-				},
-				subtract: function(v) {
-					return new Vector2(this.x-v.x, this.y-v.y);		  
-				},
-				multiply: function (n) {
-					return new Vector2(this.x*n, this.y*n);		  
-				},
-				divide: function (n) {
-					return new Vector2(this.x/n, this.y/n);		
-				},
-				//矢量积
-				dot: function (v) {
-					return new Vector2(this.x*v.x, this.y*v.y);	 
-				}
-			});
+		init: function (x, y) {
+			this.x = x;
+			this.y = y;
+		},
+		copy: function () {
+			return new Vector2(this.x, this.y);
+		},
+		length: function () {
+			return Math.sqrt(this.sqrLength());
+		},
+		sqrLength: function () {
+			return this.x*this.x + this.y*this.y;
+		},
+		/**
+		 * 标准化，单位长度为1
+		 */
+		normalize: function () {
+			var inv = 1/this.length();
+			return new Vector2(this.x*inv, this.y*inv);
+		},
+		// 反向
+		negate: function () {
+			return new Vector2(-this.x, -this.y);
+		},
+		add: function (v) {
+			return new Vector2(this.x+v.x, this.y+v.y);
+		},
+		subtract: function(v) {
+			return new Vector2(this.x-v.x, this.y-v.y);		  
+		},
+		multiply: function (n) {
+			return new Vector2(this.x*n, this.y*n);		  
+		},
+		divide: function (n) {
+			return new Vector2(this.x/n, this.y/n);		
+		},
+		//矢量积
+		dot: function (v) {
+			return new Vector2(this.x*v.x, this.y*v.y);	 
+		}
+	});
 	Vector2.zero = new Vector2(0, 0);
 
 	/**
 	 * Color {Class}
 	 */
 	var Color = Class.extend({
-				init: function (r, g, b) {
-					this.r = r;
-					this.g =g;
-					this.b =b;
-				},
-				copy: function () {
-					return new Color(this.r, this.g, this.b);
-				},
-				add: function (c) {
-					return new Color(
-						Math.min(this.r+c.r, 1),
-						Math.min(this.g+c.g, 1),
-						Math.min(this.b+c.b, 1)
-						);
-				},
-				subtract: function (c) {
-					return new Color(
-						Math.max(this.r-c.r, 0),
-						Math.max(this.g-c.g, 0),
-						Math.max(this.b-c.b, 0)
-						);
-				},
-				multiply: function (n) {
-					return new Color(
-							Math.min(this.r*n, 1),
-							Math.min(this.g*n, 1),
-							Math.min(this.b*n, 1)
-							);		  
-				},
-				divide: function (n) {
-					return new Color(this.r/n, this.g/n, this.b/n);
-				},
-				/**
-				 * 混合调配
-				 */
-				modulate: function (c) {
-					return new Color(this.r*c.r, this.g*c.g, this.b*c.b);		  
-				},
-				saturate: function () {
-					this.r = Math.min(this.r, 1);
-					this.g = Math.min(this.g, 1);
-					this.b = Math.min(this.b, 1);
-				}
-			});
+		init: function (r, g, b) {
+			this.r = r;
+			this.g =g;
+			this.b =b;
+		},
+		copy: function () {
+			return new Color(this.r, this.g, this.b);
+		},
+		add: function (c) {
+			return new Color(
+				Math.min(this.r+c.r, 1),
+				Math.min(this.g+c.g, 1),
+				Math.min(this.b+c.b, 1)
+				);
+		},
+		subtract: function (c) {
+			return new Color(
+				Math.max(this.r-c.r, 0),
+				Math.max(this.g-c.g, 0),
+				Math.max(this.b-c.b, 0)
+				);
+		},
+		multiply: function (n) {
+			return new Color(
+					Math.min(this.r*n, 1),
+					Math.min(this.g*n, 1),
+					Math.min(this.b*n, 1)
+					);		  
+		},
+		divide: function (n) {
+			return new Color(this.r/n, this.g/n, this.b/n);
+		},
+		/**
+		 * 混合调配
+		 */
+		modulate: function (c) {
+			return new Color(this.r*c.r, this.g*c.g, this.b*c.b);		  
+		},
+		saturate: function () {
+			this.r = Math.min(this.r, 1);
+			this.g = Math.min(this.g, 1);
+			this.b = Math.min(this.b, 1);
+		}
+	});
 	// static Color
 	Color.black = new Color(0, 0, 0);
 	Color.white = new Color(1, 1, 1);

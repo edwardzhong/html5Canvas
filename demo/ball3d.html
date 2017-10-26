@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>3d场景</title>
+<style>
+    canvas{
+        background: #eee;
+    }
+</style>
+</head>
+<body>
+<canvas id="canvas" width="500" height="500"></canvas>
+<script src="../js/canvas.js"></script>
+<script src="../js/ball3d.js"></script>
+<script>
+    var canvas = document.getElementById('canvas'),
+        ctx = canvas.getContext('2d'),
+        W=canvas.width,
+        H=canvas.height,
+        balls=[],
+        nums=20,
+        bounce=-0.9,
+        fl=250;//z轴深度
+
+    ctx.strokeStyle='#888';
+    ctx.lineWidth=1;
+    for(var i=0;i<nums;i++){
+        var r = Random(10,20),
+            color = RandomColor(),
+            ball = new Ball3d(r,color);
+        ball.xpos=Random(r,W-r);
+        ball.ypos=Random(r,H-r);
+        ball.zpos=Random(0,250);
+        ball.vx=Random(-5,5);
+        ball.vy=Random(-5,5);
+        ball.vz=Random(-5,5);
+        balls.push(ball);
+    }
+    function update(ball,i){
+        if(ball.xpos<ball.radius){
+            ball.xpos=ball.radius;
+            ball.vx*=bounce;
+        }
+        if(ball.xpos>W-ball.radius){
+            ball.xpos=W-ball.radius;
+            ball.vx*=bounce;
+        }
+        if(ball.ypos<ball.radius){
+            ball.ypos=ball.radius;
+            ball.vy*=bounce;
+        }
+        if(ball.ypos>H-ball.radius){
+            ball.ypos=H-ball.radius;
+            ball.vy*=bounce;
+        }
+        if(ball.zpos<ball.radius-fl){
+            ball.zpos=ball.radius-fl;
+            ball.vz*=bounce;
+        }
+        if(ball.zpos>fl-ball.radius){
+            ball.zpos=fl-ball.radius;
+            ball.vz*=bounce;
+        }
+        ball.xpos+=ball.vx;
+        ball.ypos+=ball.vy;
+        ball.zpos+=ball.vz;
+    }
+
+    function draw(ball,i){
+        if(ball.zpos>-fl){
+            var scale=(fl+ball.zpos)/fl;
+            ball.scaleX=scale;
+            ball.scaleY=scale;
+            ball.x=ball.xpos;
+            ball.y=ball.ypos;
+            ball.visible=true;
+        } else {
+            ball.visible=false;
+        }
+        if(ball.visible){
+            ball.draw(ctx);
+        }
+    }
+
+    (function animate(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        balls.forEach(update);
+        balls.sort((a,b)=>a.zpos-b.zpos);
+        balls.forEach(draw);
+        requestAnimationFrame(animate);
+    }());
+</script>
+</body>
+</html>

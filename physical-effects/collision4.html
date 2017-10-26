@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>图像与精灵的碰撞检测</title>
+        <!-- 这里的图像与精灵的碰撞检测我感觉有些不太精准，球是按四边形来存点的，感觉按圆形要更好 -->
+        <style>
+            body{
+                background: #fff;
+            }
+            #canvas{
+                background: #eee;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas" width="800" height="600"></canvas>
+    </body>
+    <!-- 精灵对象 -->
+    <script>
+        var Sprite = function(name,painter,behaviors){
+            if(name !== undefined){ this.name = name; }
+            if(painter !== undefined){ this.painter = painter; }
+
+            this.top = 0;
+            this.left = 0;
+            this.width = 10;
+            this.height = 10;
+            this.velocityX = 0;
+            this.velocityY = 0;
+            this.visible = true;
+            this.animating = false;
+            this.behaviors = behaviors || [];
+
+        }
+
+        Sprite.prototype = {
+            paint:function(context){
+                if(this.painter !== undefined && this.visible){
+                    this.painter.paint(this,context);
+                }
+            },
+            update:function(context,time){
+                for(var i=0;i<this.behaviors.length;i++){
+                    this.behaviors[i].execute(this,context,time);
+                }
+            }
+        }
+    </script>
+
+    <!-- 图像绘制器 -->
+    <script>
+        var ImagePainter = function (imageUrl){
+            var self = this;
+            this.image = new Image();
+            this.loaded = false;
+            this.image.src = imageUrl;
+
+            this.image.addEventListener('load',function(){
+                self.loaded = true;
+            },false);
+
+        }
+        ImagePainter.prototype ={
+            paint:function(sprite,context){
+                //因为图像绘制器专门负责反复绘制精灵对象所用的图像，所以它并不负责图像的加载
+                //这里不能像之间一样不负责加载了，之间是用在requestAnimationFrame中，代码会按帧持续执行，图片早晚都会加载出来，
+                //所以这块代码块一定会执行。但是在现在这个程序中，在初始化中只走一次，所以很有可能图片还没有加载完成this.image.complete为false
+
+                    context.drawImage(this.image,sprite.left,sprite.top,sprite.width,sprite.height);
+
+            }
+        }
+    </script>
+
+    <!-- Vector对象 向量对象 --> 
+    <script>
+        //坐标系中的向量，以0，0出发，到点x,y，为一个向量，向量长度方向相同为同一个向量
+        var Vector = function(x,y){
+            this.x = x;
+            this.y = y;
+        };
+
+        Vector.prototype = {
+            //得到向量的长度
+            getMagnitude:function(){  
+                return Math.sqrt(Math.pow(this.x,2)+Math.pow(this.y,2));
+            },
+
+            //两向量相加得到的新向量
+            add:function(anotherVector){
+                var v = new Vector();
+                v.x = this.x + anotherVector.x;
+                v.y = this.y + anotherVector.y;
+                return v;
+            },
+
+            //两向量相减,得到边缘法向量 OA-OB = BA;
+            subtract:function(anotherVector){
+                var v = new Vector();
+                v.x = this.x - anotherVector.x;
+                v.y = this.y - anotherVector.y;
+                return v;
+            },
+
+            //两向量的点积，一个向量在别一处向量上的投影,得到的不是一个向量，是投影的长度
+            dotProduct:function(anotherVector){
+                return this.x *anotherVector.x+ this.y*anotherVector.y;
+            },
+
+            //得到多边形的边缘向量,即多边形，相邻两点的向量
+            edge:function(anotherVector){
+                return this.subtract(anotherVector);
+            },
+
+            //得到垂直于边缘向量的边缘法向量，即投影轴向量
+            perpendicular:function(){
+                var v = new Vector();
+                v.x = this.y;
+                v.y = 0-this.x;
+                return v;
+            },
+
+            //得去某向量的单位向量，即方向相同，长度为1的向量，单位向量主要是用来指示方向的
+            normalize:function(){
+                var v = new Vector(0,0);
+                var m = this.getMagnitude();
+                if(m!=0){ //避免向量为0
+                    v.x = this.x/m;
+                    v.y = this.y/m;
+                }
+                return v;
+            },
+
+            //得去边缘法向量的单位向量，即投影轴向量的单位方向，表示投影轴的方向
+            perpendicularNormal:function(){
+                var p = this.perpendicular();
+                return p.normalize();
+            }
+        }
+    </script>
+
+    <!-- Projection 投影对象 -->
+    <script>
+        var Projection = function(min,max){
+            this.min = min;
+            this.max = max;
+        };
+
+        Projection.prototype = {
+
+            //检测两个多边形在同一个投影轴上的投影是否有重合,重叠返回true
+            overlaps:function(projection){
+                return this.max > projection.min && projection.max >this.min;
+            }
+
+        }
+    </script>
+    <!-- Point对象 -->
+    <script>
+        //构造函数
+        var Point = function(x,y){
+            this.x = x;
+            this.y = y;
+        }
+    </script>
+
+    <!-- Shape对象 -->
+    <script>
+        var Shape = function(){
+            this.x = undefined;
+            this.y = undefined;
+            this.strokeStyle = 'rgba(255,253,208,0.9)';
+            this.fillStyle = 'rgba(147,197,114,0.8)';
+        };
+
+        Shape.prototype = {
+            //碰撞检测的方法
+
+            //碰撞检测
+            collidesWith:function(shape){ //返回true表示碰撞了， false表示没有碰撞
+                var axes = this.getAxes().concat(shape.getAxes()); //得到拖拽形状与传入形状的所有投影轴集合
+                return !this.separationOnAxes(axes,shape); //返回在任何一个投影轴上的投影是否有公开
+            },
+
+            //检测在投影轴上投影是否有分离
+            separationOnAxes:function(axes,shape){
+                var axis;
+                var projection1;
+                var projection2;
+                for(var i =0;i<axes.length;++i){
+                    axis = axes[i];
+                    projection1 = shape.project(axis); //得到形状在当前投影轴上的投影
+                    projection2 = this.project(axis); //得到当前拖拽形状在当前投影轴上的投影
+                    if(!projection1.overlaps(projection2)){ //检测两个投影在当前投影轴上是否重叠,分离返回false
+                        return true;  //在当前投影轴上分离返回true,表示两个形状肯定没有碰撞，不需在检测后面的投影轴了，
+                    }
+                };
+                return false; //检测完全部的投影轴上的投影没和一个分离的，返回false;
+            },
+
+            //返回投影的最大值与最小值
+            project:function(axis){  
+                throw 'project(axis) 还没有实现呢'; //这里不写是因为不同的形状的计算投影最大值与最小值的方法不同，不能统一写在这里
+            },
+
+            //得到形状所有的投影轴
+            getAxes:function(){
+                throw 'getAxes() 还没有实现呢';//这里不写是因为不同的形状得到投影轴的方法也不一样，不能统一写在这里，如圆形与多边形
+            },
+
+            //移动形状
+            move:function(dx,dy){
+                throw 'move(dx,dy) 还没有实现呢';//这里不写是因为不同的形状移动的方法不同，不能统一写在这里
+            },
+
+            //绘制图形的方法
+            //创建路径
+            creatPath:function(context){
+                throw 'creatPath(context) 还没有实现呢';//这里不写是因为不同的形状绘制的方法不同，不能统一写在这里
+            },
+
+            //图形填充方法
+            fill:function(context){
+                context.save();
+                context.fillStyle = this.strokeStyle;
+                this.creatPath(context);
+                context.fill();
+                context.restore();
+            },
+
+            //图形描边方法
+            stroke:function(){
+                context.save();
+                context.strokeStyle = this.strokeStyle;
+                this.creatPath(context);
+                context.stroke();
+                context.restore();
+            },
+
+            //判断当前鼠标的点是否在当前形状的路径内
+            isPointInPath:function(context,x,y){
+                this.creatPath(context);
+                return context.isPointInPath(x,y); //该方法用于检测点是否在当前路径
+            }
+
+        };
+    </script>
+    <!-- Polygon对象 多边形对象  -->
+    <script>
+        var Polygon = function(){
+            this.points = [];
+            this.strokeStyle = 'blue';
+            this.fillStyle = 'white';
+        };
+
+        Polygon.prototype = new Shape(); //用原型继承的方法来继承Shape对象的属性与方法
+
+
+        //重新定义多边形碰撞方法
+        Polygon.prototype.collidesWith = function(shape){
+            var axes = shape.getAxes();
+            if(axes === undefined ){  //多边形与圆形碰撞
+                return polygonCollidesWithCircle(this,shape);
+            }else{
+                return !this.separationOnAxes(axes.concat(this.getAxes()),shape);
+            }
+
+        }
+
+        //用于得到多边形所有投影轴的方法
+        Polygon.prototype.getAxes = function(){
+            var v1 = new Vector(); //代表多边形的相邻两点
+            var v2 = new Vector();
+            var axes = [];
+
+            for(var i =0; i<this.points.length-1;i++){  //遍历多边形所有相邻的点得去所有的投影轴
+                v1.x = this.points[i].x;
+                v1.y = this.points[i].y;
+
+                v2.x = this.points[i+1].x;
+                v2.y = this.points[i+1].y;
+                axes.push(v1.edge(v2).perpendicularNormal());
+            };
+
+            //将收尾两点的投影轴也加入
+            v1.x = this.points[this.points.length-1].x;
+            v1.y = this.points[this.points.length-1].y;
+
+            v2.x = this.points[0].x;
+            v2.y = this.points[0].y;
+            axes.push(v1.edge(v2).perpendicularNormal());
+            return axes;
+        };
+
+
+        //得到多边形各个点在某一条投影轴上投影，并得到投影两端点值，传递给投影对象Projection返回投影对象
+        Polygon.prototype.project = function(axis){
+            var scalars = [];  //用于存放所有点向量在投影轴向量上的点积集合，注意点积集合是数量不是向量
+            var v = new Vector();
+            this.points.forEach(function(point){
+                v.x = point.x;
+                v.y = point.y;
+                scalars.push(v.dotProduct(axis));
+            });
+
+            return new Projection(Math.min.apply(Math,scalars),Math.max.apply(Math,scalars));
+        };
+
+        //为多边形增加新的点
+        Polygon.prototype.addPoint = function(x,y){
+            this.points.push(new Point(x,y));
+        };
+
+        //创建多边形路径
+        Polygon.prototype.creatPath = function(context){
+            if(this.points.length === 0){
+                return
+            };
+
+            context.beginPath();
+            context.moveTo(this.points[0].x,this.points[0].y);
+
+            for(var i =0 ;i<this.points.length;i++){
+                context.lineTo(this.points[i].x,this.points[i].y)
+            }
+
+            context.closePath();  //让首尾两点相连，创建完闭合路径
+        };
+
+        //移动多边形
+        Polygon.prototype.move = function(dx,dy){
+            //遍历多边形全部点，更新多边形位置
+            for(var i =0,point; i<this.points.length;i++){
+                point = this.points[i];
+                point.x += dx;
+                point.y += dy;
+            }
+        };
+    </script>
+
+    <!-- Circle对象 -->
+    <script>
+        var Circle = function(x,y,radius){
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.strokeStyle = 'rgba(255,253,208,0.9)';
+            this.fillStyle = 'rgba(147,197,114,0.8)';
+        }
+        Circle.prototype = new Shape(); //继承shape的全部属性与方法
+
+        //圆的碰撞检测的方法
+        Circle.prototype.collidesWith = function(shape){ //重写Shape的collidesWith方法，因为在圆形的碰撞中不能用统一的方法进行判断
+            var point;
+            var length;
+            var min = 1000; //给定一个够大的最小值后面会用到
+            var v1;
+            var v2;
+            var edge;
+            var perpendicular;
+            var normal;
+            var axes = shape.getAxes();
+            var distance;
+
+            if(axes ==undefined){ //证明是圆形与圆形相碰撞
+                distance = Math.sqrt(Math.pow(shape.x -this.x,2)+Math.pow(shape.y -this.y,2));
+
+                return distance < Math.abs(this.radius + shape.radius); //圆心相距小于半径之和代表两圆发生了碰撞
+            }else{ //圆形与多边形想碰撞
+                return polygonCollidesWithCircle(shape,this);
+            }
+
+        }
+
+        //圆形可以看做有无数个边的多边形，所以不能用找多边形投影轴的方法来找圆形的投影轴
+        Circle.prototype.getAxes = function(){
+            return undefined;
+        };
+
+        //圆形在投影轴上的投影对象
+        Circle.prototype.project = function(axis){
+            var scalars =[]; //用于存放在投影轴上的投影
+            var point = new Point(this.x,this.y); //此点为圆心点
+            var dotProduct = new Vector(point.x,point.y).dotProduct(axis); //得到圆心向量在投影轴上的投影
+
+            scalars.push(dotProduct);
+            scalars.push(dotProduct + this.radius);
+            scalars.push(dotProduct - this.radius);
+
+            //得到圆投影对象的最大值与最小值
+            return new Projection(Math.min.apply(Math,scalars),Math.max.apply(Math,scalars));
+        };
+
+        //移动圆形
+        Circle.prototype.move = function(dx,dy){
+            this.x += dx;
+            this.y += dy;
+        };
+
+        //创建圆形
+        Circle.prototype.creatPath = function(context){
+            context.beginPath();
+            context.arc(this.x,this.y,this.radius,0, Math.PI*2,false);
+        }
+    </script>
+
+    <!-- 检测多边形与圆形之间的碰撞 -->
+    <script>
+        /*
+         *圆与多边形碰撞的原理：圆可以近似的看成一个有无数条边的正多边形，而我们不可能按照这些边一一进行投影测试，我们只需要将圆形投射到一条投影轴上即可，
+         *这条轴就是圆心与距其最近的多边形顶点之前的连线。
+         * */
+
+        //得到多边形距离圆形最近点
+        function getPolygonPointClosestToCircle(polygon,circle){
+            var min = 1000; //设置一个相对大的值做为相距起始比较值
+            var length;
+            var testPoint;
+            var closestPoint;
+            for(var i =0 ;i<polygon.points.length;i++){
+                testPoint = polygon.points[i];
+                length = Math.sqrt(Math.pow(testPoint.x -circle.x,2)+Math.pow(testPoint.y-circle.y,2));
+                if(length <min){
+                    min = length;
+                    closestPoint = testPoint;
+                }
+            };
+            return closestPoint;
+        };
+
+        //多边形与圆形碰撞检测
+        function polygonCollidesWithCircle(polygon,circle){
+            //console.log('多边形与圆形碰撞检测');
+            var v1;
+            var v2;
+            var axes = polygon.getAxes();
+            var closestPoint = getPolygonPointClosestToCircle(polygon,circle);
+
+            v1 = new Vector(circle.x,circle.y);
+            v2 = new Vector(closestPoint.x,closestPoint.y);
+
+            axes.push(v1.subtract(v2).normalize());
+            return !polygon.separationOnAxes(axes,circle);
+        }
+    </script>
+
+    <!-- ImageShape对象 -->
+    <script>
+        var ImageShape = function(imageSource,x,y,w,h){
+            var self = this;
+
+            this.image = new Image();
+            this.imageLoaded = false;
+            this.points = [ new Point(x,y)];
+            this.x = x;
+            this.y = y;
+            this.image.width = w;
+            this.image.height = h;
+            this.image.src = imageSource;
+
+            //图片加载之后设置图片做为四边形的各个顶点
+            this.image.addEventListener('load',function(e){
+                self.setPolygonPoints();
+                self.imageLoaded = true;
+            },false);
+        };
+
+        //继承多边形方法属性
+        ImageShape.prototype = new Polygon();
+
+        //图片没有必要有填充操作
+        ImageShape.prototype.fill = function(context){
+            //什么操作也没有，覆盖shape的fill方法
+        };
+
+        //设置图像的各个点，这里的this.image.width与this.image.height应该是new Image()对象的自带属性
+        ImageShape.prototype.setPolygonPoints = function(){
+            this.points.push(new Point(this.x + this.image.width,this.y));
+            this.points.push(new Point(this.x+this.image.width,this.y+this.image.height));
+            this.points.push(new Point(this.x,this.y+this.image.height));
+        };
+
+        //绘制图像
+        ImageShape.prototype.drawImage = function(context){
+            context.drawImage(this.image,this.points[0].x,this.points[0].y,this.image.width,this.image.height);
+        };
+
+        //给图像描边
+        ImageShape.prototype.stroke = function(context){
+            var self = this;
+            if(this.imageLoaded){ //如果图片加载完成的话，就开始绘图
+                context.drawImage(this.image,this.points[0].x,this.points[0].y,this.image.width,this.image.height);
+            }else{//如果没有加载就进行加载
+                this.image.addEventListener('load',function(e){
+                    self.drawImage(context);
+                },false);
+            }
+        }
+
+    </script>
+
+    <!-- SpriteShape对象 -->
+    <script>
+        var SpriteShape = function(sprite,x,y,w,h){
+            this.sprite = sprite;
+            this.imageLoad = sprite.painter.loaded;
+
+            this.x = x;
+            this.y = y;
+            sprite.left = x;
+            sprite.top = y;
+            sprite.width = w;
+            sprite.height = h;
+            this.setPolygonPoints();
+        };
+
+        SpriteShape.prototype = new Polygon();
+
+        //重置这个方法的原因是因为在Sprite对象中left,top的值，我们也需要与SpriteShape中的x,y同步更新
+        SpriteShape.prototype.move = function(dx,dy){
+            var point,x;
+            for(var i =0;i<this.points.length;i++){
+                point = this.points[i];
+                point.x += dx;
+                point.y += dy;
+            };
+            this.sprite.left = this.points[0].x;
+            this.sprite.top = this.points[0].y;
+        };
+
+        SpriteShape.prototype.fill = function(context){
+
+        };
+
+        SpriteShape.prototype.setPolygonPoints = function(){
+            this.points.push(new Point(this.x,this.y));
+            this.points.push(new Point(this.x+this.sprite.width,this.y));
+            this.points.push(new Point(this.x+this.sprite.width,this.y + this.sprite.height));
+            this.points.push(new Point(this.x,this.y+this.sprite.height));
+        };
+
+        SpriteShape.prototype.stroke = function(context){
+            var self = this;
+            if(this.imageLoad){
+                console.log('后续执行的绘制');
+                self.sprite.painter.paint(self.sprite,context);
+            }else{
+                console.log('加载完');
+                this.sprite.painter.image.addEventListener('load',function(){
+                    self.sprite.painter.paint(self.sprite,context);
+                    self.imageLoad = true;
+                },false);
+
+            }
+
+        }
+    </script>
+
+    <script>
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        var shapes = []; //用于记录canvas中所有可做碰撞检测的图形
+
+        //精灵对象
+        var ballSprite = new Sprite('ball',new ImagePainter('img/tenniBall.png'));
+
+        var polygonPoints = [ //用于存入3个多边形的顶点集合
+            [new Point(250,150), new Point(250,250), new Point(350,250)],
+            [new Point(100,100),new Point(100,150), new Point(150,150),new Point(150,100)],
+            [new Point(400,100),new Point(380,150),new Point(500,150),new Point(520,100)]
+        ];
+
+        var polygonStrokeStyles = ['blue','yellow','red']; //3个多边形的描边颜色
+        var polygonFillStyles = ['rgba(255,255,0,0.7)','rgba(100,140,230,0.6)','rgba(255,255,255,0.8)'];//3个之边形的填充颜色
+
+        var mousedown = {x:0,y:0}; //用于记录鼠标按下的位置
+        var lastdrag = {x:0,y:0}; //用于记录拖拽时上一次鼠标所在的位置 
+        var shapeBeingDragged = undefined; //用于记录当前正在拖拽的多边形
+
+        //圆形
+        var circle1 = new Circle(150,75,20);
+        var circle2 = new Circle(350,25,30);
+        shapes.push(circle1);
+        shapes.push(circle2);
+
+        //图像与精灵
+        shapes.push(new ImageShape('img/gaofu.png',50,50,50,50));
+        shapes.push(new SpriteShape(ballSprite,300,100,50,50));
+
+
+        //初始化
+        for(var i =0 ;i<polygonPoints.length;i++){
+            var polygon = new Polygon();
+            var points = polygonPoints[i];
+
+            polygon.strokeStyle = polygonStrokeStyles[i];
+            polygon.fillStyle = polygonFillStyles[i];
+
+            points.forEach(function(point){
+                polygon.addPoint(point.x,point.y);
+            });
+            shapes.push(polygon);
+        };
+
+        context.shadowColor = 'rgba(100,140,255,0.5)';
+        context.shadowBlur = 4;
+        context.shadowOffsetX = 2;
+        context.shadowOffsetY =2;
+        context.font = '38px arial';
+
+        //绘制所有的多边形
+        drawShapes();
+
+        context.save();
+        context.fillStyle = 'cornflowerblue';
+        context.font = '24px arial';
+        context.fillText('拖拽图形相碰撞', 10,25);
+        context.restore();
+
+        //函数
+        //转换坐标到canvas
+        function windowToCanvas(x,y){
+            var bbox = canvas.getBoundingClientRect();
+            return{
+                x:x - bbox.left*(canvas.width/bbox.width),
+                y:y - bbox.top*(canvas.height/bbox.height)
+            };
+        };
+
+        //绘制全部形状
+        function drawShapes(){
+            shapes.forEach(function(shape){
+                shape.stroke(context);
+                shape.fill(context);
+            });
+        }
+
+        //检测碰撞
+        function detectCollosions(){
+
+            var textY = 30;
+            var numShapes = shapes.length;
+            var shape;
+            var i;
+
+            if(shapeBeingDragged){
+                for(var i = 0; i<numShapes; ++i){
+                    shape = shapes[i];
+                    if(shape !=shapeBeingDragged ){
+                        if(shapeBeingDragged.collidesWith(shape)){ //返回true: 碰撞了，false: 没有碰撞
+                            context.fillStyle = shape.fillStyle;
+                            context.fillText('碰撞了',20,textY);
+                            textY += 40;
+                        }
+                    }
+                }
+            }
+        }
+
+        //事件
+        //鼠标近下点
+        canvas.onmousedown = function(e){
+            var location = windowToCanvas(e.clientX,e.clientY);
+
+            //遍历所有的多边形，找到鼠标按下点所在的坐标形进行拖拽
+            shapes.forEach(function(shape){
+                if(shape.isPointInPath(context,location.x,location.y)){
+                    shapeBeingDragged = shape; 
+                    mousedown.x = location.x;
+                    mousedown.y = location.y;
+                    lastdrag.x = location.x;
+                    lastdrag.y = location.y;
+                }
+            });
+
+        };
+
+        //鼠标移动
+        canvas.onmousemove = function(e){
+
+            var location;
+            var dragVector;  //用于记录拖拽对方
+
+            //鼠标按下点在一个多边形上，在canvas空白处不做任何处理
+            if(shapeBeingDragged !=undefined){
+                //console.log('有可拖拽图形')
+                location = windowToCanvas(e.clientX,e.clientY);
+                dragVector = {x:location.x - lastdrag.x,
+                              y:location.y - lastdrag.y};
+                shapeBeingDragged.move(dragVector.x,dragVector.y);        
+                lastdrag.x = location.x;
+                lastdrag.y = location.y;
+
+                context.clearRect(0,0,canvas.width,canvas.height);
+                drawShapes();
+                detectCollosions();
+            }
+
+        };
+
+        //鼠标抬起
+        canvas.onmouseup = function(e){
+            shapeBeingDragged = undefined;
+        }
+
+
+    </script>
+</html>

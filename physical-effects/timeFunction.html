@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>时间扭曲运动</title>
+<style>
+	.wrap{
+		position: absolute;
+		top: 20px;
+		left: 50px;
+		color: #555;
+	}
+	.wrap h1{
+		font-size: 18px;
+	}
+	.wrap label{
+		display: block;
+	}
+</style>
+</head>
+<body>
+<canvas id="canvas" width="900" height="400"></canvas>
+<div class="wrap">
+	<h1>select animate type, then click the canvas to start action</h1>
+	<label for="linear"><input type="radio" name="animate-type" id="linear" checked> linear</label>
+	<label for="easeIn"><input type="radio" name="animate-type" id="easeIn"> easeIn</label>
+	<label for="easeOut"><input type="radio" name="animate-type" id="easeOut"> easeOut</label>
+	<label for="easeInOut"><input type="radio" name="animate-type" id="easeInOut"> easeInOut</label>
+	<label for="elastic"><input type="radio" name="animate-type" id="elastic"> elastic</label>
+	<label for="bounce"><input type="radio" name="animate-type" id="bounce"> bounce</label>	
+	<label for="back"><input type="radio" name="animate-type" id="back"> back</label>	
+</div>
+
+<script src="../sprite/sprite.js"></script>
+<script>
+	function StopWatch(){}
+	StopWatch.prototype={
+		startTime:0,
+		running:false,
+		elapsed:undefined,
+		start:function(){
+			this.startTime=+new Date();
+			this.elapsed=undefined;
+			this.running=true;
+		},
+		stop:function(){
+			this.elapsed=(+new Date())-this.startTime;
+			this.running=false;
+		},
+		getElapsedTime:function(){
+			if(this.running){
+				return (+new Date())-this.startTime;
+			} else {
+				return this.elapsed;
+			}
+		},
+		isRunning:function(){
+			return this.running;
+		},
+		reset:function(){
+			this.elapsed=0;
+		}
+	};
+
+	function AnimationTimer(duration,timeWrap){
+		if(timeWrap)this.timeWrap=timeWrap;
+		if(duration)this.duration=duration;
+		this.stopWatch=new StopWatch();
+	}
+	AnimationTimer.prototype={
+		start:function(){
+			this.stopWatch.start();
+		},
+		stop:function(){
+			this.stopWatch.stop();
+		},
+		getElapsedTime:function(){
+			var elapsedTime=this.stopWatch.getElapsedTime(),
+				percentComplete=elapsedTime/this.duration;
+
+			if(!this.stopWatch.isRunning()) return undefined;
+			if(!this.timeWrap)return elapsedTime;
+			
+			return elapsedTime*(this.timeWrap(percentComplete)/percentComplete);
+		},
+		isRunning:function(){
+			return this.stopWatch.isRunning();
+		},
+		isOver:function(){
+			return this.stopWatch.getElapsedTime()>this.duration;
+		}
+	};
+	var DEFAULT_ELASTIC_PASSES=3;
+	AnimationTimer.makeEaseIn=function(strength){
+		return function(precentComplete){
+			return Math.pow(precentComplete,strength*2);
+		}
+	};
+
+	AnimationTimer.makeEaseOut=function(strength){
+		return function(precentComplete){
+			return 1-Math.pow(1-precentComplete,strength*2);
+		}
+	};
+	AnimationTimer.makeEaseInOut=function(){
+		return function(precentComplete){
+			return precentComplete-Math.sin(precentComplete*2*Math.PI)/(2*Math.PI)
+		}
+	};
+	AnimationTimer.makeElastic=function(passes){
+		passes=passes||DEFAULT_ELASTIC_PASSES;
+		return function(precentComplete){
+			return ((1-Math.cos(precentComplete*Math.Pi*passes))*(1-precentComplete))+precentComplete;
+		}
+	};
+	AnimationTimer.makeBounce=function(bounces){
+		var fn = AnimationTimer.makeElastic(bounces);
+		return function(precentComplete){
+			precentComplete=fn(precentComplete);
+			return precentComplete<=1?precentComplete:2-precentComplete;
+		}
+	};
+	AnimationTimer.makeLinear=function(){
+		return function(precentComplete){
+			return precentComplete;
+		}
+	};
+
+
+
+	var canvas=document.getElementById('canvas'),
+		context=canvas.getContext('2d'),
+		BALL_RADIUS=20,
+		TOP=280,
+		LEN=600,
+		DURATION = 2000,
+		ball={},
+		startTime=0,
+		Fn=function(){},
+		/**
+         * 动画公式
+         * @param    {Number}                 t  current time 当前时间点（当前时间-开始时间）
+         * @param    {Number}                 b  beginning value 初始坐标
+         * @param    {Number}                 c  change in value 需要移动的距离（结束坐标-初始坐标）
+         * @param    {Number}                 d  duration 持续时间（多少时间内完成动画）
+         * @return   {Number}                 返回当前时间点的位置
+         */
+		tween={
+            linear:function(t,b,c,d){ 
+                return c*t/d + b; 
+            },
+            easeIn: function(t,b,c,d){
+                return c*(t/=d)*t*t*t*t + b;
+            },
+            easeOut: function(t,b,c,d){
+                return c*((t=t/d-1)*t*t*t*t + 1) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+                return c/2*((t-=2)*t*t*t*t + 2) + b;
+            },
+            elastic:function(t,b,c,d,a,p){
+            	if (t==0) return b;  
+            	if ((t/=d)==1) return b+c;  
+            	if (!p) p=d*.3;
+            	if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+            	else var s = p/(2*Math.PI) * Math.asin (c/a);
+            	return (a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b);
+            },
+            bounce:function(t,b,c,d){
+	            if ((t/=d) < (1/2.75)) {
+	                return c*(7.5625*t*t) + b;
+	            } else if (t < (2/2.75)) {
+	                return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+	            } else if (t < (2.5/2.75)) {
+	                return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+	            } else {
+	                return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+	            }
+	        },
+	        back: function(t,b,c,d,s){
+            	if (s == undefined) s = 1.70158;
+            	return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+        	}
+		},
+		tweenFn = function(type,b,c,d,callback,endCallback){
+			var startTime=new Date(),
+				fn=tween[type],
+				t;
+
+			function animate(){
+				t=new Date()-startTime;
+				if(t>=d) {
+					endCallback&&endCallback();
+					return;
+				}
+				callback(fn(t,b,c,d));
+				requestAnimationFrame(animate);
+			}
+			animate();
+		},
+		painter={
+			paint:function(sprite,context){
+				context.save()
+				context.beginPath();
+				context.arc(sprite.left,sprite.top,BALL_RADIUS,0,Math.PI*2,false);
+				context.clip();
+				context.shadowColor='rgb(0,0,0)';
+				context.shadowOffsetX=-4;
+				context.shadowOffsetY=-4;
+				context.shadowBlur=8;
+				context.lineWidth=2;
+				context.strokeStyle='rgb(100,100,195)';
+				context.fillStyle='rgba(30,144,255,0.15)';
+				context.fill();
+				context.stroke();
+				context.restore();
+			}
+		};
+		ball=new Sprite('ball',painter,[{
+			execute:function(){
+				ball.left=Fn(new Date()-startTime,BALL_RADIUS,LEN,DURATION);
+			}
+		}]);
+		function getAnimateType(){
+			var elems=[].slice.call(document.getElementsByName('animate-type')),
+				ret='linear';
+			elems.forEach(function(item,i){
+				if(item.checked)ret=item.id;
+			});
+			return ret;
+		}
+
+		function ballIsDone(){
+			return new Date()-startTime>=DURATION;
+		}
+		function ballReset(){
+			ball.top=TOP;
+			ball.left=BALL_RADIUS;
+		}
+
+		function drawGrid(color,stepX,stepY){
+			context.save();
+			context.lineWidth=0.5;
+			context.strokeStyle=color;
+
+			for(var i=stepX+0.5;i<context.canvas.width;i+=stepX){
+				context.beginPath();
+				context.moveTo(i,0);
+				context.lineTo(i,context.canvas.height);
+				context.stroke();
+			}
+
+			for(var i=stepY+0.5;i<context.canvas.height;i+=stepY){
+				context.beginPath();
+				context.moveTo(0,i);
+				context.lineTo(context.canvas.width,i);
+				context.stroke();
+			}
+			context.restore();
+		}
+		function drawLine(){
+			context.save();
+			context.beginPath();
+			context.moveTo(0,TOP+BALL_RADIUS);
+			context.lineTo(LEN+BALL_RADIUS*2,TOP+BALL_RADIUS);
+			context.lineWidth=1;
+			context.strokeStyle='#ff0000';
+			context.stroke();
+			context.restore();
+		}
+
+		function animate(){
+			ball.update();
+			context.clearRect(0,0,canvas.width,canvas.height);
+			drawGrid('lightgray',10,10);
+			drawLine();
+			ball.paint(context);
+			if(ballIsDone()) return;
+			requestAnimationFrame(animate);
+		}
+		function init(){
+			ballReset();
+			drawGrid('lightgray',10,10);
+			drawLine()
+			ball.paint(context);
+		}
+		init();
+
+		canvas.onclick=function(){
+			Fn=tween[getAnimateType()];
+			startTime=new Date();
+			ballReset();
+			animate();
+		};
+</script>
+</body>
+</html>

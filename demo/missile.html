@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>missile</title>
+	<style>
+
+	</style>
+</head>
+<body>
+<canvas id="canvas" width="1400" height="700"></canvas>
+<script src="../js/canvas.js"></script>
+<script>
+var canvas=document.getElementById('canvas'),
+	ctx=canvas.getContext('2d');
+canvas.style.background='black';
+ctx.lineWidth=1;
+ctx.strokeStyle="rgba(0,200,150,0.3)";
+/**
+ * 导弹
+ */
+class Missile {
+	constructor(x,y,angle){
+		this.x=x;
+		this.y=y;
+		this.angle=angle;
+	}
+	update(point,angle){
+		this.x=point.x;
+		this.y=point.y;
+		this.angle=angle;
+	}
+	draw(ctx){
+		var pos=[ //逆时针方向
+			{x:-4,y:20},
+			{x:+4,y:20},
+			{x:+4,y:-20},
+			{x:0,y:-30},
+			{x:-4,y:-20}
+		];
+		ctx.save();
+		ctx.lineWidth=1;
+		ctx.lineCap="round";
+		ctx.lineJoin="round";
+		ctx.fillStyle='#404040';
+		ctx.strokeStyle='#bfbfbf';
+		//切换坐标原点，方便计算
+		ctx.translate(this.x,this.y);
+		ctx.rotate(this.angle+Math.PI/2);//与切线方向垂直
+		ctx.beginPath();
+		pos.forEach((item,i)=>{
+			if (i==0) ctx.moveTo(item.x,item.y);
+			else ctx.lineTo(item.x,item.y);
+		});
+		ctx.closePath();
+		ctx.moveTo(pos[4].x,pos[4].y);
+		ctx.lineTo(pos[2].x,pos[2].y);
+		ctx.fill();
+		ctx.stroke();
+		var gradient=ctx.createRadialGradient(0,25,0,0,25,8);
+		gradient.addColorStop(0,'white');
+		gradient.addColorStop(0.4,'white');
+		gradient.addColorStop(0.6,'yellow');
+		gradient.addColorStop(0.8,'orange');
+		gradient.addColorStop(0.9,'red');
+		gradient.addColorStop(1,'black');
+		ctx.fillStyle=gradient;
+		ctx.globalCompositeOperation = "lighter";
+		ctx.beginPath();
+		ctx.arc(0,25,8,Math.PI*2,false);
+		ctx.fill();
+		ctx.restore();
+	}
+}
+var start = {x:200,y:600},
+	end = {x:700,y:500},
+	c1 = {x:start.x,y:canvas.height+start.x-end.x },
+	c2 = {x:end.x,y:canvas.height+start.x-end.x},
+	missile=new Missile(start.x,start.y,-Math.PI/2);
+
+function animate(){
+	var startTime=new Date(),
+		duration=Math.floor(Math.sqrt(Math.pow(end.x-start.x,2)+Math.pow(end.y-start.y,2))*10);
+	console.log(duration);
+	(function (){
+		// ctx.clearRect(0,0,canvas.width,canvas.height);取消clearRect可以形成尾迹效果
+		var curr=new Date()-startTime,
+			i=Tween.easeIn(curr,0,1,duration),
+			point=Curve.getBezierPosition(start,c1,c2,end,i),
+			angle=Curve.getBezierAngle(start,c1,c2,end,i);
+		missile.update(point,angle);
+		drawBg();
+		drawBezier();
+		missile.draw(ctx);
+		if(curr>=duration||i>=1){return;}
+		requestAnimationFrame(arguments.callee);
+	}());
+}
+
+function drawBezier(){
+	ctx.beginPath();
+	ctx.moveTo(start.x,start.y);
+	ctx.bezierCurveTo(c1.x,c1.y,c2.x,c2.y,end.x,end.y);
+	ctx.stroke();	
+}
+
+function drawBg(){
+	ctx.save();
+	ctx.globalCompositeOperation = "source-over";
+	ctx.fillStyle='rgba(0,0,0,0.3)';
+	ctx.fillRect(0,0,canvas.width,canvas.height);
+	ctx.restore();
+}
+
+drawBg();
+missile.draw(ctx);
+
+canvas.onclick=function(e){
+	end=WindowToCanvas(canvas,e.clientX,e.clientY);
+	c1 = {x:start.x,y:canvas.height-Math.abs(start.x-end.x)};
+	c2 = {x:end.x,y:canvas.height-Math.abs(start.x-end.x)};
+	animate();
+};
+
+
+//追踪子弹
+// this.x, this.y 表示当前子弹的位置
+// this.tar.x, this.tar.y 表示当前目标的位置
+// var dis = Math.sqrt(Math.pow((this.tar.x-this.x), 2) + Math.pow((this.tar.y - this.y), 2));
+// var angleX = (this.tar.x - this.x)/dis;
+// var angleY = (this.tar.y - this.y)/dis;
+// this.speedX = speed * angleX;
+// this.speedY = speed * angleY;
+// this.x += this.speedX;
+// this.y += this.speedY;
+</script>
+</body>
+</html>

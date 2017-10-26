@@ -35,10 +35,10 @@
 	function rotateX(ball,angleX){
 		var cos = Math.cos(angleX),
 			sin = Math.sin(angleX),
-			y1 = ball.y * cos - ball.z * sin,
-			z1 = ball.z * cos + ball.y * sin;
-		ball.y = y1;
-		ball.z = z1;
+			y = ball.y * cos - ball.z * sin,
+			z = ball.z * cos + ball.y * sin;
+		ball.y = y;
+		ball.z = z;
 	}
 
     /**
@@ -47,10 +47,10 @@
 	function rotateY(ball, angleY) {
 		var cos = Math.cos(angleY),
 			sin = Math.sin(angleY),
-			x1 = ball.x * cos - ball.z * sin,
-			z1 = ball.z * cos + ball.x * sin;
-		ball.x =x1;
-		ball.z =z1;
+			x = ball.x * cos - ball.z * sin,
+			z = ball.z * cos + ball.x * sin;
+		ball.x =x;
+		ball.z =z;
 	}
 
 	/**
@@ -59,10 +59,10 @@
 	function rotateZ(ball,angleZ){
 		var cos = Math.cos(angleZ),
 			sin = Math.sin(angleZ),
-			x1=ball.x*cos-ball.y*sin,
-			y1=ball.y*cos+ball.x*sin;
-		ball.x=x1;
-		ball.y=y1;
+			x=ball.x*cos-ball.y*sin,
+			y=ball.y*cos+ball.x*sin;
+		ball.x=x;
+		ball.y=y;
 	}
 
 	function Ball(x,y,z){
@@ -78,7 +78,7 @@
 	Ball.prototype.paint=function(){
 		ctx.save();
 		ctx.beginPath();
-		ctx.fillStyle='rgba('+this.r+','+this.g+','+this.b+',0.5)';
+		ctx.fillStyle='rgba('+this.r+','+this.g+','+this.b+',0.7)';
 		// var scale=zRadius/(zRadius+this.z);
 		var scale=Math.abs(zRadius/(zRadius-this.z+zPos));
 		ctx.arc(this.x,this.y,Math.floor(radius*scale),0,Math.PI*2,false);//canvas.width / 2 + (this.x - canvas.width / 2) * scale
@@ -87,7 +87,7 @@
 	};
 
 	function init(){
-		// 坐标原点平移到中间，方便操作
+		// 重置旋转中心
 		ctx.translate(vpx,vpy);
 		for(var i=0;i<num;i++){
 			balls.push(new Ball(Math.random()*canvas.width-vpx,Math.random()*canvas.height-vpy,Math.random()*zRadius*2-zRadius));

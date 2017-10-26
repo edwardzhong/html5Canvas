@@ -3,65 +3,83 @@
 <head>
 	<meta charset="UTF-8">
 	<title>图像合成</title>
+	<style>
+		html{
+			font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+			font-size: 16px;
+			color: #555;
+		}
+		ul{
+			float: left;
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			/* width: 200px; */
+		}
+		ul li{
+			border: 1px solid #ddd;
+			padding: 5px 20px;
+			margin-top: -1px;
+			cursor: pointer;
+		}
+		ul li:hover,ul li.active{
+			background: #ddd;
+		}
+	</style>
 </head>
 <body>
-<select name="mode" id="mode">
-	<option value="source-atop" checked>source-atop</option>
-	<option value="source-in">source-in</option>
-	<option value="source-out">source-out</option>
-	<option value="source-over">source-over</option>
-	<option value="destination-atop">destination-atop</option>
-	<option value="destination-in">destination-in</option>
-	<option value="destination-out">destination-out</option>
-	<option value="destination-over">destination-over</option>
-	<option value="lighter">lighter</option>
-	<option value="copy">copy</option>
-	<option value="xor">xor</option>
-</select>
+<ul id="mode">
+	<li class="active">source-atop</li>
+	<li>source-in</li>
+	<li>source-out</li>
+	<li>source-over</li>
+	<li>destination-atop</li>
+	<li>destination-in</li>
+	<li>destination-out</li>
+	<li>destination-over</li>
+	<li>lighter</li>
+	<li>copy</li>
+	<li>xor</li>
+</ul>
 <canvas id="canvas" width="600" height="400"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
 		mode=document.getElementById('mode');;
 
-
 	function draw(modeValue){
+		ctx.save();
 		ctx.fillStyle='cornflowerblue';
-		// ctx.strokeStyle='#555';
 		ctx.lineWidth=2;
-
-		// ctx.shadowColor='#555';
-		// ctx.shadowBlur=10;
-		// ctx.shadowOffsetX=5;
-		// ctx.shadowOffsetY=5;
-
 		ctx.font='50px Lucida Sans';
 		ctx.textAlign='center';
 		ctx.textBaseline="middle";
-
-		// ctx.strokeText('html5 canvas',300,200);
-		ctx.fillText('html5 canvas',300,200);
-
+		ctx.shadowColor='#555';
+		ctx.shadowBlur=10;
+		// ctx.shadowOffsetX=5;
+		// ctx.shadowOffsetY=5;
+		ctx.fillText('compose '+modeValue,300,200);
+		ctx.fillRect(180,70,100,100);
+		
 		ctx.globalCompositeOperation=modeValue;
-
-		ctx.save();
-		ctx.beginPath();
 		ctx.fillStyle='red';
-		// ctx.strokeStyle='orange';
-		ctx.arc(300,200,50,0,Math.PI*2,false);
-		// ctx.stroke();
+		ctx.arc(300,200,80,0,Math.PI*2,false);
 		ctx.fill();
 		ctx.restore();
 	}
 
-
-	mode.onchange=function(){
+	mode.onclick=function(e){
+		if(e.target.nodeName!='LI') return;
+		[].slice.call(this.children).forEach(item=>{
+			item.className='';
+		});
+		e.target.className='active';
+		var val=e.target.innerHTML;
+		console.log(val);
 		ctx.clearRect(0,0,canvas.width,canvas.height);
-		draw(this.value);
-		console.log(this.value);
+		draw(val);
 	}
-
-	draw(mode.value);
+	draw(document.getElementsByClassName('active')[0].innerHTML);
 </script>
 </body>
 </html>

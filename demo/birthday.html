@@ -67,8 +67,8 @@
         /**
          * 动画公式
          * @param    {Number}                 t  current time 当前时间点（当前时间-开始时间）
-         * @param    {Number}                 b  beginning value 初始值
-         * @param    {Number}                 c  change in value 需要移动的距离（结束点坐标-开始点坐标）
+         * @param    {Number}                 b  beginning value 初始坐标
+         * @param    {Number}                 c  change in value 需要移动的距离（结束坐标-初始坐标）
          * @param    {Number}                 d  duration 持续时间（多少时间内完成动画）
          * @return   {Number}                 返回当前时间点的位置
          */
@@ -86,9 +86,8 @@
                 if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
                 return c/2*((t-=2)*t*t*t*t + 2) + b;
             }
-        };
-
-        var Rotates={
+        },
+        Rotates={
             // 绕x轴旋转
             rotateX:function (ball,angleX){
                 var cos = Math.cos(angleX),
@@ -136,7 +135,7 @@
                 var cos = Math.cos(angleZ),
                     sin = Math.sin(angleZ),
                     x1 = ball.x * cos - ball.y * sin,
-                    y1 = ball.y * cos + ball.x * sin;
+                    y1 = ball.y * cos + ball.x * sin,
                     x2 = ball.dx * cos - ball.dy * sin,
                     y2 = ball.dy * cos + ball.dx * sin;
                     x3 = ball.fx * cos - ball.fy * sin,
@@ -217,7 +216,6 @@
         gradient.addColorStop(0.6,'orange');
         gradient.addColorStop(1,'yellow');
         var txtStyle=['#DA68B1','#DA68B1','#48B4D6','#48B4D6'];
-
         var fillStyles=[txtStyle,txtStyle,gradient];
 
         PointEffect.prototype={
@@ -259,15 +257,15 @@
                 CVS.ctx.restore();
             },
             getTxtData:function(){
-                var imgData = CVS.ctx.getImageData(0,0, CVS.canvas.width, CVS.canvas.height);
+                var imgData = CVS.ctx.getImageData(0,0, CVS.canvas.width, CVS.canvas.height),i;
                 CVS.clearRect();
                 this.points = [];
-                for (var x = 0; x < imgData.width; x += 8) {
-                    for (var y = 0; y < imgData.height; y += 8) {
-                        var i = (y * imgData.width + x) * 4;
-                        if (imgData.data[i+3] >= 128) {
-                            this.points.push(new Point(this.zRadius,this.zPos,x, y, 0, 4,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]}));
-                        }
+
+                for (var x = 0,w=imgData.width; x < w; x += 8) {
+                    for (var y = 0,h=imgData.height; y < h; y += 8) {
+                        i = (y * w + x) * 4;
+                        if (imgData.data[i+3] < 128) continue;
+                        this.points.push(new Point(this.zRadius,this.zPos,x, y, 0, 4,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]}));
                     }
                 }
             },
@@ -305,15 +303,11 @@
                                 break;
                             }
                             self.bgPoints.forEach(function(item,i){
-                                Rotates.rotateZ(item,angleZ);
+                                Rotates.rotateZ(item,angleZ);//绕z轴选择
                                 item.zPos+=2;//视角后退
                             });
                             break;
                         case 1:
-                            self.bgPoints.forEach(function(item,i){
-                                Rotates.rotateY(item,self.angleY);
-                                Rotates.rotateX(item,self.angleX);
-                            });
                             if(new Date()-startTime>3000){
                                 if(isLoop){
                                     self.points.forEach(function(item,i){
@@ -325,11 +319,16 @@
                                     });
                                     break;
                                 }
+
                                 startTime=new Date();
                                 stage++;
                                 break;
                             }
-
+                            //背景绕x,y轴旋转
+                            self.bgPoints.forEach(function(item,i){
+                                Rotates.rotateY(item,self.angleY);
+                                Rotates.rotateX(item,self.angleX);
+                            });
                             self.points.forEach(function(item,i){
                                 Rotates.rotateY(item,self.angleY);
                                 Rotates.rotateX(item,self.angleX);
@@ -341,9 +340,11 @@
                         case 2:
                             if(new Date()-startTime>3000){
                                 CVS.clearRect();
+                                //进入下一轮动画
                                 self.animate(++index%self.txts.length);
                                 return false;
                             }
+                            //背景绕x,y轴旋转
                             self.bgPoints.forEach(function(item,i){
                                 Rotates.rotateY(item,self.angleY);
                                 Rotates.rotateX(item,self.angleX);
@@ -465,11 +466,11 @@
                         //     currStr[i]=temp;
                         // }
                         // self.animate(currStr);
-                            CVS.canvas.style.backgroundColor='rgba(0,0,0,1)';
-                            CVS.clearRect();
-                            effect.init();                            
-                            self.points=[];
-                            CancelRequestAnimFrame(timer); 
+                        CVS.canvas.style.backgroundColor='rgba(0,0,0,1)';
+                        CVS.clearRect();
+                        effect.init();                            
+                        self.points=[];
+                        // CancelRequestAnimFrame(timer); 
                         return;
                     } else if(isStop){
                         stage++;
@@ -478,7 +479,7 @@
                     self.points.forEach(function(item,i){
                         item.paint();
                     });
-                    timer=RequestAnimFrame(arguments.callee);
+                    RequestAnimFrame(arguments.callee);
                 }());
             }
         };

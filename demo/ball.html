@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>球物理效果</title>
+</head>
+<body>
+<canvas id="canvas" width="800" height="600"></canvas>
+<script src="../js/canvas.js"></script>
+<script src="../js/ball.js"></script>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		W=canvas.width,
+		H=canvas.height,
+		vx = 2,  //初始速度
+		vy = 0,  //初始速度
+		gravity = 0.2, //定义重力加速度
+		bounce = -0.8; //定义反弹系数
+
+	// var ball = new Ball(20, "red");
+	//    	ball.x = canvas.width/2
+	//    	ball.y = canvas.height/2;
+	//    	ball.vx=vx;
+
+	    
+	// //碰撞检测
+	// function checkGround(ball){
+	// 	if(ball.y + ball.radius > canvas.height){
+	// 	   ball.y = canvas.height - ball.radius;
+	// 	   vy *= bounce; //速度反向并且减小
+	// 	}
+	// 	if(ball.x + ball.radius > canvas.width){
+	// 		ball.x = canvas.width - ball.radius;
+	// 		vx *= bounce;
+	// 	} else if(ball.x - ball.radius < 0){
+	// 		ball.x = ball.radius;
+	// 		vx *= bounce;
+	// 	}
+	// }
+
+	// (function drawFramw(){
+	// 	window.requestAnimationFrame(drawFramw, canvas);
+	// 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	// 	vy += gravity;
+	// 	ball.x += vx;
+	// 	ball.y += vy;
+	// 	// console.log(vx,vy);
+
+	// 	//碰撞检测
+	// 	checkGround(ball);
+	// 	ball.draw(ctx);
+	// }());
+
+	/**
+	* 摩擦力实验
+	*/
+	// var ball = new Ball(20, "red");
+	// ball.x = canvas.width/4;
+	// ball.y = canvas.height/4;
+
+	// var f = 0.05, speed = 0, angle = 0;//设定摩擦力
+	// var vx = Math.random()*10 -5;
+	// var vy = Math.random()*10 -5;
+
+	// (function drawFrame(){
+	// 	window.requestAnimationFrame(drawFrame, canvas);
+	// 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	// 	speed = Math.sqrt(vx*vx + vy*vy);
+	// 	angle = Math.atan2(vy, vx);
+
+	// 	if(speed > f){
+	// 	   speed -= f; //通过摩擦力减小速度
+	// 	}else{
+	// 	   speed = 0;
+	// 	}
+
+	// 	vx = Math.cos(angle) * speed;
+	// 	vy = Math.sin(angle) * speed;
+
+	// 	ball.x += vx;
+	// 	ball.y += vy;
+
+	// 	ball.draw(ctx);
+	// }());
+
+	// 另一种关于摩擦力的使用，我们况且叫它简易摩擦力的使用，这里我给出部分代码：
+	// (function drawFrame(){
+	// 	window.requestAnimationFrame(drawFrame, canvas);
+	// 	context.clearRect(0, 0, canvas.width, canvas.height);
+
+	//    //每一帧都乘以摩擦力变量
+	//    vx *= f;
+	//    vy *= f;
+	   
+	//    ball.x += vx;
+	//    ball.y += vy;
+	//    ball.draw(context);
+	// }());
+
+	// 当然，为了减少计算机的计算量，提升性能，你可以在后面加个判定条件：
+	// if(Math.abs(vx) > 0.001){
+	//	 vx *= f;
+	//	 ball.x += vx
+	// }
+	// if(Math.abs(vy) > 0.001){
+	//	vx *= f;
+	//	ball.y += vy
+	// }
+           // var canvas = document.getElementById('canvas'),
+           //     oP = document.getElementById('record'),
+           //     context = canvas.getContext('2d'),
+           //     ball = new Ball(30, "orange"),
+           //     vx = Math.random()*10 + 5,
+           //     vy = -10,
+           //     bounce = -0.8,
+           //     gravity = 1.8,
+           //     speed, //speed 用于记录速度值
+           //     oldX, oldY; //定义变量oldX, oldY
+          
+           // var isMouseDown = false,
+           //     mouse = utils.captureMouse(canvas),
+           //     w = 0, h = 0;
+                
+           //     ball.x = canvas.width/2;
+           //     ball.y = canvas.height/2;           
+ 
+           // canvas.addEventListener("mousedown", function(event){
+           //     if(utils.containsPoint(ball.getBounds(), mouse.x, mouse.y)){
+           //         w = mouse.x - ball.x;
+           //         h = mouse.y - ball.y;
+                    
+           //        //如果点击到了小球上，那么分别将小球的位置赋值给oldX, oldY
+           //        //并且随着小球的移动oldX和oldY每一帧都在刷新
+           //         oldX = ball.x;
+           //         oldY = ball.y;
+                    
+           //         isMouseDown = true;
+                    
+           //         canvas.addEventListener('mouseup', onMouseUp ,false);
+           //         canvas.addEventListener('mousemove', onMouseMove, false);
+           //     }
+           // }, false);
+            
+           // function onMouseUp(e){...}
+           // function onMouseMove(e){...}           
+           // function checkBoundries(){...}
+            
+           // //抛出速度计算
+           // function trackVelocity(){
+           //        //用当前小球的位置减去，上一帧的坐标
+           //     vx = ball.x - oldX;
+           //     vy = ball.y - oldY;
+           //     //重新赋予oldX和oldY
+           //     oldX = ball.x;
+           //     oldY = ball.y;
+         
+           //     speed = Math.sqrt(vx*vx + vy*vy);
+           //     oP.innerHTML = "当前的速度为："+speed.toFixed();
+           // }
+            
+           // (function drawFrame(){
+           //     ...
+                
+           //     //调用
+           //     if(!isMouseDown){
+           //         checkBoundries();
+           //     }else{
+           //         trackVelocity();
+           //     }
+               
+           //     ball.draw(context);
+           // }());           
+
+</script>
+</body>
+</html>
