@@ -1,3 +1,8 @@
+/**
+ * canvas chart
+ * author:jeff zhong
+ */
+
 function roundRect(ctx,x,y,width,height,radius){
 	ctx.beginPath();
 	if(width>0){
@@ -53,7 +58,9 @@ function calculateY(arr){
 		max:max
 	}
 }
-
+/**
+ * 图表基类
+ */
 class Chart{
 	constructor(container){
 		this.container=container;
@@ -77,6 +84,9 @@ class Chart{
 		this.canvas.style.height = this.H/2 + 'px';
 	}
 }
+/**
+ * 柱状图
+ */
 class Bar extends Chart{
 	constructor(container){
 		super(container);
@@ -371,7 +381,9 @@ class Bar extends Chart{
 		}
 	}
 }
-
+/**
+ * 折线图
+ */
 class Line extends Chart{
 	constructor(container){
 		super(container);
@@ -762,3 +774,4 @@ class Line extends Chart{
 		}
 	}
 }
+
