@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>missile</title>
-	<style>
-
-	</style>
+	<title>沿贝塞尔曲线运动</title>
 </head>
 <body>
 <canvas id="canvas" width="1400" height="700"></canvas>
@@ -80,7 +77,7 @@ var start = {x:200,y:600},
 
 function animate(){
 	var startTime=new Date(),
-		duration=Math.floor(Math.sqrt(Math.pow(end.x-start.x,2)+Math.pow(end.y-start.y,2))*10);
+		duration=Math.floor(Math.sqrt(Math.pow(end.x-start.x,2)+Math.pow(end.y-start.y,2))*5);
 	console.log(duration);
 	(function (){
 		// ctx.clearRect(0,0,canvas.width,canvas.height);取消clearRect可以形成尾迹效果

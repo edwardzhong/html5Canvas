@@ -158,24 +158,6 @@ var Color={
 };
 
 
-//旋转角度函数 mx = mouse.x | my = mouse.y | ox = object.x | oy = object.y
-function RotationToMouse(mx,my,ox,oy){
-    var dx = mx - ox;
-    var dy = my - oy;
-    return Math.atan2(dy,dx);
-}
-
-//捕获坐标
-function CaptureMouse(canvas){
-    var mouse = {x:canvas.width/2+50,y:canvas.height/2+50};
-    canvas.addEventListener('mousemove',function(e){
-		var pos=WindowToCanvas(canvas,e.clientX,e.clientY);
-		mouse.x=pos.x;
-		mouse.y=pos.y;
-    },false);
-    return mouse;  
-}
-
 //将鼠标位置定位到canvas坐标
 function WindowToCanvas(canvas,x,y){
 	var box=canvas.getBoundingClientRect();
@@ -183,6 +165,19 @@ function WindowToCanvas(canvas,x,y){
 		x:x-box.left*(canvas.width/box.width),
 		y:y-box.top*(canvas.height/box.height)
 	};
+}
+
+//将鼠标位置定位到webGL坐标
+function WindowToWebgl(canvas,x,y){
+  var box=canvas.getBoundingClientRect(),
+      w=canvas.width,
+      h=canvas.height,
+      x1=x-box.left*(w/box.width),
+      y1=y-box.top*(h/box.height);
+  return{
+    x:(x1-w/2)/(w/2),
+    y:(h/2-y1)/(h/2)
+  };
 }
 
 /**
@@ -209,73 +204,6 @@ function IsCollision(a,b,c,d){
 		&&b.x<d.x;
 }
 
-//画网格线
-function DrawGrid(ctx,color,stepx,stepy){
-	ctx.save();
-	ctx.lineWidth=0.5;
-	ctx.strokeStyle=color;
-
-	for(var i=stepx+0.5;i<ctx.canvas.width;i+=stepx){
-		ctx.beginPath();
-		ctx.moveTo(i,0);
-		ctx.lineTo(i,ctx.canvas.height);
-		ctx.stroke();
-	}
-
-	for(var i=stepy+0.5;i<ctx.canvas.height;i+=stepy){
-		ctx.beginPath();
-		ctx.moveTo(0,i);
-		ctx.lineTo(ctx.canvas.width,i);
-		ctx.stroke();
-	}
-	ctx.restore();
-}
-
-var Shape={
-	/**
-	* 使用三次贝塞尔曲线模拟椭圆，此方法也会产生当lineWidth较宽，椭圆较扁时，长轴端较尖锐，不平滑的现象
-	* @param {Object} ctx canvas 绘图对象
-	* @param {Number} x   中心横坐标
-	* @param {Number} y   中心纵坐标
-	* @param {Number} a   椭圆横半轴长
-	* @param {Number} b   椭圆纵半轴长
-	*/
-	ellipse:function(ctx, x, y, a, b){
-		var k = .5522848,
-		ox = a * k, // 水平控制点偏移量
-		oy = b * k; // 垂直控制点偏移量
-		ctx.beginPath();
-		//从椭圆的左端点开始顺时针绘制四条三次贝塞尔曲线
-		ctx.moveTo(x - a, y);
-		ctx.bezierCurveTo(x - a, y - oy, x - ox, y - b, x, y - b);
-		ctx.bezierCurveTo(x + ox, y - b, x + a, y - oy, x + a, y);
-		ctx.bezierCurveTo(x + a, y + oy, x + ox, y + b, x, y + b);
-		ctx.bezierCurveTo(x - ox, y + b, x - a, y + oy, x - a, y);
-		ctx.closePath();
-		ctx.stroke();
-	},
-	/**
-	 * arcTo 创建圆角矩形
-	 */
-	roundRect:function(ctx,x,y,width,height,radius){
-		ctx.beginPath();
-		if(width>0){
-			ctx.moveTo(x+radius,y);
-		} else {
-			ctx.moveTo(x-radius,y);
-		}
-
-		ctx.arcTo(x+width,y,x+width,y+height,radius);
-		ctx.arcTo(x+width,y+height,x,y+height,radius);
-		ctx.arcTo(x,y+height,x,y,radius);
-
-		if(width>0){
-			ctx.arcTo(x,y,x+radius,y,radius);
-		} else {
-			ctx.arcTo(x,y,x-radius,y,radius);
-		}
-	}
-};
 var Curve={
 	/**
 	 * 获取三次贝塞尔曲线切线弧度

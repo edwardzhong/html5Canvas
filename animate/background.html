@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>背景的滚动_在画面静止时不执行animate版</title>
+        <style>
+            body{
+                background: #ddd;
+            }
+            #canvas{
+                position: absolute;
+                top: 30px;
+                left: 10px;
+                background: #FFFFFF;
+                cursor: crosshair;
+                margin-left: 10px;
+                margin-top: 10px;
+                box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+                -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+                -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            }
+            input{
+                margin-left: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas" width="1024" height="512"></canvas>
+        <input id="animateButton" type="button" value="Animate" />
+    </body>
+    <script>
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        var animateButton = document.getElementById('animateButton');
+
+        var sky = new Image();
+
+        var paused = true;
+        var lastTime = 0;
+        var fps = 60;
+        var skyOffset = 0;
+        var skyVelocity = 100; //每秒的位移速度
+        var onOff = false;
+
+        //初始化
+        sky.src = '../img/bg.png';
+
+        sky.onload = function(e){
+            draw();
+        };
+
+        //事件
+        animateButton.onclick = function (){
+            paused = !paused;
+            if(paused){
+                animateButton.value = 'Animate';
+
+            }else{
+                onOff = true;
+                animateButton.value = 'Pause';
+                requestAnimationFrame(animate);
+            }
+        }
+
+        function draw(){
+            context.save();
+            //以每秒恒定skyVelocity速度来移动，这是两帧的时间差*速度，就是这两帧要的位移偏量 skyVelocity/fps
+            //这种就是基于时间的运动，每两帧之间的位移是动态变化的，不是恒定不变的，以免出现以帧速率决定位移量，让设备好的人跟设备一般的人，没法同时进行游戏
+            skyOffset = skyOffset<canvas.width? skyOffset+skyVelocity/fps:0;
+            context.translate(-skyOffset,0);
+
+            context.drawImage(sky,0,0,canvas.width,canvas.height);
+            context.drawImage(sky,canvas.width,0,canvas.width,canvas.height);
+
+            context.restore();
+        };
+        function erase(){
+            context.clearRect(0,0,canvas.width,canvas.height);
+        }
+
+        function calculateFps(now){
+            //注意这里的now，经过测试，now是从打开页面就开始计时的，无论动画的是执行还是静止
+            //尝试设计一个开关，执行动画时，才开始计时，但是每次点击重新开始动画时（非刷新），第一帧设置的lastTime是个估算值，对于，帧数差不多的没有影响，但是两个人如果
+            //帧速率差的太多，第一帧估算的位移是会对结果有影响的，不能实现完全的基于时间的运动
+            if(onOff){
+                lastTime = now -16.7;
+                onOff = false;
+            }
+            var fps = 1000/(now - lastTime);
+
+            lastTime = now;
+
+            return fps;
+        }
+
+        function animate(now){
+            if(!paused){
+                fps = calculateFps(now);
+                erase();
+                draw();
+                requestAnimationFrame(animate);
+            }
+
+        }
+    </script>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>视差动画</title>
+        <style>
+            body{
+                background: #ddd;
+            }
+            #canvas{
+                position: absolute;
+                top: 30px;
+                left: 10px;
+                background: #FFFFFF;
+                cursor: crosshair;
+                margin-left: 10px;
+                margin-top: 10px;
+                box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+                -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+                -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            }
+            input{
+                margin-left: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas" width="1000" height="348"></canvas>
+        <input id="animateButton" type="button" value="Animate" />
+    </body>
+    <script>
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        var animateButton = document.getElementById('animateButton');
+
+        var sky = new Image();
+        var smallTree = new Image();
+        var bigTree = new Image();
+        var grass = new Image();
+
+        var paused = true;
+        var lastTime = 0;
+        var fps = 60;
+
+        //位移量
+        var sky_offset = 0;
+        var smallTree_offset = 0;
+        var bigTree_offset = 0;
+        var grass_offset = 0;
+
+        //速度:每秒位移的像素数
+        var sky_velocity = 8;
+        var smallTree_velocity = 20;
+        var bigTree_velocity = 40;
+        var grass_velocity = 75;
+
+        //初始化
+        context.font = '48px Helvetica';
+        sky.src = '../img/sky1.png';
+        smallTree.src = '../img/small_tree.png';
+        bigTree.src = '../img/big_tree.png';
+        grass.src = '../img/grass.png';
+        sky.onload = function(){
+            draw();
+        }
+        //在画面静止时也要执行，因为需要lastTime是最新的，而now是从页面一打开就开始计时
+        requestAnimationFrame(animate);
+
+        //事件
+        animateButton.onclick = function (){
+            paused = !paused;
+            if(paused){
+                animateButton.value = 'Animate';
+            }else{
+                animateButton.value = 'Pause';
+            }
+        }
+
+        //每帧请求的动画
+        function animate(now){
+            fps = calculateFps(now);
+            if(!paused){
+                erase();
+                draw();
+            }
+            requestAnimationFrame(animate);
+        }
+        //清空画布
+        function erase(){
+            context.clearRect(0,0,canvas.width,canvas.height);
+        }
+        //帧率
+        function calculateFps(now){
+            var fps = 1000/(now -lastTime);
+            lastTime = now;
+            return fps;
+        }
+        //绘制画布
+        function draw(){
+            context.save();
+
+            //天空每帧偏移量
+            sky_offset = sky_offset< canvas.width? sky_offset+sky_velocity/fps : 0;
+            smallTree_offset = smallTree_offset< canvas.width? smallTree_offset+smallTree_velocity/fps : 0;
+            bigTree_offset = bigTree_offset< canvas.width? bigTree_offset+bigTree_velocity/fps : 0;
+            grass_offset = grass_offset<canvas.width? grass_offset+grass_velocity/fps : 0;
+
+            //天空
+            context.save();
+            context.translate(-sky_offset,0);
+            context.drawImage(sky,0,0,canvas.width,canvas.height);
+            context.drawImage(sky,canvas.width,0);
+            context.restore();
+
+            //小树
+            context.save();
+            context.translate(-smallTree_offset,0);
+            context.drawImage(smallTree,0,0,140,150,100,245,70,75);
+            context.drawImage(smallTree,0,0,140,150,1100,245,70,75);
+            context.drawImage(smallTree,0,0,140,150,500,240,70,75);
+            context.drawImage(smallTree,0,0,140,150,1500,240,70,75);
+            context.drawImage(smallTree,0,0,140,150,800,230,70,75);
+            context.drawImage(smallTree,0,0,140,150,1800,230,70,75);
+            context.restore();
+
+            //大树
+            context.save();
+            context.translate(-bigTree_offset,0);
+            context.drawImage(bigTree,0,0,213,280,100,120,180,200);
+            context.drawImage(bigTree,0,0,213,280,1100,120,180,200);
+            context.drawImage(bigTree,0,0,213,280,650,80,180,280);
+            context.drawImage(bigTree,0,0,213,280,1650,80,180,280);
+            context.restore();
+
+            //草
+            context.save();
+            context.translate(-grass_offset,0);
+            context.drawImage(grass,0,canvas.height -70);
+            context.drawImage(grass,canvas.width,canvas.height -70);
+            context.restore();
+
+            context.restore();
+        }
+
+
+    </script>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>3d立方体</title>
+</head>
+<body>
+<canvas id="canvas" width="1000" height="600"></canvas>
+<script src="../js/canvas.js"></script>
+<script src="../js/ball3d.js"></script>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		mouse=CaptureMouse(canvas),
+		Nums=27,
+		Z=1000,//焦距
+		Cubes=[],
+		W=canvas.width,
+		H=canvas.height;
+
+	ctx.strokeStyle='hsla(0,0%,70%,1)';
+	ctx.lineWidth=0.5;
+
+	class Cube{
+		constructor(x,y,z,w){
+			this.x=x;
+			this.y=y;
+			this.z=z;
+			this.dx=x;
+			this.dy=y;
+			this.w=w;
+			this.points=[
+				{x:this.dx-w/2,y:this.dy-w/2,z:this.z+w/2,dx:this.dx-w/2,dy:this.dy-w/2},//0
+				{x:this.dx-w/2,y:this.dy+w/2,z:this.z+w/2,dx:this.dx-w/2,dy:this.dy+w/2},//1
+				{x:this.dx+w/2,y:this.dy+w/2,z:this.z+w/2,dx:this.dx+w/2,dy:this.dy+w/2},//2
+				{x:this.dx+w/2,y:this.dy-w/2,z:this.z+w/2,dx:this.dx+w/2,dy:this.dy-w/2},//3
+
+				{x:this.dx-w/2,y:this.dy-w/2,z:this.z-w/2,dx:this.dx-w/2,dy:this.dy-w/2},//4
+				{x:this.dx-w/2,y:this.dy+w/2,z:this.z-w/2,dx:this.dx-w/2,dy:this.dy+w/2},//5
+				{x:this.dx+w/2,y:this.dy+w/2,z:this.z-w/2,dx:this.dx+w/2,dy:this.dy+w/2},//6
+				{x:this.dx+w/2,y:this.dy-w/2,z:this.z-w/2,dx:this.dx+w/2,dy:this.dy-w/2},//7
+			];
+			this.faces=[
+				{
+					points:[this.points[0],this.points[1],this.points[2],this.points[3]],
+					fillStyle:'hsla(0,100%,70%,1)'//红
+				},{
+					points:[this.points[1],this.points[5],this.points[4],this.points[0]],
+					fillStyle:'hsla(60,100%,70%,1)'//黄
+				},{
+					points:[this.points[4],this.points[5],this.points[6],this.points[7]],
+					fillStyle:'hsla(120,100%,70%,1)'//绿
+				},{
+					points:[this.points[3],this.points[2],this.points[6],this.points[7]],
+					fillStyle:'hsla(180,100%,70%,1)'//青
+				},{
+					points:[this.points[0],this.points[3],this.points[7],this.points[4]],
+					fillStyle:'hsla(240,100%,70%,1)'//蓝
+				},{
+					points:[this.points[1],this.points[2],this.points[6],this.points[5]],
+					fillStyle:'hsla(300,100%,70%,1)'//洋红
+				}
+			];
+		}
+		sortFaces(){				
+			this.faces.sort((a,b)=>{
+				var az=0,bz=0;
+				a.points.forEach(p=>{az+=p.z;});
+				b.points.forEach(p=>{bz+=p.z;});
+				return bz-az;
+			});
+		}
+		rotateX(angle){
+			var pos=Rotates.rotateX({y:this.y,z:this.z},angle);
+			this.y=pos.y;
+			this.z=pos.z;
+		}
+		rotateY(angle){
+			var pos=Rotates.rotateY({x:this.x,z:this.z},angle);
+			this.x=pos.x;
+			this.z=pos.z;
+		}
+		update(){
+			var angleX=(mouse.y-H/2)*0.0001;
+        	var angleY=(mouse.x-W/2)*0.0001;
+			this.rotateX(angleX);
+			this.rotateY(angleY);
+			var scale=Z/(Z+this.z);
+			this.dx=this.x*scale;
+			this.dy=this.y*scale;
+
+			this.points.forEach((p,i)=>{
+				var pos=Rotates.rotateX({y:p.y,z:p.z},angleX);
+				p.y=pos.y;
+				p.z=pos.z;
+				pos=Rotates.rotateY({x:p.x,z:p.z},angleY);
+				p.x=pos.x;
+				p.z=pos.z;
+				var scale=Z/(Z+p.z);
+				p.dx=p.x*scale;
+				p.dy=p.y*scale;
+			});
+		}
+		draw(ctx){
+			ctx.save();
+			this.sortFaces();
+			ctx.globalCompositeOperation='source-over'
+			this.faces.forEach((f,i)=>{
+				ctx.beginPath();
+				ctx.fillStyle=f.fillStyle;
+				f.points.forEach((p,j)=>{
+					ctx[j==0?'moveTo':'lineTo'](p.dx,p.dy);
+				});
+				ctx.closePath();
+				ctx.stroke();
+				ctx.fill();
+			});
+			ctx.restore();
+		}
+	}
+	
+	for(var i=0;i<Nums;i++){
+		var l=(W-400)/2,
+			t=(H-400)/2,
+			col=i%3,
+			zs=Math.floor(i/9),
+			row=Math.floor((i-zs*9)/3);
+		Cubes.push(new Cube(l+col*200-W/2,t+row*200-H/2,zs*200-200,60))
+	}
+
+	ctx.translate(W/2,H/2);
+	
+	(function animate(){
+		ctx.clearRect(-W/2,-H/2,W,H);
+		Cubes.sort((a,b)=>b.z-a.z);
+		Cubes.forEach(c=>{
+			c.update();
+			c.draw(ctx);
+		});
+		requestAnimationFrame(animate);
+	}())
+</script>
+</body>
+</html>

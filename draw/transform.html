@@ -11,33 +11,47 @@
 		ctx=canvas.getContext('2d');
 
 	ctx.save();
-	ctx.strokeStyle='red';
-	ctx.rotate(Math.PI/6);//旋转45度
-	ctx.translate(100,100);//平移到指定位置
-	ctx.scale(2,2);//缩放
-	ctx.beginPath();
-	ctx.moveTo(10,10);
-	ctx.lineTo(100,10);
-	ctx.stroke();
+	ctx.translate(canvas.width/2,canvas.height/2);
+	ctx.fillStyle='hsl(0,100%,60%)'
+	ctx.strokeStyle='#990';
+	ctx.arc(0,0,5,0,Math.PI*2,false);
+	ctx.fill();
+	drawArrow(ctx);
+	// ctx.scale(-1,-1);//水平加垂直镜像
+	var cos=Math.cos(Math.PI/6),
+		sin=Math.sin(Math.PI/6);
+	// ctx.transform(cos,sin,-sin,cos,100,100);// 旋转30度加水平移动100垂直移动100
+	// ctx.transform(1,-1,0.5,1,0,0);// 错切45度
+	ctx.transform(-1,1,-1,0,0,0);//旋转90度，同时错切
+	// drawArrow(ctx);
+	drawRect();
 	ctx.restore();
-
-	//画镜像
-	// ctx.save();
-	// ctx.strokeStyle='#990';
-	// drawArrow(ctx);
-	// ctx.translate(canvas.width/2+20,0);
-	// ctx.scale(-1,1);
-	// drawArrow(ctx);
-	// ctx.restore();
 
 	function drawArrow(ctx){
 		ctx.beginPath();
-		ctx.moveTo(100, 100);
-		ctx.lineTo(150, 50);
-		ctx.lineTo(150,150);
+		ctx.moveTo(0, 50);
+		ctx.lineTo(-50, 0);
+		ctx.lineTo(50,0);
 		ctx.closePath();
 		ctx.stroke();
 	}
+
+
+	function drawRect(){
+		ctx.beginPath();
+		ctx.strokeRect(-50,-50,100,120);
+		ctx.stroke();
+	}
+
+	// context.transform(scaleX,skewX,skewY,scaleY,transX,transY);
+	// context.transform(a,b,c,d,e,f);
+	// a	水平缩放绘图
+	// b	水平倾斜绘图
+	// c	垂直倾斜绘图
+	// d	垂直缩放绘图
+	// e	水平移动绘图
+	// f	垂直移动绘图
+
 </script>
 </body>
 </html>

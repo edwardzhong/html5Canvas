@@ -136,7 +136,7 @@
 		points.push(new Ball(x,y,dx,dy,new Date(),1500));
 	}, 700);
 
-	function animate(){
+	(function animate(){
 		var point=null,
 			c=300;
 		function run(){
@@ -159,8 +159,7 @@
 			requestAnimationFrame(run);
 		}
 		run();
-	}
-	animate();
+	}())
 </script>
 </body>
 </html>

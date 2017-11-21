@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>clip实现擦除功能</title>
+	<title>clip实现橡皮擦功能</title>
 
 </head>
 <body>
@@ -10,25 +10,12 @@
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
+		W=canvas.width,
+		H=canvas.height,
 		rubberWidth=30,
 		rubberHeight=30,
 		rubberLineWidth=1,
-		lastX=0,
-		lastY=0,
-		isDragging=false;
-
-	function init(){
-		ctx.save();
-		ctx.beginPath();
-		ctx.fillStyle='orange';
-		ctx.strokeStyle='red';
-		ctx.arc(200,200,100,0,Math.PI*2,false);
-		ctx.arc(250,250,100,0,Math.PI,false);
-		ctx.closePath();
-		ctx.stroke();
-		ctx.fill();
-		ctx.restore();
-	}
+		lastPos={x:0,y:0};
 
 	//画网格线
 	function drawGrid(color,stepx,stepy){
@@ -54,42 +41,41 @@
 	function windowToCanvas(x,y){
 		var bbox=canvas.getBoundingClientRect();
 		return {
-			x:x-bbox.left*(canvas.width/bbox.width),
-			y:y-bbox.top*(canvas.height/bbox.height)
+			x:x-bbox.left*(W/bbox.width),
+			y:y-bbox.top*(H/bbox.height)
 		};
 	}
 
 	//设置要擦除的上一次的位置
 	function setLastClip(){
 		ctx.beginPath();
-		ctx.rect(lastX-rubberWidth/2-rubberLineWidth,lastY-rubberHeight/2-rubberLineWidth,rubberWidth+2*rubberLineWidth,rubberHeight+2*rubberLineWidth);
+		ctx.rect(lastPos.x-rubberWidth/2-rubberLineWidth,
+			lastPos.y-rubberHeight/2-rubberLineWidth,
+			rubberWidth+2*rubberLineWidth,
+			rubberHeight+2*rubberLineWidth);
 		ctx.clip();//限定要擦除的区域
 	}
 
-	//清除
-	function clear(){
-		ctx.clearRect(0,0,canvas.width,canvas.height);
-		drawGrid('lightgray',10,10);
-	}
-
 	//清除上一次的位置
+	//注意: clip 和 填充clip的动作，必须在同一 save,restore中
 	function clearLast(){
 		ctx.save();
 		setLastClip();
-		clear();
+		ctx.clearRect(0,0,W,H);
+		ctx.fillStyle='hsl(0,100%,70%)';
+		drawGrid('#ddd',10,10);
 		ctx.restore();
 	}
 
 	//画当前位置的橡皮擦
-	function drawRubber(x,y){
+	function drawRubber(pos){
 		ctx.save();
-		ctx.fillStyle='white';
-		ctx.strokeStyle='gray';
+		ctx.fillStyle='#fff';
+		ctx.strokeStyle='#ddd';
 		ctx.lineWidth=rubberLineWidth;
 		ctx.lineJoin='round';
 		ctx.beginPath();
-		ctx.rect(x-rubberWidth/2,y-rubberHeight/2,rubberWidth,rubberHeight);
-		// ctx.clip();
+		ctx.rect(pos.x-rubberWidth/2,pos.y-rubberHeight/2,rubberWidth,rubberHeight);
 		ctx.fill();
 		ctx.stroke();
 		ctx.restore();
@@ -98,33 +84,27 @@
 
 	canvas.onmousedown=function(e){
 		e.preventDefault();
-		var loc=windowToCanvas(e.clientX,e.clientY);
-		lastX=loc.x;
-		lastY=loc.y;
-		// imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-		isDragging=true;
-	};
+		lastPos=windowToCanvas(e.clientX,e.clientY);
 
-	canvas.onmousemove=function(e){
-		e.preventDefault();
-		var loc=windowToCanvas(e.clientX,e.clientY);
-		if(isDragging){
-			// ctx.putImageData(imgData,0,0);
+		canvas.onmousemove=function(e){
+			e.preventDefault();
+			var pos=windowToCanvas(e.clientX,e.clientY);
 			clearLast();
-			drawRubber(loc.x,loc.y);
-			lastX=loc.x;
-			lastY=loc.y;
-		}
+			drawRubber(pos);
+			lastPos.x=pos.x;
+			lastPos.y=pos.y;
+		};
+
+		canvas.onmouseup=function(e){
+			e.preventDefault();
+			clearLast();
+			canvas.onmousemove=null;
+			canvas.onmouseup=null;
+		};
 	};
 
-	canvas.onmouseup=function(e){
-		e.preventDefault();
-		clearLast();
-		isDragging=false;
-	};
-
-	clear();
-	init();
+	ctx.fillStyle='hsla(30,100%,70%,1)';
+	ctx.fillRect(0,0,W,H);
 </script>
 </body>
 </html>

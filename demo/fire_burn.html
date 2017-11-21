@@ -8,33 +8,38 @@
 <canvas id="canvas" width="600" height="400"></canvas>
 <script>
 var canvas = document.getElementById('canvas');
-var ctx = canvas.getContext('2d');
-var particles = [];
-var particle_count = 200;
+    ctx = canvas.getContext('2d'),
+    W = canvas.width,
+    H = canvas.height,
+    particles = [],
+    nums = 200;
 
-for(var i=0; i<particle_count; i++){
-    particles.push(new particle());
+
+class Particle {
+    constructor(){
+        this.loc = {x:W/2,y:H/2 + 50};
+        this.speed = {
+            // x: Math.random()*6-3,
+            x: Math.random()*0.6-0.3,
+            // y:-10+Math.random()*10
+            y:-15+Math.random()*10
+        };
+        this.radius = 10+Math.random()*10;
+        this.life = 10+Math.random()*10;
+        this.remaining_life = this.life;
+        // this.color = Math.floor(Math.random()*360);
+        this.color = 30;
+    }
 }
 
-function particle() {
-    this.loc = {x:canvas.width/2,y:canvas.height/2 + 50};
-    this.speed = {
-        x: Math.random()*0.6-0.3,
-        y:-15+Math.random()*10
-    };
-    this.radius = 10+Math.random()*10;
-    this.life = 10+Math.random()*10;
-    this.remaining_life = this.life;
-    this.color = {};
-    this.color.r=Math.floor(Math.random()*255);
-    this.color.g=Math.floor(Math.random()*55);
-    this.color.b=Math.floor(Math.random()*55);
+for(var i=0; i<nums; i++){
+    particles.push(new Particle());
 }
 
 function draw() {
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = '#000';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillRect(0,0,W,H);
     ctx.globalCompositeOperation = 'lighter';
 
     for(var i=0; i<particles.length; i++){
@@ -42,10 +47,9 @@ function draw() {
         ctx.beginPath();
         p.opacity = Math.round(p.remaining_life/ p.life*100)/100;
         var gradient = ctx.createRadialGradient(p.loc.x, p.loc.y, 0, p.loc.x, p.loc.y, p.radius);
-        gradient.addColorStop(0, "rgba(" + p.color.r + "," + p.color.g + "," + p.color.b + "," + p.opacity + ")" );
-        gradient.addColorStop(0.5, "rgba(" + p.color.r + "," + p.color.g + "," + p.color.b + "," + p.opacity + ")" );
-        gradient.addColorStop(1, "rgba(" + p.color.r + "," + p.color.g + "," + p.color.b + ", 0)" );
-
+        gradient.addColorStop(0,`hsla(${p.color},100%,70%,${p.opacity})`);
+        gradient.addColorStop(0.5,`hsla(${p.color},100%,50%,${p.opacity})`);
+        gradient.addColorStop(1,`hsla(${p.color},100%,30%,0)`);
         ctx.fillStyle = gradient;
         ctx.arc(p.loc.x, p.loc.y, p.radius, 0, Math.PI*2, false);
         ctx.fill();
@@ -57,14 +61,14 @@ function draw() {
         p.loc.y += p.speed.y;
 
         if(p.remaining_life<0 || p.radius <0){
-            particles[i] = new particle();
+            particles[i] = new Particle();
         }
     }
 }
 
-(function loop() {
+(function animate() {
     draw();
-    requestAnimationFrame(loop);   
+    requestAnimationFrame(animate);   
 }())
 </script>
 </body>

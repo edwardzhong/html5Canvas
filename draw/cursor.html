@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>光标的闪烁效果</title>
+        <style>
+            body{
+                background: #eee;
+            }
+            #canvas{
+                background: #fff;
+                cursor: pointer;
+                margin-left: 10px;
+                margin-top: 10px;
+                box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+                -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+                -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            }
+            #controls{
+                position: absolute;
+                left: 25px;
+                top: 25px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas" width="1000" height="600"></canvas>
+        <div id="controls">
+            字体：
+            <select id="fontStyleSelect">
+                <option value="palatino">palatino</option>
+                <option value="lucida">lucida</option>
+                <option value="fantasy">fantasy</option>
+                <option value="copperplate">copperplate</option>
+                <option value="tahoma" selected>tahoma</option>
+                <option value="verdana">verdana</option>
+                <option value="impact">impact</option>
+                <option value="century">century</option>
+            </select>
+            字体大小：
+            <select id="fontSizeSelect">
+                <option value="20px" selected>20px</option>
+                <option value="30px">30px</option>
+                <option value="40px">40px</option>
+                <option value="50px">50px</option>
+                <option value="60px">60px</option>
+            </select>
+            字体填充颜色：
+            <select id="fontColorSelect">
+                <option value="red">red</option>
+                <option value="green">green</option>
+                <option value="blue">blue</option>
+                <option value="orange">orange</option>
+                <option value="cornflowerblue" selected>cornflowerblue</option>
+                <option value="goldenrod">goldenrod</option>
+                <option value="navy">navy</option>
+                <option value="purple">purple</option>
+            </select>
+        </div>
+    </body>
+    <!-- 可以单独保存为一个独立的JS文件  -->
+    <script> 
+        //组合使用构造函数与原型模式
+        TextCursor = function (width,fillStyle){
+            this.width = width || 2;
+            this.fillStyle = fillStyle || 'rgba(0,0,0,0.5)';
+            this.left = 0;
+            this.top = 0;
+        };
+        TextCursor.prototype = {
+            //设置光标高度为当前字体的字符框值的1又6分之一
+            getHeight:function(context){  
+                var h = context.measureText('M').width; //得到字符框值
+                return h+h/6;
+            },
+            createPath:function(context){
+                context.beginPath();
+                //创建光标所在路径
+                context.rect(this.left,this.top,this.width,this.getHeight(context));
+
+            },
+            draw:function(context,left,bottom){
+                context.save();
+
+                this.left = left;
+                this.top = bottom -this.getHeight(context);
+                this.createPath(context);
+
+                context.fillStyle = this.fillStyle;
+                context.fill();
+
+                context.restore();
+            },
+            erase:function (context,imageData){
+                //恢复光标处的像素
+                context.putImageData(imageData,0,0,this.left,this.top,this.width,this.getHeight(context));
+            }
+        }
+    </script>
+    <script>
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d'); 
+        var fontStyleSelect = document.getElementById('fontStyleSelect');
+        var fontSizeSelect = document.getElementById('fontSizeSelect');
+        var fontColorSelect = document.getElementById('fontColorSelect');
+
+        var drawingSurfaceImageData;
+        var fillStyle = fontColorSelect.value;
+        var str = fontSizeSelect.value +' '+ fontStyleSelect.value;
+
+        //光标闪烁定时器---设置1000ms内，700ms显示，300ms隐藏
+        var blinkingInterval;
+        var blink_show = 700;
+        var blink_hide = 300;
+
+        //创建新的光标对象
+        var cursor= new TextCursor(2,fillStyle); ;
+        //保存画布数据
+        saveDrawingSurface();
+
+        //canvas事件控制器
+        canvas.onmousedown = function(e){
+            var loc = windowToCanvas(e.clientX,e.clientY);
+            context.font = str;
+            cursor.fillStyle = fillStyle;
+            //这里erase的left,top在没有执行draw之前，记录的正是上一次的光标点的left,top,width,height
+            cursor.erase(context,drawingSurfaceImageData);
+            cursor.draw(context,loc.x,loc.y);
+
+            //定时器只开启一次，防多次重复重写blinkingInterval
+            //这样写也应该是有弊端的，在下一次点鼠标时有时会出现刚点鼠标就马上消失的效果，因为当时定时器刚好执行到消失的时间内
+            //可以考虑每次点击清定时器，再重开试一下
+            if(!blinkingInterval){
+                blinkCursor();
+            }
+        }
+        fontStyleSelect.onchange = function(){
+            str = fontSizeSelect.value +' '+ fontStyleSelect.value;
+        }
+        fontSizeSelect.onchange = function(){
+            str = fontSizeSelect.value +' '+ fontStyleSelect.value;
+
+        }
+        fontColorSelect.onchange = function (){
+            fillStyle = fontColorSelect.value;
+        }
+        //光标闪烁函数
+        function blinkCursor(){
+            blinkingInterval=setInterval(function(){
+                //鼠标点击时执行了draw,也就是说，left,top的值，已更新到当前光标位置
+                cursor.erase(context,drawingSurfaceImageData); //清除持续300ms
+
+                //300ms后执行
+                //这里之所以用了cursor.left与cursor.top是因为，定时器只开启一次，所以不能用第一次传进来的loc，而是要实时用cursor对象中的最新光标定位
+                setTimeout(function(){
+                    cursor.draw(context,cursor.left,(cursor.top+cursor.getHeight(context)));
+                },blink_hide);
+
+            },blink_show+blink_hide);
+        }
+        //得到鼠标在canvas画布中的坐标
+        function windowToCanvas(x,y){
+            var bbox = canvas.getBoundingClientRect();
+            return {
+                x:x-bbox.left*(canvas.width/bbox.width),
+                y:y-bbox.top*(canvas.height/bbox.height)
+            }
+        };
+        //保存画布数据
+        function saveDrawingSurface(){
+            drawingSurfaceImageData = context.getImageData(0,0,canvas.width,canvas.height);
+        }
+    </script>
+</html>

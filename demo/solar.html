@@ -335,7 +335,7 @@
 
 	function getAsteroidColor(){
 		var ret=['#'];
-		var val=Random(10,15).toString(16);
+		var val=Math.floor(Random(10,15)).toString(16);
 		for(var i=0;i<3;i++){
 			ret.push(val);
 		}
@@ -345,7 +345,7 @@
     function getCometColor(){
     	var ret=['#'];
     	for(var i=0;i<6;i++){
-    		ret.push(Random(3,15).toString(16));
+    		ret.push(Math.floor(Random(3,15)).toString(16));
     	}
     	return ret.join('');
     }

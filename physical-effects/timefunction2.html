@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>时间轴扭曲函数</title>
+        <style>
+            body{
+                background: #fff;
+            }
+            #canvas{
+                background: #eee;
+            }
+            #controls{
+                position: absolute;
+                left: 25px;
+                top: 25px;
+            }
+            #direction{
+                position: absolute;
+                left:25%;
+                top: 50%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="controls">
+            <input type="radio" name="sport" id="linearRadioButton" checked>均速运动<br />
+            <input type="radio" name="sport" id="easeInRadioButton" />缓入运动<br />
+            <input type="radio" name="sport" id="easeOutRadioButton" />缓出运动<br />
+            <input type="radio" name="sport" id="easeInOutRadioButton" />缓入缓出运动<br />
+            <input type="radio" name="sport" id="elasticRadioButton" />弹簧运动<br />
+            <input type="radio" name="sport" id="bounceRadioButton" />弹跳运动<br />
+        </div>
+        <div id="direction">
+            <input type="button" value="左边" id="leftButton"/ style="margin-right: 20px;">
+            <input type="button" value="右边" id="rightButton"/>
+
+        </div>
+        <canvas id="canvas" width="800" height="600"></canvas>
+    </body>
+    <!-- 精灵对象 -->
+    <script>
+        var Sprite = function(name,painter,behaviors){
+            if(name !== undefined){ this.name = name; }
+            if(painter !== undefined){ this.painter = painter; }
+
+            this.top = 0;
+            this.left = 0;
+            this.width = 10;
+            this.height = 10;
+            this.velocityX = 0;
+            this.velocityY = 0;
+            this.visible = true;
+            this.animating = false;
+            this.behaviors = behaviors || [];
+
+        }
+
+        Sprite.prototype = {
+            paint:function(context){
+                if(this.painter !== undefined && this.visible){
+                    this.painter.paint(this,context);
+                }
+            },
+            update:function(context,time){
+                for(var i=0;i<this.behaviors.length;i++){
+                    this.behaviors[i].execute(this,context,time);
+                }
+            }
+        }
+    </script>
+    <!-- 重构后的支持时间轴扭曲功能的AnimationTimer对象（动画计时器） -->
+    <script>
+        StopWatch = function(){};
+        StopWatch.prototype = {
+            startTime:0,
+            running:false,
+            elapsed:undefined,
+
+            start:function(){
+                this.startTime = +new Date();
+                this.running = true;
+                this.elapsed = undefined;
+            },
+            stop:function(){
+                this.elapsed = (+new Date()) - this.startTime;
+                this.running = false;
+            },
+            isRunning:function(){
+                return this.running;
+            },
+            getElapsedTime:function(){
+                if(this.isRunning()){
+                    return (+new Date()) - this.startTime;
+                }else{
+                    return this.elapsed;
+                }
+            },
+            reset:function(){
+                this.elapsed = 0;
+            }
+        };
+
+        AnimationTimer = function(duration,timeWarp){
+            if(duration !== undefined){
+                this.duration = duration;
+            };
+            if(timeWarp !== undefined){
+                this.timeWarp = timeWarp;
+            }
+            this.stopWatch = new StopWatch();
+        }
+
+        AnimationTimer.prototype = {
+            default_elastic_passes:3,
+            start:function(){
+                this.stopWatch.start();
+            },
+            stop:function(){
+                this.stopWatch.stop();
+            },
+            getElapsedTime:function(){
+                var elapsedTime = this.stopWatch.getElapsedTime();
+                var percentComplete = elapsedTime/this.duration;
+
+                if(!this.stopWatch.running){
+                    return undefined;
+                };
+                if(this.timeWarp == undefined){
+                    return elapsedTime;
+                };
+                //console.log(this.timeWarp);
+                return elapsedTime*(this.timeWarp(percentComplete)/percentComplete);
+            },
+            isRunning:function(){
+                return this.stopWatch.isRunning();
+            },
+            isOver:function(){
+                return this.stopWatch.getElapsedTime() > this.duration;
+            },
+            //运动形式
+            makeEaseIn:function(strength){  //缓入动画
+                return function (percentComplete){
+                    console.log('进入缓入动画了');
+                    return Math.pow(percentComplete,strength*2)
+                }
+            },
+            makeEaseOut:function(strength){
+                return function(percentComplete){  //缓出动画
+                    console.log('进入缓出动画了');
+                    return 1-Math.pow(1-percentComplete,strength*2);
+                };
+            },
+            makeEaseInOut:function(){  //缓入缓出动画
+                return function(percentComplete){  //第一个return是timeWarp函数
+                    console.log('进入缓入缓出动画了');
+                    return percentComplete - Math.sin(percentComplete*2*Math.PI)/(2*Math.PI);
+                };
+            },
+            makeElastic:function(passes){ //弹簧运动
+                var passes = passes || this.default_elastic_passes;
+                return function(percentComplete){
+                    console.log('进入弹簧运动了');
+                    return ((1-Math.cos(percentComplete*Math.PI*passes))*(1-percentComplete))+ percentComplete;
+                };
+            },
+            makeBounce:function(bounces){ //弹跳运动
+                var fn = this.makeElastic(bounces);
+                return function(percentComplete){
+                    console.log('进入弹跳运动了');
+                    percentComplete = fn(percentComplete);
+                    return percentComplete <=1 ?percentComplete:2-percentComplete;
+                }
+            },
+            makeLinear:function(){  //匀速运动
+                return function(percentComplete){
+                    console.log('进入匀速运动了');
+                    return percentComplete;
+                }
+            }
+        };
+    </script>
+    <script>
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+
+        var linearRadioButton = document.getElementById('linearRadioButton');
+        var easeInRadioButton = document.getElementById('easeInRadioButton');
+        var easeOutRadioButton = document.getElementById('easeOutRadioButton');
+        var easeInOutRadioButton = document.getElementById('easeInOutRadioButton');
+        var elasticRadioButton = document.getElementById('elasticRadioButton');
+        var bounceRadioButton = document.getElementById('bounceRadioButton');
+
+        var leftButton = document.getElementById('leftButton');
+        var rightButton = document.getElementById('rightButton');
+
+        var push_animation_duration = 3600;
+        var board_left = 20;
+        var board_top = canvas.height - 50;
+        var board_width = canvas.width-40;
+        var board_height = 10;
+
+        var ball_radius = 15;
+        var ball_velocityX =100;
+
+        var arrow ;
+
+        var pushAnimationTimer  = new AnimationTimer(push_animation_duration);
+
+        //返回的是时间扭曲函数
+        var linear = pushAnimationTimer.makeLinear();
+        var easeIn = pushAnimationTimer.makeEaseIn(1);
+        var easeOut = pushAnimationTimer.makeEaseOut(1);
+        var easeInOut = pushAnimationTimer.makeEaseInOut();
+        var elastic = pushAnimationTimer.makeElastic(5);
+        var bounce = pushAnimationTimer.makeBounce(5);
+
+        //绘制器
+        var boardPainter = {
+                board_fillStyle:'darkblue',
+                board_strokeStyle:'rgb(0,0,0,)',
+                paint:function(board,context){
+                    context.save();
+                    context.beginPath();
+                    context.lineWidth = 2;
+                    context.fillStyle = this.board_fillStyle;
+                    context.strokeStyle = this.board_strokeStyle;
+                    context.shadowColor = 'rgba(0,0,0,0.5)';
+                    context.shadowOffsetX = 4;
+                    context.shadowOffsetY = 4;
+                    context.shadowBlur = 8;
+                    context.fillRect(board.left,board.top,board.width,board.height);
+                    context.restore();
+                }
+            };
+        var ballPainter = {
+                ball_fill_style:'rgb(255,255,0)',
+                ball_stroke_style:'rgb(0,0,0,0.4)',
+
+                paint:function(ball,context){
+                    context.save();
+                    context.shadowColor = undefined;
+                    context.lineWidth = 2;
+                    context.fillStyle = this.ball_fill_style;
+                    context.strokeStyle = this.ball_stroke_style;
+
+                    context.beginPath();
+                    context.arc(ball.left,ball.top,ball.radius,0,Math.PI*2,false);
+                    context.clip();
+                    context.fill();
+                    context.stroke();
+                    context.restore();
+                }
+            };
+        //小球行为对象
+        moveBall = {
+            lastTime:undefined,
+            resetBall:function(){
+                ball.left =  board_left;
+                ball.top = board_top - ball_radius;
+            },
+            updatePosition:function(elapsed){
+
+                if(arrow == 'left'){
+                    ball.left -= ball.velocityX *elapsed/1000;
+                }else{
+                    ball.left += ball.velocityX *elapsed/1000;
+                }
+            },
+            execute:function(ball,contxet,time){
+                var animationElapsed = pushAnimationTimer.getElapsedTime();
+                var elapsed;
+                if(pushAnimationTimer.isRunning()){
+                    //console.log('进来了');
+                    if(this.lastTime !== undefined ){  //点击后第一个运行时this.lastTime没有赋值所以做如下处理
+                        elapsed = animationElapsed - this.lastTime;
+                        console.log('elapsed:'+elapsed);
+                        this.updatePosition(elapsed);
+                        if(isBallOnLedge()){ //球在板上
+                            if(pushAnimationTimer.isOver()){
+                                console.log('球没掉下去，时间到了');
+                                pushAnimationTimer.stop();
+                            }
+                        }else{ //球掉下去了
+                            console.log('球掉下去了')
+                            pushAnimationTimer.stop();
+                            this.resetBall();
+                        }
+                    }
+                }
+                this.lastTime = animationElapsed;
+            }
+        }
+        //精灵
+        var board = new Sprite('board',boardPainter);
+        var ball = new Sprite('ball',ballPainter,[moveBall]);
+        var startTime = undefined;
+
+
+
+        //初始化
+        board.left = board_left;
+        board.top = board_top;
+        board.width = board_width;
+        board.height = board_height;
+
+        ball.radius = ball_radius;
+        ball.left =  board_left;
+        ball.top = board_top - ball_radius;
+        ball.velocityX = ball_velocityX;
+
+        startTime = +new Date();
+        animate(startTime);
+
+        //函数
+        function animate(time){
+            time = +new Date();
+            context.clearRect(0,0,canvas.width,canvas.height);
+
+            updateSprites(time);
+            paintSprites();
+
+            window.requestAnimationFrame(animate);
+        }
+        function updateSprites(time){
+            ball.update(context,time);
+        }
+        function paintSprites(){
+            board.paint(context);
+            ball.paint(context);
+        }
+        function isBallOnLedge(){ //判断球是不是还在板上
+            return ball.left>board_left && ball.left<(board_left+board_width);
+        }
+
+        leftButton.onclick = function(){
+
+            if(!pushAnimationTimer.isRunning()){
+                arrow = 'left';
+                pushAnimationTimer.start();
+                console.log('点击了左边开始按钮');
+            }
+        }
+        rightButton.onclick = function(){
+            if(!pushAnimationTimer.isRunning()){
+                arrow = 'right';
+                pushAnimationTimer.start();
+                console.log('点击了右边开始按钮');
+            }
+        }
+        //事件
+        linearRadioButton.onchange = function(){
+            pushAnimationTimer.timeWarp = linear;
+        };
+        easeInRadioButton.onchange = function(){
+            pushAnimationTimer.timeWarp = easeIn;
+        };
+        easeOutRadioButton.onchange = function(){
+            pushAnimationTimer.timeWarp = easeOut;
+        };
+        easeInOutRadioButton.onchange = function(){
+            pushAnimationTimer.timeWarp = easeInOut;
+        };
+        elasticRadioButton.onchange = function(){
+            pushAnimationTimer.timeWarp = elastic;
+        };
+        bounceRadioButton.onchange = function(){
+            pushAnimationTimer.timeWarp = bounce;
+        };
+
+    </script>
+</html>

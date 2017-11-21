@@ -23,14 +23,13 @@
         bounce=-0.9,
         fl=250;//z轴深度
 
-    ctx.strokeStyle='#888';
-    ctx.lineWidth=1;
+    ctx.translate(W/2,H/2);
     for(var i=0;i<nums;i++){
         var r = Random(10,20),
             color = RandomColor(),
             ball = new Ball3d(r,color);
-        ball.xpos=Random(r,W-r);
-        ball.ypos=Random(r,H-r);
+        ball.xpos=Random(-W/2,W/2);
+        ball.ypos=Random(-H/2,H/2);
         ball.zpos=Random(0,250);
         ball.vx=Random(-5,5);
         ball.vy=Random(-5,5);
@@ -38,20 +37,20 @@
         balls.push(ball);
     }
     function update(ball,i){
-        if(ball.xpos<ball.radius){
-            ball.xpos=ball.radius;
+        if(ball.xpos<-W/2+ball.radius){
+            ball.xpos=-W/2+ball.radius;
             ball.vx*=bounce;
         }
-        if(ball.xpos>W-ball.radius){
-            ball.xpos=W-ball.radius;
+        if(ball.xpos>W/2-ball.radius){
+            ball.xpos=W/2-ball.radius;
             ball.vx*=bounce;
         }
-        if(ball.ypos<ball.radius){
-            ball.ypos=ball.radius;
+        if(ball.ypos<-H/2+ball.radius){
+            ball.ypos=-H/2+ball.radius;
             ball.vy*=bounce;
         }
-        if(ball.ypos>H-ball.radius){
-            ball.ypos=H-ball.radius;
+        if(ball.ypos>H/2-ball.radius){
+            ball.ypos=H/2-ball.radius;
             ball.vy*=bounce;
         }
         if(ball.zpos<ball.radius-fl){
@@ -69,24 +68,25 @@
 
     function draw(ball,i){
         if(ball.zpos>-fl){
-            var scale=(fl+ball.zpos)/fl;
+            var scale=fl/(fl+ball.zpos);
             ball.scaleX=scale;
             ball.scaleY=scale;
-            ball.x=ball.xpos;
-            ball.y=ball.ypos;
+            ball.x=ball.xpos*scale;
+            ball.y=ball.ypos*scale;
             ball.visible=true;
         } else {
             ball.visible=false;
         }
+
         if(ball.visible){
             ball.draw(ctx);
         }
     }
 
     (function animate(){
-        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.clearRect(-W/2,-H/2,W,H);
         balls.forEach(update);
-        balls.sort((a,b)=>a.zpos-b.zpos);
+        balls.sort((a,b)=>b.zpos-a.zpos);
         balls.forEach(draw);
         requestAnimationFrame(animate);
     }());

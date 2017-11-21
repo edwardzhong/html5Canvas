@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>伸缩式动画</title>
+	<title>clip实现伸缩式动画</title>
 	<style>
 
 	</style>
@@ -11,13 +11,14 @@
 <canvas id="canvas" width="600" height="400"></canvas>
 <script>
 	var canvas=document.getElementById('canvas'),
-		ctx=canvas.getContext('2d');
+		ctx=canvas.getContext('2d'),
+		w=canvas.width,
+		h=canvas.height;
 
 	ctx.lineWidth=0.5;
 	ctx.font='128pt Comic-sans';
 
 	function drawText(){
-		// ctx.save();
 		ctx.shadowColor='rgba(100,100,150,0.8)';
 		ctx.shadowOffsetX=5;
 		ctx.shadowOffsetX=5;
@@ -27,56 +28,32 @@
 		ctx.fillText('html5',20,250);
 		ctx.strokeStyle='yellow';
 		ctx.strokeText('html5',20,250);
-		// ctx.restore();
 	}
 
-	function setClipingRegin(radius){
-		ctx.beginPath();
-		ctx.arc(canvas.width/2,canvas.height/2,radius,0,Math.PI*2,false);
-		ctx.clip();
-	}
-
-	function fillCanvas(color){
-		ctx.fillStyle=color;
-		ctx.fillRect(0,0,canvas.width,canvas.height);
-	}
-
-	function endAnimation(loop){
-		clearInterval(loop);
-		setTimeout(function(e) {
-			ctx.clearRect(0,0,canvas.width,canvas.height);
-			drawText();
-		}, 1000);
-	}
-
-	function drawAnimationFrame(radius){
-		ctx.save();
-		setClipingRegin(radius);
-		fillCanvas('lightgray');
-		drawText();
-		ctx.restore();
-	}
-
-	function animate(){
-		var radius=canvas.width/2,
-			loop;
-
-		loop=setInterval(function(){
-			radius-=canvas.width/100;
-			fillCanvas('charcoal');
-
-			if(radius>0){
-				drawAnimationFrame(radius);
-			} else {
-				endAnimation(loop);
+	canvas.onmousedown=function(){
+		var radius=Math.min(w,h);
+		(function run(){
+			ctx.clearRect(0,0,w,h);
+			if(radius<1){
+				drawText();
+				return;
 			}
-		},16);
-	}
+			ctx.save();
+			ctx.fillStyle='hsla(200,100%,70%,1)';
+			ctx.fillRect(0,0,w,h);
 
-	canvas.onmousedown=function(e){
-		animate();
+			ctx.beginPath();
+			ctx.arc(w/2,h/2,radius,0,Math.PI*2,false);
+			ctx.clip();//注意: clip 和 填充clip的动作，必须在同一 save,restore中
+
+			ctx.clearRect(0,0,w,h);
+			drawText();
+			ctx.restore();
+			radius-=radius/50;
+			radius=radius<5?0:radius;
+			requestAnimationFrame(run);
+		}());
 	};
-
 	drawText();
 </script>
 </body>

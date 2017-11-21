@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>精灵表绘制器</title>
+        <title>将多个行为组合起来_可暂停</title>
         <style>
             body{
                 background: #ddd;
@@ -25,6 +25,7 @@
         </style>
     </head>
     <body>
+
         <input id="animateButton" type="button" value="Animate" />
         <canvas id="canvas" width="462" height="500"></canvas>
 
@@ -81,6 +82,7 @@
             }
         }
     </script>
+
     <script>
         var canvas = document.getElementById('canvas');
         var context = canvas.getContext('2d');
@@ -92,73 +94,100 @@
                         {x:0,y:0,w:47,h:64},
                         {x:55,y:0,w:44,h:64},
                         {x:107,y:0,w:39,h:64},
-                        {x:150,y:0,w:46,h:64},
-                        {x:208,y:0,w:49,h:64},
+                        {x:152,y:0,w:46,h:64},
+                        {x:212,y:0,w:47,h:64},
                         {x:265,y:0,w:46,h:64},
                         {x:320,y:0,w:42,h:64},
                         {x:380,y:0,w:35,h:64},
                         {x:425,y:0,w:35,h:64}
                     ];
-        var sprite = new Sprite('runner',new SpriteSheetPainter(runnerCells));
 
-        var interval;
-        var lastAdvance = 0;
-        var paused = false;
-        var pageFlip_interval = 100;
+        //原地奔跑
+        var runInPlace = {
+            lastAdvance :0,
+            pageFlip_interval:100,
+            execute:function(sprite,context,time){
+
+                if(time - this.lastAdvance >this.pageFlip_interval){
+                    if(!paused){
+                        sprite.painter.advance();
+                    }
+                    this.lastAdvance = time;
+                }
+            }
+        };
+
+        //从右向左
+        var moveRightToLeft = {
+            lastMove :0,
+            execute:function(sprite,context,time){
+
+                if(this.lastMove !==0){
+                    if(!paused){
+                        sprite.left -= sprite.velocityX*((time-this.lastMove)/1000);
+                        if(sprite.left<-64){
+                            sprite.left = canvas.width;
+                        }
+                    }
+                }
+                this.lastMove = time;
+            }
+        }
+
+        var sprite = new Sprite('runner',new SpriteSheetPainter(runnerCells),[runInPlace,moveRightToLeft]);
+
+        var paused = true;
 
         //初始化
         spritesheet.src = '../img/running-sprite-sheet.png';
-
         spritesheet.onload = function(){
             context.drawImage(spritesheet,0,0);
         }
 
+        sprite.velocityX = 30; //每秒在X轴的位移
         sprite.left = 200;
         sprite.top = 100;
 
-        context.strokeStyle = 'llightgray';
-        context.lineWidth = 0.5;
+        context.strokeStyle = 'lightgray';
+        context.lineWidth =0.5;
 
         drawBackground();
 
         //事件
         animateButton.onclick = function(){
-            if(animateButton.value === 'Animate'){
+            if(animateButton.value == 'Animate'){
                 startAnimation();
             }else{
                 pauseAnimation();
             }
         }
 
-        function startAnimation(){
-            animateButton.value = 'Pause';
-            paused = false;
-            //lastAdvance = +new Date();
-            window.requestAnimationFrame(animate);
-        }
-
-        function pauseAnimation(){
-            animateButton.value = 'Animate';
-            paused = true;
-        }
-
+        //动画函数
         function animate(time){
-            //这里的time不能用他传进来的参数
-            //time = +new Date();
             if(!paused){
                 context.clearRect(0,0,canvas.width,canvas.height);
                 drawBackground();
                 context.drawImage(spritesheet,0,0);
-
-                if(time -lastAdvance >pageFlip_interval ){
-                    sprite.painter.advance();
-                    lastAdvance = time;
-                }
-
-
-                sprite.paint(context);
-                window.requestAnimationFrame(animate);
             }
+
+            //这里让time,与lastTime保持更新，当前图片定位张数与距离左边距离都不更新
+            sprite.update(context,time);
+
+            if(!paused){
+                sprite.paint(context);
+            }
+            window.requestAnimationFrame(animate);
+        }
+        //功能函数
+        function startAnimation(){
+            paused = false;
+            animateButton.value = 'Pause';
+            window.requestAnimationFrame(animate);
+        }
+
+        function pauseAnimation(){
+            paused = true;
+            animateButton.value = 'Animate';
         }
         //绘制横隔背景
         function drawBackground(){
@@ -184,6 +213,6 @@
                 i-=step_y;
             }
             context.restore();
-        }
+        } 
     </script>
 </html>
