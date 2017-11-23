@@ -10,6 +10,7 @@
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d');
 
+	// 坐标变换都是围绕坐标原点进行，所以如果只想变换部分图形，需要translate到该图形中点，然后将变换代码放到beginPath后面
 	ctx.save();
 	ctx.translate(canvas.width/2,canvas.height/2);
 	ctx.fillStyle='hsl(0,100%,60%)'
