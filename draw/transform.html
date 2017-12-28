@@ -21,10 +21,11 @@
 	// ctx.scale(-1,-1);//水平加垂直镜像
 	var cos=Math.cos(Math.PI/6),
 		sin=Math.sin(Math.PI/6);
-	// ctx.transform(cos,sin,-sin,cos,100,100);// 旋转30度加水平移动100垂直移动100
+	// ctx.transform(cos,sin,-sin,cos,100,100);// 旋转30度 水平移动100 垂直移动100
 	// ctx.transform(1,-1,0.5,1,0,0);// 错切45度
-	ctx.transform(-1,1,-1,0,0,0);//旋转90度，同时错切
-	// drawArrow(ctx);
+	// ctx.transform(-1,1,-1,0,0,0);//旋转90度，同时错切
+	ctx.transform(0,1,-1,0,100,0);//旋转90度 水平移动100
+	drawArrow(ctx);
 	drawRect();
 	ctx.restore();
 

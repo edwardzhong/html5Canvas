@@ -60,7 +60,7 @@ body{
 			// 然后绕x旋转（180/12）度
 			// var pos=Rotates.rotateX({y:this.y,z:this.z},Math.PI/12);
 			
-			// 注意比例问题，重要
+			// 注意比例问题，重要, z轴朝向里面为正，朝向外面为负
 			var scale=ZIndex/(this.z+ZIndex);
 			this.x1=this.x*scale;
 			this.y1=this.y*scale;

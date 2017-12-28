@@ -63,10 +63,10 @@
         vy*=friction;
         vz*=friction;
 
-        if(b.zpos < -fl){//超过焦距后，再放回无限远处
+        if(b.zpos < -fl){//向远处移动，超过焦距后，再放回无限远处
             b.zpos+=10000;
         }
-        if (b.zpos > 10000 - fl) {
+        if (b.zpos + fl > 10000) {//向近处移动，远处超过后，放回无限近处
           b.zpos -= 10000;
         }
         if(b.ypos<-500){
