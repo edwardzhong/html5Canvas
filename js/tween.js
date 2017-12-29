@@ -1,11 +1,11 @@
-/*
- * Tween.js
- * t: current time（当前时间）；
- * b: beginning value（初始值）；
- * c: change in value（变化量）；
- * d: duration（持续时间）。
- * you can visit 'http://easings.net/zh-cn' to get effect
-*/
+/**
+ * 动画公式
+ * @param    {Number}                 t  current time 当前时间点（当前时间-开始时间）
+ * @param    {Number}                 b  beginning value 初始坐标
+ * @param    {Number}                 c  change in value 需要移动的距离（结束坐标-初始坐标）
+ * @param    {Number}                 d  duration 持续时间（多少时间内完成动画）
+ * @return   {Number}                 返回当前时间点的位置
+ */
 var Tween = {
     Linear: function(t, b, c, d) { return c*t/d + b; },
     Quad: {
