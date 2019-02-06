@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>圆与三角函数</title>
 </head>
-
 <body>
     <canvas id="canvas" width="600" height="400"></canvas>
     <script>
@@ -18,18 +16,19 @@
             R = 100,
             X = 0,
             Rad = 0,
+            Pos = -3 * R,
             points = [];
 
         canvas.width = 2 * W;
         canvas.height = 2 * H;
         canvas.style.width = W + 'px';
         canvas.style.height = H + 'px';
-        ctx.lineWidth=2;
-        ctx.translate(W,H);
-        
+        ctx.lineWidth = 2;
+        ctx.translate(W, H);
+
         function generate() {
-            Rad += Math.PI / 90;
-            Rad%=(Math.PI*2);
+            Rad += Math.PI / 60;
+            Rad %= (Math.PI * 2);
             X = Math.cos(-Rad) * R;
             points.unshift(Math.sin(-Rad) * R);
             points.length = W;//截取至屏幕长度
@@ -50,7 +49,7 @@
             ctx.save();
             ctx.beginPath();
             ctx.strokeStyle = 'hsl(0,0%,50%)';
-            ctx.arc(-R*4, 0, R, 0, -Rad, true);
+            ctx.arc(Pos, 0, R, 0, -Rad, true);
             ctx.stroke();
             ctx.restore();
         }
@@ -71,7 +70,8 @@
             ctx.strokeStyle = 'hsl(0,80%,50%)';
             let y = points[0];
             ctx.beginPath();
-            ctx.moveTo(-R*4 + X, y);
+            ctx.moveTo(Pos, 0);
+            ctx.lineTo(Pos + X, y);
             ctx.lineTo(0, y);
             ctx.stroke();
             ctx.restore();
