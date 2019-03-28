@@ -14,8 +14,8 @@
     按上下左右空格键试试
 </h2>
 <canvas id="canvas" width="800" height="500"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/ball3d.js"></script>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
 <script>
     var canvas = document.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
@@ -35,17 +35,17 @@
 
 
     for(var i=0;i<nums;i++){
-        var r=Random(10,20),
-            color= RandomHsl(),
+        var r=random(10,20),
+            color= randomHsl(),
             gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, r );
         gradient.addColorStop(0,`hsl(${color[0]},100%,100%)`);
         gradient.addColorStop(0.4,`hsl(${color[0]},100%,90%)`);
         gradient.addColorStop(1,`hsl(${color[0]},100%,60%)`);
             
         var ball = new Ball3d(r,gradient);
-        ball.xpos=Random(-1500,1500);
-        ball.ypos=Random(-500,500);
-        ball.zpos=Random(0,10000);
+        ball.xpos=random(-1500,1500);
+        ball.ypos=random(-500,500);
+        ball.zpos=random(0,10000);
         balls.push(ball);
     }
 

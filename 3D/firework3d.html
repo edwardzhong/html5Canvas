@@ -12,8 +12,8 @@ body{
 </head>
 <body>
 <canvas id="canvas" width="800" height="600"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/ball3d.js"></script>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
@@ -58,7 +58,7 @@ body{
 			// 绕y轴旋转
 			this.rotateY(Math.PI/180);
 			// 然后绕x旋转（180/12）度
-			// var pos=Rotates.rotateX({y:this.y,z:this.z},Math.PI/12);
+			// var pos=rotateX({y:this.y,z:this.z},Math.PI/12);
 			
 			// 注意比例问题，重要, z轴朝向里面为正，朝向外面为负
 			var scale=ZIndex/(this.z+ZIndex);
@@ -98,7 +98,7 @@ body{
 
 	class Piece{
 		constructor(x,y,z,color,time){
-			var v=Random(15,20),
+			var v=random(15,20),
 				Pr2=2*Math.PI*Math.random(),
 				Pr=Math.PI*Math.random();
 			this.vx=Math.sin(Pr2)*Math.sin(Pr)*v;
@@ -164,7 +164,7 @@ body{
 			// ctx.globalAlpha=0.1;
 			ctx.beginPath();
 			this.trail.forEach((p,i)=>{
-				var pos=Rotates.rotateY({x:p.x,z:p.z},Math.PI/180*i);
+				var pos=rotateY({x:p.x,z:p.z},Math.PI/180*i);
 				ctx.lineWidth=8-i*0.8;
 				ctx.strokeStyle=`hsla(${this.color[0]},${this.color[1]}%,${40+i*5}%,${0.06-i*0.003})`;
 				ctx[i==0?'moveTo':'lineTo'](pos.x,p.y);
@@ -175,10 +175,10 @@ body{
 	}
 
 	(function fire(){
-		var x=Random(-300,300),
-			y=Random(-400,-50),
-			z=Random(-400,400),
-			color=RandomHsl();
+		var x=random(-300,300),
+			y=random(-400,-50),
+			z=random(-400,400),
+			color=randomHsl();
 		for(var i=0;i<100;i++){
 			Fires.push(new Piece(x,y,z,color,new Date()));
 		}

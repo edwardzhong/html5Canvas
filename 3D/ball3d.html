@@ -11,8 +11,8 @@
 </head>
 <body>
 <canvas id="canvas" width="500" height="500"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/ball3d.js"></script>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
 <script>
     var canvas = document.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
@@ -25,15 +25,15 @@
 
     ctx.translate(W/2,H/2);
     for(var i=0;i<nums;i++){
-        var r = Random(10,20),
-            color = RandomColor(),
+        var r = random(10,20),
+            color = randomColor(),
             ball = new Ball3d(r,color);
-        ball.xpos=Random(-W/2,W/2);
-        ball.ypos=Random(-H/2,H/2);
-        ball.zpos=Random(0,250);
-        ball.vx=Random(-5,5);
-        ball.vy=Random(-5,5);
-        ball.vz=Random(-5,5);
+        ball.xpos=random(-W/2,W/2);
+        ball.ypos=random(-H/2,H/2);
+        ball.zpos=random(0,250);
+        ball.vx=random(-5,5);
+        ball.vy=random(-5,5);
+        ball.vz=random(-5,5);
         balls.push(ball);
     }
     function update(ball,i){

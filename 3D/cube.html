@@ -6,12 +6,12 @@
 </head>
 <body>
 <canvas id="canvas" width="1000" height="600"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/ball3d.js"></script>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
-		mouse=CaptureMouse(canvas),
+		mouse=captureMouse(canvas),
 		Nums=27,
 		Z=1000,//焦距
 		Cubes=[],
@@ -71,12 +71,12 @@
 			});
 		}
 		rotateX(angle){
-			var pos=Rotates.rotateX({y:this.y,z:this.z},angle);
+			var pos=rotateX({y:this.y,z:this.z},angle);
 			this.y=pos.y;
 			this.z=pos.z;
 		}
 		rotateY(angle){
-			var pos=Rotates.rotateY({x:this.x,z:this.z},angle);
+			var pos=rotateY({x:this.x,z:this.z},angle);
 			this.x=pos.x;
 			this.z=pos.z;
 		}
@@ -90,10 +90,10 @@
 			this.dy=this.y*scale;
 
 			this.points.forEach((p,i)=>{
-				var pos=Rotates.rotateX({y:p.y,z:p.z},angleX);
+				var pos=rotateX({y:p.y,z:p.z},angleX);
 				p.y=pos.y;
 				p.z=pos.z;
-				pos=Rotates.rotateY({x:p.x,z:p.z},angleY);
+				pos=rotateY({x:p.x,z:p.z},angleY);
 				p.x=pos.x;
 				p.z=pos.z;
 				var scale=Z/(Z+p.z);

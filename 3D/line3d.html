@@ -1,89 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>3d场景</title>
-<style>
-    canvas{
-        background: #000;
-    }
-</style>
+    <meta charset="UTF-8">
+    <title>3d场景</title>
+    <style>
+        canvas {
+            background: #000;
+        }
+    </style>
 </head>
+
 <body>
-<canvas id="canvas" width="600" height="400"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/ball3d.js"></script>
-<script>
-    var canvas = document.getElementById('canvas'),
-        ctx = canvas.getContext('2d'),
-        W=canvas.width,
-        H=canvas.height,
-        mouse=CaptureMouse(canvas);
-        balls=[],
-        nums=20,
-        fl=300;//z轴深度
+    <canvas id="canvas" width="600" height="400"></canvas>
+    <script src="../../graphics/canvas.js"></script>
+    <script src="../../graphics/util.js"></script>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            ctx = canvas.getContext('2d'),
+            W = canvas.width,
+            H = canvas.height,
+            mouse = captureMouse(canvas);
+        balls = [],
+            nums = 20,
+            fl = 300;//z轴深度
 
-     ctx.lineWidth=1;
-     ctx.strokeStyle='#fff';
-    for(var i=0;i<nums;i++){
-        var r = Random(5,10),
-            color = RandomColor(),
-            ball = new Ball3d(r,color);
-        ball.xpos=Random(-200,200);
-        ball.ypos=Random(-200,200);
-        ball.zpos=Random(-200,200);
-        console.log(ball.xpos,ball.ypos,ball.zpos);
-        balls.push(ball);
-    }
-    function rotateX(ball,angle){
-        var pos=Rotates.rotateX({y:ball.ypos,z:ball.zpos},angle);
-        ball.ypos=pos.y;
-        ball.zpos=pos.z;
-    }
-    function rotateY(ball,angle){
-        var pos=Rotates.rotateY({x:ball.xpos,z:ball.zpos},angle);
-        ball.xpos=pos.x;
-        ball.zpos=pos.z;
-    }
-
-    function rotateZ(ball,angle){
-        var pos=Rotates.rotateZ({x:ball.xpos,y:ball.ypos},angle);
-        ball.xpos=pos.x;
-        ball.ypos=pos.y;
-    }
-
-    function update(ball,i){
-        var angleX=(mouse.x-W/2)*0.0001;
-        var angleY=(mouse.y-H/2)*0.0001;
-        rotateX(ball,angleY);
-        rotateY(ball,angleX);
-    }
-    function draw(ball,i){
-        if(ball.zpos>-fl){
-            var scale=(fl+ball.zpos)/fl;
-            ball.scaleX=scale;
-            ball.scaleY=scale;
-            ball.x=W/2+ball.xpos;
-            ball.y=H/2+ball.ypos;
-            ball.visible=true;
-        } else {
-            ball.visible=false;
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#fff';
+        for (var i = 0; i < nums; i++) {
+            var r = random(5, 10),
+                color = randomColor(),
+                ball = new Ball3d(r, color);
+            ball.xpos = random(-200, 200);
+            ball.ypos = random(-200, 200);
+            ball.zpos = random(-200, 200);
+            console.log(ball.xpos, ball.ypos, ball.zpos);
+            balls.push(ball);
         }
-        if(ball.visible){
-            ball.draw(ctx);
+        function RotateX(ball, angle) {
+            var pos = rotateX({ y: ball.ypos, z: ball.zpos }, angle);
+            ball.ypos = pos.y;
+            ball.zpos = pos.z;
         }
-    }
+        function RotateY(ball, angle) {
+            var pos = rotateY({ x: ball.xpos, z: ball.zpos }, angle);
+            ball.xpos = pos.x;
+            ball.zpos = pos.z;
+        }
 
-    (function animate(){
-        ctx.clearRect(0,0,W,H);
-        balls.forEach(update);
-        balls.forEach((ball,i)=>{
-        	ctx[i==0?'moveTo':'lineTo'](balls[i].x, balls[i].y);
-        });
-        ctx.stroke();
-        balls.forEach(draw);
-        requestAnimationFrame(animate);
-    }());
-</script>
+        function RotateZ(ball, angle) {
+            var pos = rotateZ({ x: ball.xpos, y: ball.ypos }, angle);
+            ball.xpos = pos.x;
+            ball.ypos = pos.y;
+        }
+
+        function update(ball, i) {
+            var angleX = (mouse.x - W / 2) * 0.0001;
+            var angleY = (mouse.y - H / 2) * 0.0001;
+            RotateX(ball, angleY);
+            RotateY(ball, angleX);
+        }
+        function draw(ball, i) {
+            if (ball.zpos > -fl) {
+                var scale = (fl + ball.zpos) / fl;
+                ball.scaleX = scale;
+                ball.scaleY = scale;
+                ball.x = W / 2 + ball.xpos;
+                ball.y = H / 2 + ball.ypos;
+                ball.visible = true;
+            } else {
+                ball.visible = false;
+            }
+            if (ball.visible) {
+                ball.draw(ctx);
+            }
+        }
+
+        (function animate() {
+            ctx.clearRect(0, 0, W, H);
+            balls.forEach(update);
+            balls.forEach((ball, i) => {
+                ctx[i == 0 ? 'moveTo' : 'lineTo'](balls[i].x, balls[i].y);
+            });
+            ctx.stroke();
+            balls.forEach(draw);
+            requestAnimationFrame(animate);
+        }());
+    </script>
 </body>
+
 </html>

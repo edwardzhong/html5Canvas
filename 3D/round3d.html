@@ -6,13 +6,13 @@
 </head>
 <body>
 <canvas id="canvas" width="800" height="600"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/ball3d.js"></script>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
 		Nums=150,
-		mouse=CaptureMouse(canvas),
+		mouse=captureMouse(canvas),
 		Z=400,
 		R=200,
 		Balls=[],
@@ -28,7 +28,7 @@
 		var b = a*Math.sqrt(Nums*Math.PI);
 		// var a = Math.random()*2*Math.PI;
 		// var b = Math.random()*2*Math.PI;
-		var ball=new Ball3d(5,RandomColor());
+		var ball=new Ball3d(5,randomColor());
 		ball.xpos = R * Math.sin(a) * Math.cos(b);
 		ball.ypos = R * Math.sin(a) * Math.sin(b); 
 		ball.zpos = R * Math.cos(a);
@@ -38,10 +38,10 @@
 		var angleX=(mouse.y-H/2)*0.0001;
         var angleY=(mouse.x-W/2)*0.0001;
 
-		var posX=Rotates.rotateX({y:b.ypos,z:b.zpos},angleX);
+		var posX=rotateX({y:b.ypos,z:b.zpos},angleX);
 		b.ypos=posX.y;
 		b.zpos=posX.z;
-		var posY=Rotates.rotateY({x:b.xpos,z:b.zpos},angleY);
+		var posY=rotateY({x:b.xpos,z:b.zpos},angleY);
 		b.xpos=posY.x;
 		b.zpos=posY.z;
 		var scale=Z/(b.zpos+Z);

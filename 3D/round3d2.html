@@ -11,14 +11,14 @@
 </head>
 <body>
 <canvas id="canvas" width="600" height="400"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/ball3d.js"></script>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
 <script>
     var canvas = document.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
         W=canvas.width,
         H=canvas.height,
-        mouse=CaptureMouse(canvas);
+        mouse=captureMouse(canvas);
         balls=[],
         nums=50,
         fl=300;//z轴深度
@@ -28,28 +28,28 @@
     ctx.lineWidth=1;
     // ctx.translate(2/W,2/H);
     for(var i=0;i<nums;i++){
-        var r = Random(5,10),
-            color = RandomColor(),
+        var r = random(5,10),
+            color = randomColor(),
             ball = new Ball3d(r,color);
-        ball.xpos=Random(-300,300);
-        ball.ypos=Random(-300,300);
-        ball.zpos=Random(-300,300);
+        ball.xpos=random(-300,300);
+        ball.ypos=random(-300,300);
+        ball.zpos=random(-300,300);
         console.log(ball.xpos,ball.ypos,ball.zpos);
         balls.push(ball);
     }
-    function rotateX(ball,angle){
-        var pos=Rotates.rotateX({y:ball.ypos,z:ball.zpos},angle);
+    function RotateX(ball,angle){
+        var pos=rotateX({y:ball.ypos,z:ball.zpos},angle);
         ball.ypos=pos.y;
         ball.zpos=pos.z;
     }
-    function rotateY(ball,angle){
-        var pos=Rotates.rotateY({x:ball.xpos,z:ball.zpos},angle);
+    function RotateY(ball,angle){
+        var pos=rotateY({x:ball.xpos,z:ball.zpos},angle);
         ball.xpos=pos.x;
         ball.zpos=pos.z;
     }
 
-    function rotateZ(ball,angle){
-        var pos=Rotates.rotateZ({x:ball.xpos,y:ball.ypos},angle);
+    function RotateZ(ball,angle){
+        var pos=rotateZ({x:ball.xpos,y:ball.ypos},angle);
         ball.xpos=pos.x;
         ball.ypos=pos.y;
     }
@@ -57,9 +57,9 @@
     function update(ball,i){
         var angleX=(mouse.x-W/2)*0.0001;
         var angleY=(mouse.y-H/2)*0.0001;
-        rotateX(ball,angleY);
-        rotateY(ball,angleX);
-        // rotateZ(ball);
+        RotateX(ball,angleY);
+        RotateY(ball,angleX);
+        // RotateZ(ball);
     }
     function draw(ball,i){
         if(ball.zpos>-fl){

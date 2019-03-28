@@ -11,8 +11,8 @@
 </head>
 <body>
 <canvas id="canvas" width="600" height="600"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/ball3d.js"></script>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
 <script>
     var canvas = document.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
@@ -26,12 +26,12 @@
 
     for(var i=0;i<nums;i++){
         var r = 10,
-            color = RandomColor(),
+            color = randomColor(),
             ball = new Ball3d(r,color);
         ball.ypos=-100;
-        ball.vx=Random(-5,5);
-        ball.vy=Random(-5,5);
-        ball.vz=Random(-5,5);
+        ball.vx=random(-5,5);
+        ball.vy=random(-5,5);
+        ball.vz=random(-5,5);
         balls.push(ball);
     }
 

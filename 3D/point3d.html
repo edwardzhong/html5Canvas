@@ -15,23 +15,23 @@
 <h1>3D 物体</h1>
 <p>基于三角函数旋转的连线图案</p>
 <canvas id="canvas" width="600" height="400"></canvas>
-<script src="../js/canvas.js"></script>
-<script src="../js/point3d.js"></script>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
 <script>
     var canvas = document.getElementById('canvas'),
         ctx = canvas.getContext('2d'),
         W=canvas.width,
         H=canvas.height,
-        mouse=CaptureMouse(canvas);
+        mouse=captureMouse(canvas);
         points=[],
         nums=50;
 
     ctx.lineWidth=1;
     ctx.strokeStyle='#aaa';
     for(var i=0;i<nums;i++){
-        var x=Random(-200,200),
-            y=Random(-200,200),
-            z=Random(-200,200),
+        var x=random(-200,200),
+            y=random(-200,200),
+            z=random(-200,200),
             p=new Point3d(x,y,z);
         points.push(p);
     }
