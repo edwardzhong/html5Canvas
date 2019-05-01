@@ -18,7 +18,7 @@
 		ctx=canvas.getContext('2d'),
 		W=canvas.width,
 		H=canvas.height,
-		mouse=CaptureMouse(canvas),
+		mouse=captureMouse(canvas),
 		MAX=4,
 		rains=[],
 		drops=[];
@@ -35,7 +35,7 @@
 			this.x=x;
 			this.y=y;
 			this.x1=x;
-			this.l=Random(25,35);
+			this.l=random(25,35);
 			this.y1=y;
 			this.vx=0;
 			this.vy=10;
@@ -65,12 +65,12 @@
 	}
 	class Drop{
 		constructor(x,y,vx){
-			this.r=Random(1,2.4);
+			this.r=random(1,2.4);
 			this.x=x;
 			this.y=y;
-			this.vx=1.5*vx+Random(-10,10);
-			this.vy=-Random(1,10);
-			this.hsla=[210,80,70,Random(5,10)/10];
+			this.vx=1.5*vx+random(-10,10);
+			this.vy=-random(1,10);
+			this.hsla=[210,80,70,random(5,10)/10];
 		}
 		update(){
 			this.fillStyle=`hsla(${this.hsla[0]},${this.hsla[1]}%,${this.hsla[2]}%,${this.hsla[3]})`;
@@ -93,7 +93,7 @@
 	function createRains(){	
 		if(new Date().getTime()%MAX==0){
 			for(var i=0;i<Math.floor(10-MAX);i++){
-				var x=Random(-W/2,3*W/2);
+				var x=random(-W/2,3*W/2);
 				rains.push(new Rain(x,0));		
 			}
 		}

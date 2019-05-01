@@ -13,6 +13,7 @@
 <canvas id="canvas" width="1600" height="1600"></canvas>
 <script src="../../graphics/canvas.js"></script>
 <script src="../../graphics/util.js"></script>
+<script src="../../graphics/tween.js"></script>
 <script>
 /**
  * author:Jeff Zhong
@@ -109,7 +110,7 @@
 			this.blurStyle=blurStyle;
 		}
 		update(startTime){
-			this.angle=Tween.linear(new Date()-startTime,0,Math.PI*2,this.duration*1000);
+			this.angle=Tween.Linear(new Date()-startTime,0,Math.PI*2,this.duration*1000);
 		}
 		draw(ctx){
 			ctx.save();
@@ -221,7 +222,7 @@
 			this.duration=duration;
 		}
 		update(startTime){
-			var t=Tween.linear(new Date()-startTime,0,Math.PI*2,this.duration*1000);
+			var t=Tween.Linear(new Date()-startTime,0,Math.PI*2,this.duration*1000);
 			this.x=this.cx+this.a*Math.cos(this.angle+t);
 			this.y=this.cy+this.b*Math.sin(this.angle+t);
 		}
@@ -231,7 +232,7 @@
 			//画运动轨迹
 			ctx.lineWidth=0.5;
 			ctx.strokeStyle='rgba(15,69,116,0.2)';
-			Shape.ellipse(ctx,this.cx,this.cy,this.a,this.b);
+			ellipse(ctx,this.cx,this.cy,this.a,this.b);
 
 			//画球
 			ctx.beginPath();
@@ -340,7 +341,7 @@
 
 	function getAsteroidColor(){
 		var ret=['#'];
-		var val=Math.floor(Random(10,15)).toString(16);
+		var val=Math.floor(random(10,15)).toString(16);
 		for(var i=0;i<3;i++){
 			ret.push(val);
 		}
@@ -350,7 +351,7 @@
     function getCometColor(){
     	var ret=['#'];
     	for(var i=0;i<6;i++){
-    		ret.push(Math.floor(Random(3,15)).toString(16));
+    		ret.push(Math.floor(random(3,15)).toString(16));
     	}
     	return ret.join('');
     }
@@ -361,12 +362,12 @@
 			angle=0, d=283, 
 			color='#fff';
 		for(var i=0;i<400;i++){
-			rd=Random(300,320);
-			angle=Random(0,Math.PI*2*1000)/1000;
+			rd=random(300,320);
+			angle=random(0,Math.PI*2*1000)/1000;
 			x=Math.round(Math.cos(angle)*rd);
 			y=Math.round(Math.sin(angle)*rd);
-			r=Random(1,3);
-			d=Random(28.3,511);
+			r=random(1,3);
+			d=random(28.3,511);
 			color=getAsteroidColor();
 			// console.log(angle,color);
 			asteroid = new Asteroid(x,y,r,d,color,{color:color,blur:1});
@@ -380,14 +381,14 @@
 			r=3,duration=30,angle=0,color='#fff',
 			comet = null;
 		for(var i=0;i<20;i++){
-			l=Random(120,350)
-			a=Random(600,1000);
-			b=a/Random(1,3);
+			l=random(120,350)
+			a=random(600,1000);
+			b=a/random(1,3);
 			cx=a-l;
-			r=Random(2,4);
-			angle=Random(0,Math.PI*2*1000)/1000;
+			r=random(2,4);
+			angle=random(0,Math.PI*2*1000)/1000;
 			color=getCometColor();
-			duration=Random(20,100);
+			duration=random(20,100);
 			stage.planets.push(new Comet(cx,cy,a,b,r,angle,color,duration));
 		}
 	}

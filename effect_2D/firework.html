@@ -13,6 +13,7 @@
 <canvas id="canvas" width="1000" height="700"></canvas>
 <script src="../../graphics/canvas.js"></script>
 <script src="../../graphics/util.js"></script>
+<script src="../../graphics/tween.js"></script>
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
@@ -36,8 +37,8 @@
 			this.d=d;
 		}
 		update(c){
-			this.x=Tween.linear(c,this.sx,this.dx-this.sx,this.d);
-			this.y=Tween.linear(c,this.sy,this.dy-this.sy,this.d);
+			this.x=Tween.Linear(c,this.sx,this.dx-this.sx,this.d);
+			this.y=Tween.Linear(c,this.sy,this.dy-this.sy,this.d);
 		}
 		draw(ctx){
 			var rdGradient=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,5);
@@ -66,7 +67,7 @@
 			this.angle=angle;
 		}
 		update(c){
-			this.x=Tween.easeInOut(c,0,this.l,this.d);
+			this.x=Tween.Quart.easeInOut(c,0,this.l,this.d);
 		}
 		draw(ctx){
 			ctx.save();
@@ -92,8 +93,8 @@
 			this.color=color;
 		}
 		update(c){
-			this.x=Tween.easeInOut(c,0,this.dx,this.d);
-			this.y=Tween.easeInOut(c,0,this.dy,this.d);
+			this.x=Tween.Quart.easeInOut(c,0,this.dx,this.d);
+			this.y=Tween.Quart.easeInOut(c,0,this.dy,this.d);
 		}
 		draw(ctx){
 			var color=`rgba(${this.color.r},${this.color.g},${this.color.b},0.9)`;

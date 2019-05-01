@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<title>canvas粒子特效</title>
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 <style>
@@ -8,49 +9,29 @@
         padding: 0;
         margin: 0;
     }
-
     canvas {
-        background-color:rgba(0,0,0,0);
-        -webkit-transition: background-color 2s ease-in-out;
-        -o-transition: background-color 2s ease-in-out;
-        transition: background-color 2s ease-in-out;
+        background-color:rgba(0,0,0,1);
     }
-    img{display: none;}
 </style>
-<title>canvas粒子特效</title>
 </head>
 <body>
-<div>
-<img src="cake.png" alt="">
 <canvas id='canvas' width="1200" height="800">浏览器不支持canvas</canvas>
-</div>
+<script src="../../graphics/stats.js"></script>
 <script>
     (function(){
-        var RequestAnimFrame=window.requestAnimationFrame 
-            || window.webkitRequestAnimationFrame 
-            || window.mozRequestAnimationFrame 
-            || window.oRequestAnimationFrame 
-            || window.msRequestAnimationFrame 
-            || function(callback) {return window.setTimeout(callback, 1000/60); },
+        var stats = new Stats();
 
-        CancelRequestAnimFrame=window.cancelRequestAnimationFrame
-            || window.webkitCancelAnimationFrame
-            || window.webkitCancelRequestAnimationFrame
-            || window.mozCancelRequestAnimationFrame
-            || window.oCancelRequestAnimationFrame
-            || window.msCancelRequestAnimationFrame
-            || clearTimeout;
+        stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+        document.body.appendChild( stats.dom );
 
         var CVS=(function(){
             var canvas=document.getElementById('canvas'),
                 ctx=canvas.getContext('2d');
-                vpx=canvas.width/2,
-                vpy=canvas.height/2;
 
             canvas.width=window.innerWidth;
             canvas.height=window.innerHeight;
-            vpx=canvas.width/2;
-            vpy=canvas.height/2;
+            this.vpx=canvas.width/2;
+            this.vpy=canvas.height/2;
             ctx.translate(this.vpx,this.vpy);//坐标原点重置为中间
 
             return {
@@ -244,8 +225,7 @@
                     for(var i=0;i<len;i++){
                         CVS.ctx.fillStyle=style[i%l];
                         CVS.ctx.fillText(txt.charAt(i), space*i-len*space/2,0);
-                    }
-                    
+                    }  
                     
                 } else {
                     CVS.ctx.fillStyle=style;
@@ -292,6 +272,7 @@
                  this.getBgData();
 
                 (function(){
+                    stats.begin();
                     switch(stage){
                         case 0:
                             if(new Date()-startTime>2000){
@@ -371,137 +352,16 @@
                             item.paint(); 
                         });
                     }
-                    RequestAnimFrame(arguments.callee);
+                    stats.end();
+                    requestAnimationFrame(arguments.callee);
                 }());
             },
         };
-
-        function TimeEffect(str){
-            this.endStr=str.split('');
-            this.currStr=[0,0,0,0];
-            this.poionts=[];
-        }
-
-        TimeEffect.prototype={
-            init:function(){
-                this.animate(this.endStr);
-            },
-            drawText:function(txt){
-                CVS.ctx.save()
-                CVS.ctx.font = "200px Microsoft YaHei bolder";
-                
-                CVS.ctx.fillStyle='#555';
-                CVS.ctx.textAlign = "center";
-                CVS.ctx.textBaseline = "middle";
-                CVS.ctx.fillText(txt, 0,0);
-
-                CVS.ctx.restore();
-            },
-            getTxtData:function(){
-                var imgData = CVS.ctx.getImageData(0,0, CVS.canvas.width, CVS.canvas.height);
-                CVS.clearRect();
-                this.points = [];
-                for (var x = 0; x < imgData.width; x += 8) {
-                    for (var y = 0; y < imgData.height; y += 8) {
-                        var i = (y * imgData.width + x) * 4;
-                        if (imgData.data[i+3] >= 128) {
-                            var point=new Point(200,-50,x, y, 0, 4,{r:imgData.data[i],g:imgData.data[i+1],b:imgData.data[i+2]})
-                            point.fx=getRandom(-CVS.vpx,CVS.vpx);
-                            point.fy=getRandom(-CVS.vpy,CVS.vpy);
-                            point.fz=getRandom(-100,100);
-                            this.points.push(point);
-
-                        }
-                    }
-                }
-            },
-            animate:function(currStr){
-                var self=this,
-                    endStr=self.endStr,
-                    stage=0,
-                    zoom=0.5,
-                    isStop=true,
-                    timer=null;
-                CVS.clearRect();
-                self.drawText(currStr.join(''));
-                self.getTxtData();
-                (function(){
-                    isStop=true;
-                    self.points.forEach(function(item,i){
-                        switch (stage) {
-                            case 0:
-                                if (Math.abs(item.dx - item.x) < zoom && Math.abs(item.dy - item.y) < zoom && Math.abs(item.dz - item.z)<zoom) {
-                                     item.x = item.dx;
-                                     item.y = item.dy;
-                                     item.z = item.dz;
-
-                                 } else {
-                                    item.x = item.x + (item.dx - item.x) * 0.1;
-                                    item.y = item.y + (item.dy - item.y) * 0.1;
-                                    item.z = item.z + (item.dz - item.z) * 0.1;
-                                    isStop=false;
-                                }
-                                break;
-                            case 1:
-                                if (Math.abs(item.fx - item.x) < zoom && Math.abs(item.fy - item.y) < zoom && Math.abs(item.fz - item.z)<zoom) {
-                                     item.x = item.fx;
-                                     item.y = item.fy;
-                                     item.z = item.fz;
-                                 } else {
-                                    item.x = item.x + (item.fx - item.x) * 0.1;
-                                    item.y = item.y + (item.fy - item.y) * 0.1;
-                                    item.z = item.z + (item.fz - item.z) * 0.1;
-                                    isStop=false;
-                                }
-                                break;
-                            default: break;
-                        }
-                    });
-
-                    if(isStop&&stage==1){
-                        // for(var i=0;i<4;i++){
-                        //     if(currStr[i]==endStr[i]){continue; }
-                        //     var temp=parseInt(currStr[i],10);
-                        //     temp++;
-                        //     currStr[i]=temp;
-                        // }
-                        // self.animate(currStr);
-                        CVS.canvas.style.backgroundColor='rgba(0,0,0,1)';
-                        CVS.clearRect();
-                        effect.init();                            
-                        self.points=[];
-                        // CancelRequestAnimFrame(timer); 
-                        return;
-                    } else if(isStop){
-                        stage++;
-                    }
-                    CVS.clearRect();
-                    self.points.forEach(function(item,i){
-                        item.paint();
-                    });
-                    RequestAnimFrame(arguments.callee);
-                }());
-            }
-        };
-
-        /**
-         * 初始化音乐
-         */
-        function initMusic(){
-            var audio = document.createElement("audio");
-            audio.src = "Thomas Greenberg - The Right Path.mp3",
-            audio.autoplay = true;
-            audio.loop = true;
-        }
-
         var effect=new PointEffect({
             zPos:50,
-            txts:['王琳','生日快乐','Happy🎂Birthday']
+            txts:['Hello','Canvas','粒子特效']
         });
-        var effect2=new TimeEffect('0417');
-        effect2.init();
-        initMusic();
-        // effect.init();
+        effect.init();
     }());
 </script>
 </body>

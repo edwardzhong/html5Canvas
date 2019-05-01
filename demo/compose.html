@@ -45,7 +45,14 @@
 <script>
 	var canvas=document.getElementById('canvas'),
 		ctx=canvas.getContext('2d'),
-		mode=document.getElementById('mode');;
+		mode=document.getElementById('mode'),
+		w = canvas.width,
+		h = canvas.height;
+
+	canvas.width = canvas.clientWidth * 2;
+	canvas.height = canvas.clientHeight * 2;
+	canvas.style.width = w +'px';
+	canvas.style.height = h + 'px';
 
 	function draw(modeValue){
 		ctx.save();
@@ -58,12 +65,12 @@
 		ctx.shadowBlur=10;
 		// ctx.shadowOffsetX=5;
 		// ctx.shadowOffsetY=5;
-		ctx.fillText('compose '+modeValue,300,200);
-		ctx.fillRect(180,70,100,100);
+		ctx.fillText('compose ' + modeValue,400,200);
+		ctx.fillRect(280,70,100,100);
 		
 		ctx.globalCompositeOperation=modeValue;
 		ctx.fillStyle='red';
-		ctx.arc(300,200,80,0,Math.PI*2,false);
+		ctx.arc(400,200,80,0,Math.PI*2,false);
 		ctx.fill();
 		ctx.restore();
 	}

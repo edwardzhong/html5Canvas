@@ -8,6 +8,7 @@
 <canvas id="canvas" width="1400" height="700"></canvas>
 <script src="../../graphics/canvas.js"></script>
 <script src="../../graphics/util.js"></script>
+<script src="../../graphics/tween.js"></script>
 <script>
 var canvas=document.getElementById('canvas'),
 	ctx=canvas.getContext('2d');
@@ -83,9 +84,9 @@ function animate(){
 	(function (){
 		// ctx.clearRect(0,0,canvas.width,canvas.height);取消clearRect可以形成尾迹效果
 		var curr=new Date()-startTime,
-			i=Tween.easeIn(curr,0,1,duration),
-			point=Curve.getBezierPosition(start,c1,c2,end,i),
-			angle=Curve.getBezierAngle(start,c1,c2,end,i);
+			i=Tween.Quart.easeIn(curr,0,1,duration),
+			point=getBezierPosition(start,c1,c2,end,i),
+			angle=getBezierAngle(start,c1,c2,end,i);
 		missile.update(point,angle);
 		drawBg();
 		drawBezier();
@@ -114,7 +115,7 @@ drawBg();
 missile.draw(ctx);
 
 canvas.onclick=function(e){
-	end=WindowToCanvas(canvas,e.clientX,e.clientY);
+	end=windowToCanvas(canvas,e.clientX,e.clientY);
 	c1 = {x:start.x,y:canvas.height-Math.abs(start.x-end.x)};
 	c2 = {x:end.x,y:canvas.height-Math.abs(start.x-end.x)};
 	animate();

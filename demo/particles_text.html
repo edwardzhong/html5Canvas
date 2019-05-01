@@ -9,6 +9,7 @@
 <script src="../../graphics/stats.js"></script>
 <script src="../../graphics/canvas.js"></script>
 <script src="../../graphics/util.js"></script>
+<script src="../../graphics/tween.js"></script>
 <script>
 	var stats = new Stats(),
 		canvas=document.getElementById('canvas'),
@@ -111,8 +112,8 @@ function getImageData(){
 	// 		};
 
 	// 	var point=new Particle(x,y,color,2000);
-	// 	point.dx=Random(x-40,x+40);
-	// 	point.dy=Random(y-80,y+80);
+	// 	point.dx=random(x-40,x+40);
+	// 	point.dy=random(y-80,y+80);
 	// 	points.push(point);
 	// }
 
@@ -131,8 +132,8 @@ function getImageData(){
 				y1=(H-img.height)/2+y,
 				point=new Particle(x1,y1,color,1200);
 
-			point.dx=Random(x1-40,x1+40);
-			point.dy=Random(y1-80,y1+80);
+			point.dx=random(x1-40,x1+40);
+			point.dy=random(y1-80,y1+80);
 			points.push(point);
 		}
 	}
@@ -141,7 +142,7 @@ function getImageData(){
 getImageData();
 
 canvas.addEventListener('mousemove',function(e){
-	mouse=WindowToCanvas(canvas,e.clientX,e.clientY);
+	mouse = windowToCanvas(canvas,e.clientX,e.clientY);
 	MAN=true;
 },false);
 

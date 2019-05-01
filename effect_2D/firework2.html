@@ -36,10 +36,10 @@
 
 	class Launch{
 		constructor(time,duration){
-			this.x=Math.round(Random(-150,150));
+			this.x=Math.round(random(-150,150));
 			this.y=-30;
-			this.vx=Random(-3,3);
-			this.vy=Random(-12,-20);
+			this.vx=random(-3,3);
+			this.vy=random(-12,-20);
 			this.startTime=time;
 			this.visible=true;
 			this.duration=duration;
@@ -87,7 +87,7 @@
 	}
 	class Piece{
 		constructor(x,y,color,time){
-			var v=Random(15,20),
+			var v=random(15,20),
 				Pr2=2*Math.PI*Math.random(),
 				Pr=Math.PI*Math.random();
 			this.vx=Math.sin(Pr2)*Math.sin(Pr)*v;
@@ -148,7 +148,7 @@
 
 	function boom(x,y,color){
 		for(var i=0;i<100;i++){
-			fires.push(new Piece(x,y,color||RandomHsl(),new Date()));
+			fires.push(new Piece(x,y,color||randomHsl(),new Date()));
 		}
 	}
 
@@ -165,7 +165,7 @@
 			p.update();
 			if(!p.visible){
 				points.splice(i--,1);
-				boom(p.x,p.y,j%2?RandomHsl():'');
+				boom(p.x,p.y,j%2?randomHsl():'');
 			} else {
 				p.drawTrail(ctx)
 				p.draw(ctx);

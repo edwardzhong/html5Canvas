@@ -1030,7 +1030,7 @@
 		}
 	},false);
 	canvas.addEventListener('mousedown',function(e){
-		mouseStart=WindowToCanvas(canvas,e.clientX,e.clientY);
+		mouseStart=windowToCanvas(canvas,e.clientX,e.clientY);
 		env=getEnv();
 		activeShape=null;
 
@@ -1061,7 +1061,7 @@
 	},false);
 
 	function mouseMove(e){
-		mouseEnd=WindowToCanvas(canvas,e.clientX,e.clientY);
+		mouseEnd=windowToCanvas(canvas,e.clientX,e.clientY);
 		if(activeShape){
 			if(index>-1){
 				activeShape.update(index,mouseEnd);
@@ -1100,7 +1100,7 @@
 		}
 	};
 	canvas.addEventListener('mousemove',function(e){
-		currPos=WindowToCanvas(canvas,e.clientX,e.clientY);
+		currPos=windowToCanvas(canvas,e.clientX,e.clientY);
 		showInfo(currPos);
 	},false);
 
@@ -1137,7 +1137,7 @@
 	}
 	function drawBG(){
 		ctx.clearRect(0,0,W,H);
-		if(getEnv().grid){DrawGrid(ctx,'lightGray',10,10); }
+		if(getEnv().grid){grid(ctx,'lightGray',10,10); }
 	}
 	//Guidwires
 	function drawGuidewires(x,y){

@@ -30,17 +30,17 @@
         bounce = -1;
 
     for(var ball,r,color,i=0;i<numBalls;i++){
-        r=Math.floor(Random(minRadius,maxRadius));
-        // color=RandomColor();
-        var hsl=RandomHsl();
+        r=Math.floor(random(minRadius,maxRadius));
+        // color=randomColor();
+        var hsl=randomHsl();
         color=`hsl(${hsl[0]},${hsl[1]}%,${hsl[2]}%)`
         // color=`hsl(${hsl[0]},50%,50%)`
         ball=new Ball(r,color);
         ball.mass=r;
-        ball.x=Random(r,W-r);
-        ball.y=Random(r,H-r);
-        ball.vx=Random(-5,5);
-        ball.vy=Random(-5,5);
+        ball.x=random(r,W-r);
+        ball.y=random(r,H-r);
+        ball.vx=random(-5,5);
+        ball.vy=random(-5,5);
         balls.push(ball);
     }
 
