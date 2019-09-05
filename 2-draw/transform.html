@@ -45,7 +45,8 @@ trangle();
 ctx.restore();
 
 ctx.save();
-ctx.transform(1,0.5,0,1,50,50);//位移加错切
+// ctx.transform(Math.cos(Math.PI/6),Math.sin(Math.PI/6),-Math.sin(Math.PI/6),Math.cos(Math.PI/6),50,50);//旋转30˚
+ctx.transform(1,0,0.5,1,50,50);//位移加错切
 ctx.rect(0,0,100,80);
 ctx.fill();
 ctx.stroke();
