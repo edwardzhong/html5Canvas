@@ -339,22 +339,15 @@
 	var neptune =new Planet(700,0,20,6015.295,neptuneStyle,{color:'#1933a1'});
 	stage.planets.push(neptune);
 
-	function getAsteroidColor(){
-		var ret=['#'];
-		var val=Math.floor(random(10,15)).toString(16);
-		for(var i=0;i<3;i++){
-			ret.push(val);
-		}
-		return ret.join('');
-    }
+	function getAsteroidColor() {
+		const val = Math.ceil(random(10, 15)).toString(16);
+		return '#'+val.repeat(3);
+	}
 
-    function getCometColor(){
-    	var ret=['#'];
-    	for(var i=0;i<6;i++){
-    		ret.push(Math.floor(random(3,15)).toString(16));
-    	}
-    	return ret.join('');
-    }
+	function getCometColor() {
+		const [h,s,l] = randomHsl();
+		return `hsl(${h},${s}%,${l}%)`;
+	}
 
 	function createAsteroids(){
 		var asteroid=null,
@@ -369,7 +362,6 @@
 			r=random(1,3);
 			d=random(28.3,511);
 			color=getAsteroidColor();
-			// console.log(angle,color);
 			asteroid = new Asteroid(x,y,r,d,color,{color:color,blur:1});
 			stage.planets.push(asteroid);
 		}
