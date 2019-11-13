@@ -38,7 +38,7 @@
 	canvas.style.background='#000';
 
 	function drawCircle(r,color){
-		var hsl=Color.hexToHsl(color);
+		var hsl= rgbToHsl(hexToRgb(color));
 		ctx.lineWidth=1;
 		// ctx.strokeStyle='rgba(176,184,203,0.3)';
 		// ctx.arc(0,0,this.x,Math.PI*2,false);

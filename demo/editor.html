@@ -1,107 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta http-equiv="X-UA-Compatible" content="ie=edge" />
-<title>editor</title>
-<style>
-    body{
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>text editor</title>
+    <style>
+      body {
         margin: 0;
-    }
-    #content{
-        position: relative;
-        border: 1px solid #eee;
-        width: 600px;
-        height: 400px;
-        margin: 0 auto;
-    }
-    #content textarea{
-        box-sizing: border-box;
-        position: absolute;
-        font-weight: bold;
-        font-size: 20px;
-        border:1px solid transparent;
-        resize: none;
-        outline: none;
-    }
-    #content textarea:hover,#content textarea:focus{
-        border-color: #efefef;
-        border-radius: 4px;
-        resize:both;
-    }
-    #menu{
-        box-sizing: border-box;
-        display: none;
-        position: absolute;
-        left: 100px;
-        top: 100px;
-        z-index: 99;
-        border: 1px solid #ddd;
-        padding:10px;
-        background-color: #fff;
-    }
-    #menu p{
-        margin: 0;
-        color: hsl(200, 100%, 50%);
-    }
-</style>
-</head>
-<body>
-<p>双击添加文字框，可拖动位置和拖拽大小</p>
-<div id="content">
+      }
+    </style>
+  </head>
+  <body>
     <canvas id="canvas" width="600" height="400"></canvas>
-    <div id="menu">
-        <p>右键菜单</p>
-    </div>
-</div>
-<script src="../../graphics/util.js"></script>
-<script>
-    const content = document.getElementById('content');
-    const menu = document.getElementById('menu');
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const pos = content.getBoundingClientRect();
+    <script src="../../graphics/util.js"></script>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const RATIO = 2;
+      const w = canvas.width * RATIO;
+      const h = canvas.height * RATIO;
+      const bgStyle = "hsl(0,0%,97%)";
 
-    content.ondblclick = function(e) {
-        const txt = document.createElement('textarea');
-        txt.setAttribute('autofocus','true');
-        content.appendChild(txt);
-        txt.style.cssText = `left:${e.clientX - pos.left -10}px;top:${e.clientY - pos.top -10}px;`;
-        setTimeout(() => {
-            txt.focus();
-        }, 500);
-    };
-    
-    content.onmousedown=function(e){
-        const target = e.target;
-        if(target.nodeName == 'TEXTAREA'){
-            const x = e.clientX- pos.left - target.offsetLeft;
-            const y = e.clientY- pos.top - target.offsetTop;
-            if(target.offsetWidth - x < 10 && target.offsetHeight - y < 10) return;
-            content.onmousemove=function(e){
-                target.style.left = e.clientX- pos.left - x + 'px';
-                target.style.top = e.clientY- pos.top - y + 'px';
-            }
-            content.onmouseup = function(){
-                content.onmouseup = null;
-                content.onmousemove = null;
-            }
-        }
-    }
-    content.oncontextmenu=function(e){
-        const target = e.target;
-        if(target.nodeName == 'TEXTAREA'){
-            menu.style.display ="block";
-            menu.style.left = e.clientX- pos.left - 10 + 'px';
-            menu.style.top = e.clientY- pos.top - 10 + 'px';
-        }
-        return false;
-    }
+      setPixelRatio(canvas, RATIO);
+      ctx.fillStyle = bgStyle;
+      ctx.fillRect(0, 0, w, h);
 
-    menu.onmouseleave=function(e){
-        this.style.display='';
-    }
-</script>
-</body>
+      ctx.fillStyle = "hsl(0,0%,30%)";
+      ctx.font = "30px arial";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+
+      console.log(ctx.measureText("hello canvas"));
+
+      class Cursor {
+        constructor() {
+          this.x = 0;
+          this.y = 0;
+          this.w = ctx.measureText("a").width * 2;
+          this.timer;
+        }
+        init() {
+          clearTimeout(this.timer);
+          this.erase();
+        }
+        move(x, y) {
+          this.init();
+          this.x = x;
+          this.y = y;
+        }
+        draw() {
+          ctx.save();
+          ctx.fillStyle = "hsl(0,20%,50%)";
+          ctx.fillRect(this.x, this.y - this.w / 2, 4, this.w);
+          ctx.restore();
+        }
+        erase() {
+          ctx.save();
+          ctx.fillStyle = bgStyle;
+          ctx.fillRect(this.x - 1, this.y - this.w / 2, 6, this.w + 2);
+          ctx.restore();
+        }
+        blink(cb) {
+          let i = 0;
+          const fun = () => {
+            if (i++ % 2) {
+              this.draw();
+            } else {
+              this.erase();
+              cb && cb();
+            }
+            this.timer = setTimeout(fun, 500);
+          };
+          fun();
+        }
+      }
+
+      class TextLine {
+        constructor() {
+          this.x = 0;
+          this.y = 0;
+          this.w = ctx.measureText("a").width * 2;
+        }
+        init() {
+          this.txts = [];
+          this.index = 0;
+        }
+        move(x, y) {
+          this.init();
+          this.x = x;
+          this.y = y;
+        }
+        setIndex(i) {
+          return (this.index = Math.min(
+            Math.max(this.index + i, 0),
+            this.txts.length
+          ));
+        }
+        getWidth(i) {
+          return ctx.measureText(this.txts.slice(0, i).join("")).width;
+        }
+        insert(c) {
+          this.txts.splice(this.index, 0, c);
+          this.setIndex(1);
+        }
+        delete() {
+          this.txts.splice(this.setIndex(-1), 1);
+        }
+        draw(c, w) {
+          ctx.save();
+          ctx.fillText(c, this.x + w, this.y);
+          // ctx.strokeRect(this.x, this.y - this.w / 2, this.nw, this.w);
+          ctx.restore();
+        }
+        erase(cw, w) {
+          ctx.save();
+          ctx.fillStyle = bgStyle;
+          ctx.fillRect(this.x + w, this.y - this.w / 2, cw, this.w);
+          ctx.restore();
+        }
+      }
+
+      const cursor = new Cursor();
+      const line = new TextLine();
+      let isEdit = false;
+      canvas.onmousedown = function(e) {
+        const pos = windowToCanvas(canvas, e.clientX, e.clientY);
+        line.move(pos.x, pos.y);
+        cursor.move(pos.x, pos.y);
+        cursor.blink();
+        isEdit = true;
+      };
+
+      canvas.onmousemove = function(e) {};
+
+      //写入字符
+      document.onkeypress = function(e) {
+        if (!isEdit) return;
+        const char = String.fromCharCode(e.keyCode || e.which);
+        line.insert(char);
+        cursor.move(line.x + line.getWidth(line.index) + 2, line.y);
+        const txt = line.txts.slice(line.index - 1).join("");
+        const cw = ctx.measureText(txt).width;
+        const w = line.getWidth(line.index - 1);
+        line.erase(cw, w);
+        line.draw(txt, w);
+		cursor.blink(() => {
+            const w = line.getWidth(line.index);
+            const txt = line.txts.slice(line.index, line.index + 2).join("");
+            const cw = ctx.measureText(txt).width;
+            line.erase(cw, w);
+            line.draw(txt, w);
+          });
+      };
+
+      document.onkeydown = function(e) {
+        // e.preventDefault()禁用后面的 onkeypress 事件，因为 backspace 和 enter,不需要执行keypress,所以要禁用掉
+        if ([8, 13, 37, 39].indexOf(e.keyCode) > -1) {
+          e.preventDefault();
+        }
+        // Backspace 删除文本最后的字符
+        if (e.keyCode === 8) {
+          const cw = ctx.measureText(line.txts[line.index - 1]).width;
+          line.delete();
+          line.erase(cw, line.getWidth());
+          cursor.move(line.x + line.getWidth(line.index) + 2, line.y);
+          cursor.blink();
+        }
+        // enter 完成输入
+        if (e.keyCode === 13) {
+          cursor.init();
+          line.init();
+          isEdit = false;
+        }
+        // left
+        if (e.keyCode === 37) {
+          const i = line.setIndex(-1);
+          cursor.move(line.x + line.getWidth(i) + 2, line.y);
+          cursor.blink(() => {
+            const w = line.getWidth(i);
+            const txt = line.txts.slice(i, i + 2).join("");
+            const cw = ctx.measureText(txt).width;
+            line.erase(cw, w);
+            line.draw(txt, w);
+          });
+        }
+        // right
+        if (e.keyCode === 39) {
+          const i = line.setIndex(1);
+          cursor.move(line.x + line.getWidth(i) + 2, line.y);
+          cursor.blink(() => {
+            const w = line.getWidth(i + 1);
+            const txt = line.txts.slice(i - 1, i + 1).join("");
+            const cw = ctx.measureText(txt).width;
+            line.erase(cw, w - cw);
+            line.draw(txt, w - cw);
+          });
+        }
+      };
+    </script>
+  </body>
 </html>

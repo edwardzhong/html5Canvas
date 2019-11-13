@@ -9,21 +9,23 @@
       body {
         margin: 0;
       }
-	  #board{
-		  position: relative;
-		  width: 600px;
-
-	  }
+      #board {
+        position: relative;
+        width: 600px;
+      }
       input[type="text"] {
         box-sizing: border-box;
         position: absolute;
-		left: 0;
-		top: 0;
-		padding: 4px;
+        left: 0;
+        top: 0;
+        width: 20px;
+        min-width: 20px;
+        max-width: 600px;
+        padding: 4px;
         font-size: 15px;
         border: 1px dashed #ddd;
-        background:hsl(0, 0%, 97%);
-		color:hsl(0,0%,30%);
+        background: hsl(0, 0%, 97%);
+        color: hsl(0, 0%, 30%);
         outline: none;
       }
       /* input[type="text"]:hover, input[type="text"]:focus {
@@ -33,13 +35,13 @@
     </style>
   </head>
   <body>
-	  <div id="board">
-			<canvas id="canvas" width="600" height="400"></canvas>
-			<input type="text" id="input" />
-	  </div>
+    <div id="board">
+      <canvas id="canvas" width="600" height="400"></canvas>
+      <!-- <input type="text" id="input" /> -->
+    </div>
     <script src="../../graphics/util.js"></script>
     <script>
-		const input = document.getElementById('input');
+      const input = document.getElementById('input');
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
       const ratio = 2;
@@ -56,7 +58,6 @@
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
 
-      console.log(ctx.measureText("hello canvas"));
 
       class Cursor {
         constructor(x, y) {
@@ -134,12 +135,14 @@
           const ws = ctx.measureText(this.txts.slice(0, -1).join("")).width;
           ctx.save();
           ctx.fillText(this.txts.slice(-1), this.x + ws, this.y);
+          ctx.strokeRect(this.x, this.y - this.w / 2, this.ws, this.w);
           ctx.restore();
         }
         erase() {
           ctx.save();
           ctx.fillStyle = bgStyle;
           ctx.fillRect(this.x + this.ws, this.y - this.w / 2, this.w, this.w);
+          ctx.strokeRect(this.x, this.y - this.w / 2, this.ws, this.w);
           ctx.restore();
         }
       }
@@ -148,13 +151,14 @@
       const line = new TextLine(0, 0);
       let isEdit = false;
       canvas.onmousedown = function(e) {
-		input.focus();
         const pos = windowToCanvas(canvas, e.clientX, e.clientY);
         line.move(pos.x, pos.y);
         cursor.move(pos.x, pos.y);
         cursor.blink();
         isEdit = true;
       };
+
+      canvas.onmousemove = function(e) {};
 
       //写入字符
       document.onkeypress = function(e) {

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<title>editor</title>
+<style>
+    body{
+        margin: 0;
+    }
+    #content{
+        position: relative;
+        border: 1px solid #eee;
+        width: 600px;
+        height: 400px;
+        margin: 0 auto;
+    }
+    #content textarea{
+        box-sizing: border-box;
+        position: absolute;
+        font-weight: bold;
+        font-size: 20px;
+        border:1px solid transparent;
+        resize: none;
+        outline: none;
+    }
+    #content textarea:hover,#content textarea:focus{
+        border-color: #efefef;
+        border-radius: 4px;
+        resize:both;
+    }
+    #menu{
+        box-sizing: border-box;
+        display: none;
+        position: absolute;
+        left: 100px;
+        top: 100px;
+        z-index: 99;
+        border: 1px solid #ddd;
+        padding:10px;
+        background-color: #fff;
+    }
+    #menu p{
+        margin: 0;
+        color: hsl(200, 100%, 50%);
+    }
+</style>
+</head>
+<body>
+<p>双击添加文字框，可拖动位置和拖拽大小</p>
+<div id="content">
+    <canvas id="canvas" width="600" height="400"></canvas>
+    <div id="menu">
+        <p>右键菜单</p>
+    </div>
+</div>
+<script src="../../graphics/util.js"></script>
+<script>
+    const content = document.getElementById('content');
+    const menu = document.getElementById('menu');
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const pos = content.getBoundingClientRect();
+
+    content.ondblclick = function(e) {
+        const txt = document.createElement('textarea');
+        txt.setAttribute('autofocus','true');
+        content.appendChild(txt);
+        txt.style.cssText = `left:${e.clientX - pos.left -10}px;top:${e.clientY - pos.top -10}px;`;
+        setTimeout(() => {
+            txt.focus();
+        }, 500);
+    };
+    
+    content.onmousedown=function(e){
+        const target = e.target;
+        if(target.nodeName == 'TEXTAREA'){
+            const x = e.clientX- pos.left - target.offsetLeft;
+            const y = e.clientY- pos.top - target.offsetTop;
+            if(target.offsetWidth - x < 10 && target.offsetHeight - y < 10) return;
+            content.onmousemove=function(e){
+                target.style.left = e.clientX- pos.left - x + 'px';
+                target.style.top = e.clientY- pos.top - y + 'px';
+            }
+            content.onmouseup = function(){
+                content.onmouseup = null;
+                content.onmousemove = null;
+            }
+        }
+    }
+    content.oncontextmenu=function(e){
+        const target = e.target;
+        if(target.nodeName == 'TEXTAREA'){
+            menu.style.display ="block";
+            menu.style.left = e.clientX- pos.left - 10 + 'px';
+            menu.style.top = e.clientY- pos.top - 10 + 'px';
+        }
+        return false;
+    }
+
+    menu.onmouseleave=function(e){
+        this.style.display='';
+    }
+</script>
+</body>
+</html>
