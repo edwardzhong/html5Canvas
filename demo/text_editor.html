@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>text editor</title>
+    <style>
+      body {
+        margin: 0;
+      }
+	  #board{
+		  position: relative;
+		  width: 600px;
+
+	  }
+      input[type="text"] {
+        box-sizing: border-box;
+        position: absolute;
+		left: 0;
+		top: 0;
+		padding: 4px;
+        font-size: 15px;
+        border: 1px dashed #ddd;
+        background:hsl(0, 0%, 97%);
+		color:hsl(0,0%,30%);
+        outline: none;
+      }
+      /* input[type="text"]:hover, input[type="text"]:focus {
+        border-color: #efefef;
+        resize: both;
+      } */
+    </style>
+  </head>
+  <body>
+	  <div id="board">
+			<canvas id="canvas" width="600" height="400"></canvas>
+			<input type="text" id="input" />
+	  </div>
+    <script src="../../graphics/util.js"></script>
+    <script>
+		const input = document.getElementById('input');
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const ratio = 2;
+      const w = canvas.width * ratio;
+      const h = canvas.height * ratio;
+      const bgStyle = "hsl(0,0%,97%)";
+
+      setPixelRatio(canvas, ratio);
+      ctx.fillStyle = bgStyle;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.fillStyle = "hsl(0,0%,30%)";
+      ctx.font = "30px arial";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+
+      console.log(ctx.measureText("hello canvas"));
+
+      class Cursor {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.w = ctx.measureText("a").width * 2;
+          this.timer;
+        }
+        init() {
+          clearTimeout(this.timer);
+          this.erase();
+        }
+        move(x, y) {
+          this.init();
+          this.x = x;
+          this.y = y;
+        }
+        draw() {
+          ctx.save();
+          ctx.fillStyle = "hsl(0,20%,50%)";
+          ctx.fillRect(this.x, this.y - this.w / 2, 4, this.w);
+          ctx.restore();
+        }
+        erase() {
+          ctx.save();
+          ctx.fillStyle = bgStyle;
+          ctx.fillRect(this.x - 1, this.y - this.w / 2 - 1, 6, this.w + 2);
+          ctx.restore();
+        }
+        blink() {
+          let i = 0;
+          const fun = () => {
+            i++ % 2 ? this.draw() : this.erase();
+            this.timer = setTimeout(fun, 600);
+          };
+          fun();
+        }
+      }
+
+      class TextLine {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.txts = [];
+          this.w = ctx.measureText("a").width * 2;
+          this.ws = 0;
+        }
+        init() {
+          this.txts = [];
+        }
+        move(x, y) {
+          this.init();
+          this.x = x;
+          this.y = y;
+        }
+        insert(c, i) {
+          if (!i) {
+            this.txts.push(c);
+          } else {
+            this.txts.splice(i, 0, c);
+          }
+          this.ws = ctx.measureText(this.txts.join("")).width;
+          this.draw();
+        }
+        delete(i) {
+          if (!i) {
+            this.txts.pop();
+          } else {
+            this.txts.splice(i, 1);
+          }
+          this.ws = ctx.measureText(this.txts.join("")).width;
+          this.erase();
+        }
+        draw() {
+          const ws = ctx.measureText(this.txts.slice(0, -1).join("")).width;
+          ctx.save();
+          ctx.fillText(this.txts.slice(-1), this.x + ws, this.y);
+          ctx.restore();
+        }
+        erase() {
+          ctx.save();
+          ctx.fillStyle = bgStyle;
+          ctx.fillRect(this.x + this.ws, this.y - this.w / 2, this.w, this.w);
+          ctx.restore();
+        }
+      }
+
+      const cursor = new Cursor(0, 0);
+      const line = new TextLine(0, 0);
+      let isEdit = false;
+      canvas.onmousedown = function(e) {
+		input.focus();
+        const pos = windowToCanvas(canvas, e.clientX, e.clientY);
+        line.move(pos.x, pos.y);
+        cursor.move(pos.x, pos.y);
+        cursor.blink();
+        isEdit = true;
+      };
+
+      //写入字符
+      document.onkeypress = function(e) {
+        if (!isEdit) return;
+        const char = String.fromCharCode(e.keyCode || e.which);
+        line.insert(char);
+        cursor.move(line.x + line.ws + 4, line.y);
+        cursor.blink();
+        line.draw();
+      };
+
+      document.onkeydown = function(e) {
+        // e.preventDefault()禁用后面的 onkeypress 事件，因为 backspace 和 enter,不需要执行keypress,所以要禁用掉
+        if (e.keyCode === 8 || e.keyCode === 13) {
+          e.preventDefault();
+        }
+        // enter 完成输入
+        if (e.keyCode === 13) {
+          cursor.init();
+          line.init();
+          isEdit = false;
+        }
+
+        // Backspace 删除文本最后的字符
+        if (e.keyCode === 8) {
+          line.delete(0);
+          cursor.move(line.x + line.ws + 4, line.y);
+          cursor.blink();
+        }
+      };
+    </script>
+  </body>
+</html>
