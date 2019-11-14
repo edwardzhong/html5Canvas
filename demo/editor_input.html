@@ -50,6 +50,7 @@
         left: -1px;
         border: 1px dashed hsl(0, 0%, 70%);
         border-radius: 4px;
+        cursor: pointer;
       }
       @keyframes flash {
         from {
@@ -294,16 +295,19 @@
         }
         //移动模式, 遍历渲染字符串对象
         if (isEdit || !line) return;
+        content.style.cursor = 'move';
         drawBg();
-        line.move(pos.x, pos.y);
+        const w = line.getWidth();
+        line.move(pos.x - w/2, pos.y);
         for (let l of lines) {
           l.draw(l.txts, 0);
         }
-        box.show(line.x, line.y - line.w / 2, line.getWidth(), line.w);
+        box.show(line.x, line.y - line.w / 2, w, line.w);
       };
 
       content.onmouseup = function(e) {
         line = null;
+        content.style.cursor = 'auto';
       };
 
       // textarea代理输入
