@@ -236,7 +236,8 @@
       }
 
       let line;
-      let isEdit = false;
+      let isEdit = false;//是否编辑模式
+      let dis = 0;//拖动间距
       const lines = [];
       const cursor = new Cursor(document.getElementById("cursor"));
       const box = new Box(document.getElementById("box"));
@@ -246,6 +247,7 @@
         const pos = windowToCanvas(canvas, e.clientX, e.clientY);
         isEdit = true;
         line = null;
+        //遍历当前坐标是否为已存在的字符串对象
         for (let i = 0; i < lines.length; i++) {
           let l = lines[i];
           if (!l.txts) {
@@ -259,6 +261,7 @@
             line = l;
           }
         }
+        //没选中则新建字符串对象
         if (!line) {
           line = new TextLine(input);
           line.init().move(pos.x, pos.y);
@@ -277,6 +280,7 @@
           ctx.rect(l.x, l.y - l.w / 2, l.getWidth(), l.w);
           if (ctx.isPointInPath(pos.x, pos.y)) {
             line = l;
+            dis = pos.x - line.x;
             break;
           }
         }
@@ -284,6 +288,7 @@
 
       content.onmousemove = function(e) {
         const pos = windowToCanvas(canvas, e.clientX, e.clientY);
+        //判断是否滑动过已存在对象
         for (let l of lines) {
           ctx.beginPath();
           const w = l.getWidth();
@@ -297,12 +302,11 @@
         if (isEdit || !line) return;
         content.style.cursor = 'move';
         drawBg();
-        const w = line.getWidth();
-        line.move(pos.x - w/2, pos.y);
+        line.move(pos.x - dis, pos.y);
         for (let l of lines) {
           l.draw(l.txts, 0);
         }
-        box.show(line.x, line.y - line.w / 2, w, line.w);
+        box.show(line.x, line.y - line.w / 2, line.getWidth(), line.w);
       };
 
       content.onmouseup = function(e) {
@@ -325,6 +329,7 @@
 
       //光标移动和回车
       document.onkeydown = function(e) {
+        // 完成编辑
         if (e.keyCode === 13) {
           e.preventDefault();
           cursor.init();
