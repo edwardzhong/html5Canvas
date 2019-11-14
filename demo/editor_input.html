@@ -146,10 +146,10 @@
         }
         init() {
           this.show(-200, -200, 0, 0);
+          return this;
         }
         show(x, y, w, h) {
-          this.dom.style.cssText = `left:${x / 2 - 4}px;top:${y /
-            2}px;width:${w / 2 + 8}px;height:${h / 2}px;`;
+          this.dom.style.cssText = `left:${x / 2 - 4}px;top:${y / 2}px;width:${w / 2 + 8}px;height:${h / 2}px;`;
         }
       }
 
