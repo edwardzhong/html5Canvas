@@ -31,8 +31,6 @@
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
 
-    console.log(ctx.measureText("hello canvas"));
-
     class Cursor {
       constructor() {
         this.x = 0;
@@ -104,9 +102,9 @@
       delete() {
         this.txts.splice(this.setIndex(-1), 1);
       }
-      draw(c, w) {
+      draw(c, s) {
         ctx.save();
-        ctx.fillText(c, this.x + w, this.y);
+        ctx.fillText(c, this.x + s, this.y);
         // ctx.strokeRect(this.x, this.y - this.w / 2, this.nw, this.w);
         ctx.restore();
       }
@@ -116,7 +114,7 @@
         ctx.fillRect(this.x + s, this.y - this.w / 2, l, this.w);
         ctx.restore();
       }
-  }
+    }
 
     const cursor = new Cursor();
     const line = new TextLine();
@@ -139,8 +137,6 @@
       line.move(pos.x, pos.y);
       isEdit = true;
     };
-
-    canvas.onmousemove = function(e) {};
 
     //写入字符
     document.onkeypress = function(e) {

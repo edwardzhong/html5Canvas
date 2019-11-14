@@ -13,35 +13,44 @@
         position: relative;
         width: 600px;
       }
-      input[type="text"] {
+      textarea {
+        z-index: -1;
         box-sizing: border-box;
         position: absolute;
         left: 0;
         top: 0;
-        width: 20px;
-        min-width: 20px;
-        max-width: 600px;
         padding: 4px;
         font-size: 15px;
-        border: 1px dashed #ddd;
-        background: hsl(0, 0%, 97%);
-        color: hsl(0, 0%, 30%);
+        resize: none;
         outline: none;
       }
-      /* input[type="text"]:hover, input[type="text"]:focus {
-        border-color: #efefef;
-        resize: both;
-      } */
+      #cursor {
+        position: absolute;
+        top: -1;
+        left: -1;
+        height: 20px;
+        border-right: 1px solid hsl(0, 0%, 20%);
+        animation: flash 1s linear 0.5s infinite;
+        animation-fill-mode: both;
+      }
+      @keyframes flash {
+        from {
+          border-color: hsl(0, 0%, 95%);
+        }
+        to {
+          border-color: hsl(0, 100%, 20%);
+        }
+      }
     </style>
   </head>
   <body>
     <div id="board">
       <canvas id="canvas" width="600" height="400"></canvas>
-      <!-- <input type="text" id="input" /> -->
+      <textarea name="input" id="input" cols="10" rows="1"></textarea>
+      <div id="cursor"></div>
     </div>
     <script src="../../graphics/util.js"></script>
     <script>
-      const input = document.getElementById('input');
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
       const ratio = 2;
@@ -57,136 +66,123 @@
       ctx.font = "30px arial";
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-
+      
+      // 计算包含emoji的字符串长度
+      function charCount(str) {
+        const reg = /\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]/g;
+        return str.replace(reg, "a").length;
+      }
 
       class Cursor {
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-          this.w = ctx.measureText("a").width * 2;
-          this.timer;
+        constructor(elem) {
+          this.x = -2;
+          this.y = -2;
+          this.dom = elem;
+          this.w = ctx.measureText("你").width;
+          this.dom.style.height = this.w / 2 + "px";
         }
         init() {
-          clearTimeout(this.timer);
-          this.erase();
+          this.move(-2, -2);
         }
         move(x, y) {
-          this.init();
           this.x = x;
           this.y = y;
-        }
-        draw() {
-          ctx.save();
-          ctx.fillStyle = "hsl(0,20%,50%)";
-          ctx.fillRect(this.x, this.y - this.w / 2, 4, this.w);
-          ctx.restore();
-        }
-        erase() {
-          ctx.save();
-          ctx.fillStyle = bgStyle;
-          ctx.fillRect(this.x - 1, this.y - this.w / 2 - 1, 6, this.w + 2);
-          ctx.restore();
-        }
-        blink() {
-          let i = 0;
-          const fun = () => {
-            i++ % 2 ? this.draw() : this.erase();
-            this.timer = setTimeout(fun, 600);
-          };
-          fun();
+          this.dom.style.left = x / 2 + "px";
+          this.dom.style.top = y / 2 - this.w / 3 + "px";
         }
       }
 
       class TextLine {
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-          this.txts = [];
-          this.w = ctx.measureText("a").width * 2;
-          this.ws = 0;
+        constructor(elem) {
+          this.x = 0;
+          this.y = 0;
+          this.input = elem;
+          this.w = ctx.measureText("你").width * 2;
+          this.init();
+          return this;
         }
         init() {
-          this.txts = [];
+          this.input.value = "";
+          setTimeout(() => {
+            this.input.focus();
+          }, 500);
+          this.txts = "";
+          this.index = 0;
+          return this;
         }
         move(x, y) {
-          this.init();
           this.x = x;
           this.y = y;
+          return this;
         }
-        insert(c, i) {
-          if (!i) {
-            this.txts.push(c);
+        setIndex(i) {
+          return (this.index = Math.min(
+            Math.max(this.index + i, 0),
+            charCount(this.txts)
+          ));
+        }
+        getWidth(i) {
+          let txt = "";
+          if (i === undefined) {
+            txt = this.txts.slice(0);
           } else {
-            this.txts.splice(i, 0, c);
+            // for...of 遍历字符串解决 emoji 定位
+            let l = i < 0 ? charCount(this.txts) + i : i;
+            for (let x of this.txts) {
+              if (!l) break;
+              txt += x;
+              l--;
+            }
           }
-          this.ws = ctx.measureText(this.txts.join("")).width;
-          this.draw();
+          return ctx.measureText(txt).width;
         }
-        delete(i) {
-          if (!i) {
-            this.txts.pop();
-          } else {
-            this.txts.splice(i, 1);
-          }
-          this.ws = ctx.measureText(this.txts.join("")).width;
-          this.erase();
+        insert(str) {
+          this.txts = str;
+          return this;
         }
-        draw() {
-          const ws = ctx.measureText(this.txts.slice(0, -1).join("")).width;
+        draw(str, s) {
           ctx.save();
-          ctx.fillText(this.txts.slice(-1), this.x + ws, this.y);
-          ctx.strokeRect(this.x, this.y - this.w / 2, this.ws, this.w);
+          ctx.fillText(str, this.x + s, this.y);
           ctx.restore();
+          return this;
         }
-        erase() {
+        erase(s, l) {
           ctx.save();
           ctx.fillStyle = bgStyle;
-          ctx.fillRect(this.x + this.ws, this.y - this.w / 2, this.w, this.w);
-          ctx.strokeRect(this.x, this.y - this.w / 2, this.ws, this.w);
+          ctx.fillRect(this.x + s, this.y - this.w / 2, l, this.w);
           ctx.restore();
+          return this;
         }
       }
 
-      const cursor = new Cursor(0, 0);
-      const line = new TextLine(0, 0);
-      let isEdit = false;
+      const cursor = new Cursor(document.getElementById("cursor"));
+      const line = new TextLine(document.getElementById("input"));
       canvas.onmousedown = function(e) {
         const pos = windowToCanvas(canvas, e.clientX, e.clientY);
-        line.move(pos.x, pos.y);
+        line.init().move(pos.x, pos.y);
         cursor.move(pos.x, pos.y);
-        cursor.blink();
-        isEdit = true;
       };
 
-      canvas.onmousemove = function(e) {};
-
-      //写入字符
-      document.onkeypress = function(e) {
-        if (!isEdit) return;
-        const char = String.fromCharCode(e.keyCode || e.which);
-        line.insert(char);
-        cursor.move(line.x + line.ws + 4, line.y);
-        cursor.blink();
-        line.draw();
+      line.input.oninput = function(e) {
+        const str = e.target.value;
+        const ostr = line.txts;
+        //清除旧值再重写新值
+        line.erase(0, line.getWidth() + 2);
+        line.insert(str).draw(str, 0);
+        const i = line.setIndex(charCount(str) - charCount(ostr));
+        cursor.move(line.x + line.getWidth(i), line.y);
       };
 
       document.onkeydown = function(e) {
-        // e.preventDefault()禁用后面的 onkeypress 事件，因为 backspace 和 enter,不需要执行keypress,所以要禁用掉
-        if (e.keyCode === 8 || e.keyCode === 13) {
-          e.preventDefault();
+        // left
+        if (e.keyCode === 37) {
+          const i = line.setIndex(-1);
+          cursor.move(line.x + line.getWidth(i), line.y);
         }
-        // enter 完成输入
-        if (e.keyCode === 13) {
-          cursor.init();
-          line.init();
-          isEdit = false;
-        }
-
-        // Backspace 删除文本最后的字符
-        if (e.keyCode === 8) {
-          line.delete(0);
-          cursor.move(line.x + line.ws + 4, line.y);
-          cursor.blink();
+        // right
+        if (e.keyCode === 39) {
+          const i = line.setIndex(1);
+          cursor.move(line.x + line.getWidth(i), line.y);
         }
       };
     </script>
