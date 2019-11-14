@@ -145,13 +145,13 @@
         const w = line.getWidth(line.index - 1);
         line.erase(cw, w);
         line.draw(txt, w);
-		cursor.blink(() => {
-            const w = line.getWidth(line.index);
-            const txt = line.txts.slice(line.index, line.index + 2).join("");
-            const cw = ctx.measureText(txt).width;
-            line.erase(cw, w);
-            line.draw(txt, w);
-          });
+        cursor.blink(() => {
+          const w = line.getWidth(line.index);
+          const txt = line.txts.slice(line.index, line.index + 2).join("");
+          const cw = ctx.measureText(txt).width;
+          line.erase(cw, w);
+          line.draw(txt, w);
+        });
       };
 
       document.onkeydown = function(e) {
@@ -165,7 +165,13 @@
           line.delete();
           line.erase(cw, line.getWidth());
           cursor.move(line.x + line.getWidth(line.index) + 2, line.y);
-          cursor.blink();
+          cursor.blink(() => {
+            const w = line.getWidth(line.index);
+            const txt = line.txts.slice(line.index, line.index + 2).join("");
+            const cw = ctx.measureText(txt).width;
+            line.erase(cw, w);
+            line.draw(txt, w);
+          });
         }
         // enter 完成输入
         if (e.keyCode === 13) {
