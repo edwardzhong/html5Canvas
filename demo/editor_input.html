@@ -237,6 +237,19 @@
         }
       }
 
+      familyEl.onchange = function(e) {
+        ctx.font = Number(sizeEl.value) * 2 + "px " + this.value;
+        cursor.init();
+      };
+      sizeEl.onchange = function(e) {
+        ctx.font = Number(this.value) * 2 + "px " + familyEl.value;
+        cursor.init();
+      };
+      colorEl.onchange = function(e) {
+        ctx.fillStyle = this.value;
+        cursor.init();
+      };
+
       let line;
       let isEdit = false;//是否编辑模式
       let dis = 0;//拖动间距
@@ -272,50 +285,6 @@
         cursor.init().move(line.x + line.getWidth(), line.y);
       };
 
-      //单击移动模式
-      content.onmousedown = function(e) {
-        if (isEdit) return;
-        line = null;
-        const pos = windowToCanvas(canvas, e.clientX, e.clientY);
-        for (let l of lines) {
-          ctx.beginPath();
-          ctx.rect(l.x, l.y - l.w / 2, l.getWidth(), l.w);
-          if (ctx.isPointInPath(pos.x, pos.y)) {
-            line = l;
-            dis = pos.x - line.x;
-            break;
-          }
-        }
-      };
-
-      content.onmousemove = function(e) {
-        const pos = windowToCanvas(canvas, e.clientX, e.clientY);
-        //判断是否滑动过已存在对象
-        for (let l of lines) {
-          ctx.beginPath();
-          const w = l.getWidth();
-          ctx.rect(l.x, l.y - l.w / 2, w, l.w);
-          if (ctx.isPointInPath(pos.x, pos.y)) {
-            box.show(l.x, l.y - l.w / 2, w, l.w);
-            break;
-          }
-        }
-        //移动模式, 遍历渲染字符串对象
-        if (isEdit || !line) return;
-        content.style.cursor = 'move';
-        drawBg();
-        line.move(pos.x - dis, pos.y);
-        for (let l of lines) {
-          l.draw(l.txts, 0);
-        }
-        box.show(line.x, line.y - line.w / 2, line.getWidth(), line.w);
-      };
-
-      content.onmouseup = function(e) {
-        line = null;
-        content.style.cursor = 'auto';
-      };
-
       // textarea代理输入
       input.oninput = function(e) {
         if (!isEdit) return;
@@ -327,6 +296,9 @@
         const i = line.setIndex(charCount(str) - charCount(ostr));
         cursor.move(line.x + line.getWidth(i), line.y);
         box.show(line.x, line.y - line.w / 2, line.getWidth(), line.w);
+        if(!str){
+          box.init();
+        }
       };
 
       //光标移动和回车
@@ -351,14 +323,55 @@
         }
       };
 
-      familyEl.onchange = function(e) {
-        ctx.font = Number(sizeEl.value) * 2 + "px " + this.value;
+      content.addEventListener('mousemove', function(e){
+        const pos = windowToCanvas(canvas, e.clientX, e.clientY);
+        //判断是否滑动过已存在对象
+        for (let l of lines) {
+          ctx.beginPath();
+          const w = l.getWidth();
+          ctx.rect(l.x, l.y - l.w / 2, w, l.w);
+          if (ctx.isPointInPath(pos.x, pos.y)) {
+            box.show(l.x, l.y - l.w / 2, w, l.w);
+            break;
+          }
+        }
+      },false);
+
+      //单击移动模式
+      content.onmousedown = function(e) {
+        if (isEdit) return;
+        line = null;
+        const pos = windowToCanvas(canvas, e.clientX, e.clientY);
+        for (let l of lines) {
+          ctx.beginPath();
+          ctx.rect(l.x, l.y - l.w / 2, l.getWidth(), l.w);
+          if (ctx.isPointInPath(pos.x, pos.y)) {
+            line = l;
+            dis = pos.x - line.x;
+            break;
+          }
+        }
+        content.addEventListener('mousemove', moveFn, false);
+        content.addEventListener('mouseup', mouseUp, false);
       };
-      sizeEl.onchange = function(e) {
-        ctx.font = Number(this.value) * 2 + "px " + familyEl.value;
+
+      function moveFn (e) {
+        const pos = windowToCanvas(canvas, e.clientX, e.clientY);
+        //移动模式, 遍历渲染字符串对象
+        if (isEdit || !line) return;
+        content.style.cursor = 'move';
+        drawBg();
+        line.move(pos.x - dis, pos.y);
+        for (let l of lines) {
+          l.draw(l.txts, 0);
+        }
+        box.show(line.x, line.y - line.w / 2, line.getWidth(), line.w);
       };
-      colorEl.onchange = function(e) {
-        ctx.fillStyle = this.value;
+
+      function mouseUp() {
+        content.style.cursor = 'auto';
+        content.removeEventListener('mousemove', moveFn, false);
+        content.removeEventListener('mouseup', mouseUp, false);
       };
     </script>
   </body>
