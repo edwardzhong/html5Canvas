@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>solar system</title>
+<style>
+	body{
+		margin: 0;
+	}
+</style>
+</head>
+<body>
+<canvas id="canvas" width="1600" height="1600"></canvas>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
+<script src="../../graphics/tween.js"></script>
+<script>
+/**
+ * author:Jeff Zhong
+ */
+
+// 星球	 变量名	   公转周期
+// 水星	  Mercury	87.70	
+// 金星	  Venus	    224.701.70
+// 地球	  Earth	    365.2422
+// 火星	  Mars	    686.98
+// 木星	  Jupiter	4332.589
+// 土星	  Saturn	10759.95
+// 天王星	  Uranus	30799.095
+// 海王星	  Neptune	60152.95
+// 小行星带 Asteroid  283 ～ 14*365=5110
+
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		W=canvas.width,
+		H=canvas.height;
+
+	canvas.style.background='#000';
+
+	function drawCircle(r,color){
+		var hsl= rgbToHsl(hexToRgb(color));
+		ctx.lineWidth=1;
+		// ctx.strokeStyle='rgba(176,184,203,0.3)';
+		// ctx.arc(0,0,this.x,Math.PI*2,false);
+		// ctx.stroke();
+		var gradient=ctx.createLinearGradient(-r,0,r,0);
+		gradient.addColorStop(0,'hsla('+hsl[0]+','+hsl[1]+'%,0%,.3)');
+		gradient.addColorStop(0.6,'hsla('+hsl[0]+','+hsl[1]+'%,50%,.9)');
+		gradient.addColorStop(1,'hsla('+hsl[0]+','+hsl[1]+'%,80%,1)');
+		ctx.strokeStyle=gradient;
+			// ctx.shadowColor=color;
+			// ctx.shadowBlur=4;	
+		ctx.beginPath();
+		ctx.arc(0,0,r,0,Math.PI,true);
+		ctx.stroke();
+	}
+
+	//场景
+	class Stage {
+		constructor(){
+			this.planets=[];
+		}
+		init(ctx){
+			ctx.translate(W/2,H/2);//坐标重置为中间
+			this.animate(ctx);
+		}
+		drawBG(ctx){
+			ctx.save();
+			ctx.globalCompositeOperation = "source-over";
+			var gradient=ctx.createRadialGradient(0,0,0,0,0,600);
+			gradient.addColorStop(0,'rgba(3,12,13,0.1)');
+			gradient.addColorStop(1,'rgba(0,0,0,1');
+			ctx.fillStyle=gradient;
+			// ctx.fillStyle='rgba(0,0,0,0.9)';
+			ctx.fillRect(-W/2,-H/2,W,H);
+			ctx.restore();
+		}
+		animate(ctx){
+			var that=this,
+				startTime=new Date();
+			(function run(){
+				that.drawBG(ctx);
+				that.planets.forEach(item=>{
+					item.update(startTime);
+					item.draw(ctx);
+				});
+				requestAnimationFrame(run);
+			}());
+		}
+	}
+	/**
+	 * 星球基类
+	 */
+	class Planet{
+		/**
+		 * @param  {Number} x         x坐标
+		 * @param  {Number} y         y坐标
+		 * @param  {Number} r         半径
+		 * @param  {Number} duration  周期(秒)
+		 * @param  {Object} fillStyle 
+		 * @param  {Object} blurStyle 
+		 */
+		constructor(x,y,r,duration,fillStyle,blurStyle){
+			this.x=x;
+			this.y=y;
+			this.r=r;
+			this.duration=duration;
+			this.angle=0;
+			this.fillStyle=fillStyle;
+			this.blurStyle=blurStyle;
+		}
+		update(startTime){
+			this.angle=Tween.Linear(new Date()-startTime,0,Math.PI*2,this.duration*1000);
+		}
+		draw(ctx){
+			ctx.save();
+			ctx.rotate(this.angle);
+			// ctx.translate(this.x,this.y);
+			drawCircle(this.x,this.blurStyle.color);
+			ctx.beginPath();
+			// ctx.globalCompositeOperation = "lighter";
+			ctx.fillStyle=this.fillStyle;
+			ctx.shadowColor=this.blurStyle.color;
+			ctx.shadowBlur=this.blurStyle.blur;				
+			// ctx.arc(0,0,this.r,Math.PI*2,false);
+			ctx.arc(this.x,this.y,this.r,0,Math.PI*2,false);
+			ctx.fill();
+			ctx.restore();
+		}
+	};
+	/**
+	 * 太阳
+	 */
+	class Sun extends Planet{
+		draw(ctx){
+			ctx.save();
+			ctx.beginPath();
+			ctx.globalCompositeOperation = "source-over";
+			ctx.fillStyle=this.fillStyle;
+			ctx.shadowColor=this.blurStyle.color;
+			ctx.shadowBlur=this.blurStyle.blur;				
+			ctx.arc(this.x,this.y,this.r,0,Math.PI*2,false);
+			ctx.fill();
+			ctx.restore();	
+		}
+	}
+	/**
+	 * 土星
+	 */
+	class Saturn extends Planet{
+		draw(ctx){
+			ctx.save();
+			ctx.rotate(this.angle);
+			drawCircle(this.x,this.blurStyle.color);
+
+			ctx.beginPath();
+			ctx.fillStyle=this.fillStyle;			
+			ctx.arc(this.x,this.y,this.r,Math.PI*2,false);
+			ctx.fill();
+
+			//土星光环
+			ctx.globalCompositeOperation = "source-over";
+			var gradient=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r+25);
+			var startStop=(this.r+3)/(this.r+24);
+			gradient.addColorStop(startStop,'#282421');
+			gradient.addColorStop(startStop+0.06,'#282421');
+			gradient.addColorStop(startStop+0.1,'#7e7966');
+			gradient.addColorStop(startStop+0.18,'#706756');
+			gradient.addColorStop(startStop+0.24,'#7e7966');
+			gradient.addColorStop(startStop+0.25,'#282421');//间隔
+			gradient.addColorStop(startStop+0.26,'#282421');
+			gradient.addColorStop(startStop+0.27,'#807766');
+			gradient.addColorStop(1,'#595345');
+			ctx.fillStyle=gradient;
+			ctx.beginPath();//从beginPath处，开始使用非零环绕原则画环
+			ctx.arc(this.x,this.y,this.r+24,0,Math.PI*2,true);
+			ctx.arc(this.x,this.y,this.r+3,0,Math.PI*2,false);
+			ctx.fill();
+			ctx.restore();	
+		}
+	}
+	/**
+	 * 小行星
+	 */
+	class Asteroid extends Planet{
+		draw(ctx){
+			ctx.save();
+			ctx.rotate(this.angle);
+			ctx.beginPath();
+			ctx.globalCompositeOperation = "xor";
+			ctx.fillStyle=this.fillStyle;			
+			ctx.arc(this.x,this.y,this.r,0,Math.PI*2,false);
+			ctx.fill();
+			ctx.restore();	
+		}
+	}
+	/**
+	 * 彗星
+	 */
+	class Comet {
+		/**
+		 * 彗星
+		 * @param  {Number} cx       椭圆中心横坐标
+		 * @param  {Number} cy       椭圆中心纵坐标
+		 * @param  {Number} a        椭圆横半轴长
+		 * @param  {Number} b        椭圆纵半轴长
+		 * @param  {Number} r        圆球半径
+		 * @param  {Number} angle    旋转角度和初始位置角度
+		 * @param  {String} color    颜色
+		 * @param  {Number} duration 周期(秒)
+		 */
+		constructor(cx,cy,a,b,r,angle,color,duration){
+			this.a=a;
+			this.b=b;
+			this.r=r;
+			this.cx=cx;
+			this.cy=cy;
+			this.x=0;
+			this.y=0;
+			this.color=color;
+			this.angle=angle;
+			this.duration=duration;
+		}
+		update(startTime){
+			var t=Tween.Linear(new Date()-startTime,0,Math.PI*2,this.duration*1000);
+			this.x=this.cx+this.a*Math.cos(this.angle+t);
+			this.y=this.cy+this.b*Math.sin(this.angle+t);
+		}
+		draw(){
+			ctx.save();
+			ctx.rotate(this.angle);
+			//画运动轨迹
+			ctx.lineWidth=0.5;
+			ctx.strokeStyle='rgba(15,69,116,0.2)';
+			ellipse(ctx,this.cx,this.cy,this.a,this.b);
+
+			//画球
+			ctx.beginPath();
+			// ctx.globalCompositeOperation = "lighter";
+			ctx.globalCompositeOperation = "source-atop";
+			ctx.shadowColor=this.color;
+			ctx.shadowBlur=1;
+			ctx.fillStyle=this.color;
+			ctx.arc(this.x,this.y,this.r,0,Math.PI*2,false);
+			ctx.fill();
+			//画尾迹
+			ctx.restore();
+		}
+	}
+
+	var stage=new Stage();
+
+	// sun
+	var sunStyle=ctx.createRadialGradient(0,0,0,0,0,60);
+	sunStyle.addColorStop(0,'white');
+	sunStyle.addColorStop(0.5,'white');
+	sunStyle.addColorStop(0.8,'#ffca1e');
+	sunStyle.addColorStop(1,'#b4421d');
+	var sun=new Sun(0,0,60,0,sunStyle,{color:'#b4421d',blur:300});
+	stage.planets.push(sun);
+
+	// mercury
+	var mercuryStyle=ctx.createRadialGradient(100,0,0,100,0,9);
+	mercuryStyle.addColorStop(0,'#75705a');
+	mercuryStyle.addColorStop(1,'#464646');
+	var mercury=new Planet(100,0,9,8.77,mercuryStyle,{color:'#464646'});
+	stage.planets.push(mercury);
+
+	//venus
+	var venusStyle=ctx.createRadialGradient(150,0,0,150,0,12);
+	venusStyle.addColorStop(0,'#f6cd7e');
+	venusStyle.addColorStop(1,'#ce8c42');
+	var venus=new Planet(150,0,15,22.47,venusStyle,{color:'#ce8c42'});
+	stage.planets.push(venus);
+	
+	//earth
+	var earthStyle=ctx.createRadialGradient(200,0,0,200,0,15);
+	earthStyle.addColorStop(0,'#3193b8');
+	earthStyle.addColorStop(1,'#056fe5');
+	var earth=new Planet(200,0,15,36.5,earthStyle,{color:'#056fe5'});
+	stage.planets.push(earth);
+
+	//mars
+	var marsStyle=ctx.createRadialGradient(250,0,0,250,0,14);
+	marsStyle.addColorStop(0,'#b77660');
+	marsStyle.addColorStop(1,'#8c2f10');
+	var mars=new Planet(250,0,12,68.69,marsStyle,{color:'#8c2f10'});
+	stage.planets.push(mars);
+
+	//jupiter
+	// var jupiterStyle=ctx.createRadialGradient(400,-20,80,400,-80,20);
+	// jupiterStyle.addColorStop(0,'#D2B48C');//白
+	// jupiterStyle.addColorStop(0.21,'#D2B48C');
+	// jupiterStyle.addColorStop(0.23,'#DDDDDD');//白
+	// jupiterStyle.addColorStop(0.23,'#DDDDDD');
+	// jupiterStyle.addColorStop(0.25,'#D2B48C');//黄
+	// jupiterStyle.addColorStop(0.28,'#D2B48C');
+	// jupiterStyle.addColorStop(0.31,'#C6E2FF');//白
+	// jupiterStyle.addColorStop(0.32,'#C6E2FF');
+
+	// jupiterStyle.addColorStop(0.36,'#cb8235');//红
+	// jupiterStyle.addColorStop(0.42,'#cb8235');
+	// jupiterStyle.addColorStop(0.45,'#C6E2FF');//白
+	// jupiterStyle.addColorStop(0.48,'#C6E2FF');
+	// jupiterStyle.addColorStop(0.52,'#cb8235');//红
+	// jupiterStyle.addColorStop(0.57,'#cb8235');
+	// jupiterStyle.addColorStop(0.60,'#C6E2FF');//白
+	// jupiterStyle.addColorStop(0.61,'#C6E2FF');
+	// jupiterStyle.addColorStop(0.62,'#CDBA96');//红
+	// jupiterStyle.addColorStop(0.62,'#CDBA96');
+	// jupiterStyle.addColorStop(0.63,'#C6E2FF');//白	
+	// jupiterStyle.addColorStop(0.64,'#C6E2FF');
+	// jupiterStyle.addColorStop(0.66,'#D2B48C');//黄
+
+	var jupiterStyle=ctx.createRadialGradient(400,0,0,400,0,30);
+	jupiterStyle.addColorStop(0,'#be854e');
+	jupiterStyle.addColorStop(0.4,'#be854e');
+	jupiterStyle.addColorStop(0.7,'#e3ad87');
+	jupiterStyle.addColorStop(1,'#873d20');
+	var jupiter=new Planet(400,0,30,433.25,jupiterStyle,{color:'#873d20'});
+	stage.planets.push(jupiter);
+
+	//saturn 
+	var saturnStyle=ctx.createRadialGradient(500,0,0,500,0,26);
+	saturnStyle.addColorStop(0,'#f2e558');
+	saturnStyle.addColorStop(1,'#4c4a3b');
+	var saturn =new Saturn(500,0,26,1075.995,saturnStyle,{color:'#4c4a3b'});
+	stage.planets.push(saturn);
+	//uranus
+	var uranusStyle=ctx.createRadialGradient(600,0,0,600,0,22);
+	uranusStyle.addColorStop(0,'#cdf3f6');
+	uranusStyle.addColorStop(1,'#4ea2ce');
+	var uranus =new Planet(600,0,22,3079.9095,uranusStyle,{color:'#4ea2ce'});
+	stage.planets.push(uranus);
+	//neptune
+	var neptuneStyle=ctx.createRadialGradient(700,0,0,700,0,20);
+	neptuneStyle.addColorStop(0,'#2f61dc');
+	neptuneStyle.addColorStop(1,'#1933a1');
+	var neptune =new Planet(700,0,20,6015.295,neptuneStyle,{color:'#1933a1'});
+	stage.planets.push(neptune);
+
+	function getAsteroidColor() {
+		const val = Math.ceil(random(10, 15)).toString(16);
+		return '#'+val.repeat(3);
+	}
+
+	function getCometColor() {
+		const [h,s,l] = randomHsl();
+		return `hsl(${h},${s}%,${l}%)`;
+	}
+
+	function createAsteroids(){
+		var asteroid=null,
+			x=300,y=0, r=2,rd=300,
+			angle=0, d=283, 
+			color='#fff';
+		for(var i=0;i<400;i++){
+			rd=random(300,320);
+			angle=random(0,Math.PI*2*1000)/1000;
+			x=Math.round(Math.cos(angle)*rd);
+			y=Math.round(Math.sin(angle)*rd);
+			r=random(1,3);
+			d=random(28.3,511);
+			color=getAsteroidColor();
+			asteroid = new Asteroid(x,y,r,d,color,{color:color,blur:1});
+			stage.planets.push(asteroid);
+		}
+	}
+	function createComets(){
+		var l=180,
+			a=800,b=300,
+			cx=a-l,cy=0,
+			r=3,duration=30,angle=0,color='#fff',
+			comet = null;
+		for(var i=0;i<20;i++){
+			l=random(120,350)
+			a=random(600,1000);
+			b=a/random(1,3);
+			cx=a-l;
+			r=random(2,4);
+			angle=random(0,Math.PI*2*1000)/1000;
+			color=getCometColor();
+			duration=random(20,100);
+			stage.planets.push(new Comet(cx,cy,a,b,r,angle,color,duration));
+		}
+	}
+	createAsteroids();
+	createComets();
+	stage.init(ctx);
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>圆与三角函数</title>
+</head>
+<body>
+<canvas id="canvas" width="600" height="400"></canvas>
+<script>
+    var canvas = document.getElementById('canvas'),
+        ctx = canvas.getContext('2d'),
+        W = canvas.width,
+        H = canvas.height,
+        X = 0,
+        Y = 0,
+        RADIUS = 100,
+        RAD = 0,
+        POS = -3 * 100,
+        points = [];
+
+    canvas.width = 2 * W;
+    canvas.height = 2 * H;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.lineWidth = 2;
+    ctx.translate(W, H);
+
+    function generate() {
+        RAD += Math.PI / 60;
+        RAD %= (Math.PI * 2);
+        X = Math.cos(-RAD) * RADIUS;
+        Y = Math.sin(-RAD) * RADIUS;
+        points.unshift(Y);
+        points.length = W;//截取至屏幕长度
+    }
+
+    function drawCoordinate() {
+        ctx.save();
+        ctx.strokeStyle = 'hsl(0,0%,60%)';
+        ctx.moveTo(-W, 0);
+        ctx.lineTo(W, 0);
+        ctx.moveTo(0, -H);
+        ctx.lineTo(0, H);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawCircle() {
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = 'hsl(0,0%,50%)';
+        ctx.arc(POS, 0, RADIUS, 0, -RAD, true);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawCurve() {
+        ctx.save();
+        ctx.strokeStyle = 'hsl(200,50%,50%)';
+        ctx.beginPath();
+        points.forEach((y, i) => {
+            ctx[i ? 'lineTo' : 'moveTo'](i*2, y);
+        });
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawLine() {
+        ctx.save();
+        ctx.strokeStyle = 'hsl(0,80%,50%)';
+        let y = points[0];
+        ctx.beginPath();
+        ctx.moveTo(POS, 0);
+        ctx.lineTo(POS + X, y);
+        ctx.lineTo(0, y);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    (function animate() {
+        ctx.clearRect(-W, -H, 2 * W, 2 * H);
+        generate();
+        drawCoordinate();
+        drawCircle();
+        drawLine();
+        drawCurve();
+        requestAnimationFrame(animate);
+    }());
+</script>
+</body>
+</html>

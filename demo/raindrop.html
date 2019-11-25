@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>下雨</title>
+	<style>
+		canvas{
+			background: #000;
+		}
+	</style>
+</head>
+<body>
+<canvas id="canvas" width="1400" height="500"></canvas>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
+<script>
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		W=canvas.width,
+		H=canvas.height,
+		mouse=captureMouse(canvas),
+		MAX=4,
+		rains=[],
+		drops=[];
+
+	var gradient=ctx.createLinearGradient(0,0,0,H);//线性渐变
+	gradient.addColorStop(0,'hsla(220,100%,10%,1)');
+	gradient.addColorStop(0.4,'hsla(220,60%,5%,1)');
+	gradient.addColorStop(1,'hsla(30,100%,10%,1)');
+	ctx.fillStyle=gradient;
+	ctx.globalCompositeOperation='source-over';
+
+	class Rain{
+		constructor(x,y){
+			this.x=x;
+			this.y=y;
+			this.x1=x;
+			this.l=random(25,35);
+			this.y1=y;
+			this.vx=0;
+			this.vy=10;
+			this.angle=0;
+		}
+		update(){
+			var x=Math.tan(this.angle)*this.l;
+			this.x1=this.x+x;
+			this.vx=Math.tan(this.angle)*this.vy;
+			this.x+=this.vx;
+			this.x1+=this.vx;
+			this.y+=this.vy;
+			this.y1=this.y+this.l;
+		}
+		draw(ctx){
+			ctx.save();
+			ctx.lineWidth=1;
+			ctx.lineCap='round';
+			ctx.strokeStyle='hsla(210,100%,70%,1)';
+			ctx.globalCompositeOperation='lighter';
+			ctx.beginPath();
+			ctx.moveTo(this.x,this.y);
+			ctx.lineTo(this.x1,this.y1);
+			ctx.stroke();
+			ctx.restore();
+		}
+	}
+	class Drop{
+		constructor(x,y,vx){
+			this.r=random(1,2.4);
+			this.x=x;
+			this.y=y;
+			this.vx=1.5*vx+random(-10,10);
+			this.vy=-random(1,10);
+			this.hsla=[210,80,70,random(5,10)/10];
+		}
+		update(){
+			this.fillStyle=`hsla(${this.hsla[0]},${this.hsla[1]}%,${this.hsla[2]}%,${this.hsla[3]})`;
+			this.vx*=0.9;
+			this.x+=this.vx;
+			this.vy+=0.7;
+			this.y+=this.vy;
+		}
+		draw(ctx){
+			ctx.save();
+			// ctx.globalCompositeOperation='lighter';
+			ctx.fillStyle=this.fillStyle;
+			ctx.beginPath();
+			ctx.arc(this.x,this.y,this.r,0,Math.PI*2,false);
+			ctx.fill();
+			ctx.restore();
+		}
+	}
+
+	function createRains(){	
+		if(new Date().getTime()%MAX==0){
+			for(var i=0;i<Math.floor(10-MAX);i++){
+				var x=random(-W/2,3*W/2);
+				rains.push(new Rain(x,0));		
+			}
+		}
+	}
+	function createDrops(x,vx){
+		for(var i=0;i<5;i++){
+			var d=new Drop(x,H,vx);
+			drops.push(d);
+		}
+	}
+
+	function update(){
+		var angle=(mouse.x-W/2)*0.001;
+		MAX=9-Math.ceil(mouse.y*8/H);
+		for(var i=0,p;i<rains.length;i++){
+			p=rains[i];
+			p.angle=angle;
+			p.update();
+			p.draw(ctx);
+			//到达地板后触发水珠飞溅效果
+			if(p.y>H-p.l){
+				createDrops(p.x,p.vx);
+			}
+			//飞出屏幕后移除该雨滴
+			if(p.y>H){
+				rains.splice(i--,1);
+			}
+		}
+
+		for(var i=0;i<drops.length;i++){
+			var d=drops[i];
+			d.update();
+			d.draw(ctx);
+			//移除水珠
+			if(d.y>H){
+				drops.splice(i--,1);
+			}
+		}
+	}
+	(function animate(){
+		ctx.fillRect(0,0,W,H);
+		createRains();
+		update();
+		requestAnimationFrame(animate);
+	}());
+</script>
+</body>
+</html>

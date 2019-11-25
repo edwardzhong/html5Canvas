@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>简单画板</title>
+<style>
+	body{
+		margin: 0;
+	}
+	.toolbar{
+		/* padding: 10px; */
+		color: #555;
+		font-size: 14px;
+		display: flex;
+		flex-flow: row nowrap;
+		min-width: 1000px;
+	}
+	.block{
+		padding: 4px;
+		height: 90px;
+		display: flex;
+		border: 1px solid #eee;
+		border-width: 1px 0 1px 1px;
+		flex-flow: column wrap;
+		justify-content: space-around;
+	}
+
+	.style-block{
+		width: 240px;
+	}
+	.style-block span{
+		padding-left: 10px;
+	}
+	.Polygon-block{
+		width: 240px;
+	}
+	.Polygon-block input[type=number]{
+		/* margin-top: 4px; */
+		width: 40px;
+		padding: 2px 4px;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		outline: none;
+	}
+	.info-block{
+		width: 120px;
+		border: 1px solid #eee;
+	}
+	.info{
+		line-height: 2;
+		padding-left: 10px;
+	}
+	.info span{
+		font-size: 12px;
+		color: #e00;
+	}
+
+	.wrap{
+		position: relative;
+		width: 80px;
+		height: 30px;
+		text-align: center;
+		overflow: hidden;
+		
+	}
+	.wrap .label{
+		padding: 4px;
+		border-radius: 5px;
+	}
+	.wrap [type=radio]{
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 99;
+		opacity: 0;
+		cursor: pointer;
+	}
+	.wrap [type=radio]:checked~.label{/* 覆盖radio */
+		background: hsl(200, 100%, 40%);
+		color: hsl(0, 0%, 100%)
+	}
+	.desc{
+		line-height: 2;
+		color: hsl(0, 0%, 80%)
+	}
+	label{
+		display: block;
+		padding: 2px;
+	}
+	button{
+		margin-left: 10px;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		background: #fff;
+		padding: 3px 20px;
+		cursor: pointer;
+		outline: none;
+	}
+	button:hover{
+		background: #eee;
+	}
+	canvas{
+		float: left;
+	}
+</style>
+</head>
+<body>
+<div class="toolbar">
+	<div class="block">
+		<div class="wrap desc"> 直线 </div>
+		<div class="wrap">
+			<input type="radio" name="type" id="line"><div class="label">实线</div>
+		</div>
+		<div class="wrap">
+			<input type="radio" name="type" id="dash"><div class="label">虚线</div>
+		</div>
+	</div>
+	<div class="block">
+		<div class="desc wrap"> 贝塞尔曲线 </div>
+		<div class="wrap">
+			<input type="radio" name="type" id="quadratic"><div class="label">二次</div>
+		</div>
+		<div class="wrap">
+			<input type="radio" name="type" id="bezier"><div class="label">三次</div>
+		</div>
+	</div>
+	<div class="block Polygon-block">
+		<div class="wrap">
+			<input type="radio" name="type" id="triangle"><div class="label">三角形</div>
+		</div>
+		<div class="wrap">
+			<input type="radio" name="type" id="rect"><div class="label">矩形</div>
+		</div>
+		<div class="wrap">
+			<input type="radio" name="type" id="round"><div class="label">圆形</div>
+		</div>
+		<div class="wrap">
+			<input type="radio" name="type" id="polygon"><div class="label">多边形</div>
+		</div>
+		<div class="wrap">
+			<input type="radio" name="type" id="star"><div class="label">多角星</div>
+		</div>
+		<div class="wrap">
+			<input type="radio" name="type" id="ellipse"><div class="label">椭圆</div>
+		</div>
+		<div class="wrap">
+			<input type="number" id="sides" step="1" min="3" max="20" value="5">
+		</div>
+		<div class="wrap">
+			<input type="number" id="stars" step="1" min="3" max="20" value="5">
+		</div>
+		<div class="wrap">
+			<label for="isFill"><input type="checkbox" name="isFill" id="isFill"> 填充</label>
+		</div>
+	</div>
+	<div class="block style-block">
+		<label for="size">线条粗细 <input type="range" name="size" id="size" step="0.5" min="0.5" max="10" value="1"><span>1</span></label>
+		<label for="strokeColor">描边颜色 <input type="color" name="strokeColor" value="#ff0000" id="strokeColor"><span>#ff0000</span></label>
+		<label for="fillColor">填充颜色 <input type="color" name="fillColor" value="#0000ff" id="fillColor"><span>#0000ff</span></label>
+	</div>
+	<div class="block">
+		<div class="wrap">
+			<label for="grid"><input type="checkbox" name="grid" id="grid" checked> 背景格</label>
+		</div>
+		<div class="wrap">
+			<label for="guid"><input type="checkbox" name="guid" id="guid" checked> 导航线</label>
+		</div>
+		<div class="wrap">
+			<label for="control"><input type="checkbox" name="control" id="control" checked> 控制线</label>
+		</div>
+	</div>
+	<div class="block">
+		<button id="clear">清 空</button>
+		<button id='createCode'>生成代码</button>
+	</div>
+	<div class="block info-block">
+		<div class="info" id="pos">
+			X: <span> 0</span> 
+			Y: <span> 0</span>
+		</div>
+	</div>
+</div>
+<canvas id='canvas' width="1000" height="600">浏览器不支持canvas</canvas>
+<textarea name="codes" class="codes" id="codes" cols="60" rows="40"></textarea>
+<script src="../../graphics/canvas.js"></script>
+<script src="../../graphics/util.js"></script>
+<script>
+	/**
+	 * author:Jeff Zhong
+	 */
+	var canvas=document.getElementById('canvas'),
+		ctx=canvas.getContext('2d'),
+		W=canvas.width,H=canvas.height,
+		currPos={x:0,y:0},
+		mouseStart={x:0,y:0},
+		mouseEnd={x:0,y:0},
+		drawing=false,
+		activeShape=null,
+		imgData=null,
+		index=-1,
+		env=getEnv(),
+		shapes=[];
+
+	// function saveImageData(){
+	// 	imgData=ctx.getImageData(0,0,W,H);
+	// }
+	// //将当前canvas数据写回ctx
+	// function restoreImageData(){
+	// 	ctx.putImageData(imgData,0,0);
+	// }
+
+	function getEnv(){
+		var lw=document.getElementById('size').value,
+			strokeStyle=document.getElementById('strokeColor').value,
+			fillStyle=document.getElementById('fillColor').value,
+			sides=document.getElementById('sides').value,
+			stars=document.getElementById('stars').value,
+			isFill=document.getElementById('isFill').checked,
+			grid=document.getElementById('grid').checked,
+			guid=document.getElementById('guid').checked,
+			control=document.getElementById('control').checked,
+			type='solid',
+			elems=document.getElementsByName('type');
+		for(var i=0,len=elems.length;i<len;i++){
+			if(elems[i].checked){
+				type=elems[i].id;break;
+			}
+		}
+
+		return {
+			lineWidth:lw,
+			strokeStyle:strokeStyle,
+			fillStyle:fillStyle,
+			type:type,
+			sides:sides,
+			stars:stars,
+			isFill:isFill,
+			grid:grid,
+			guid:guid,
+			control:control
+		};
+	}
+	function resetDrawType(){
+		var elems=document.getElementsByName('type');
+		for(var i=0,len=elems.length;i<len;i++){
+			elems[i].checked=false;
+		}
+		drawing=false;
+	}
+
+	function factory(type,pos){
+		switch(type){
+			case 'line': return new Line(pos);
+			case 'dash': return new Dash(pos);
+			case 'quadratic': return new Quadratic(pos);
+			case 'bezier': return new Bezier(pos);
+			case 'triangle': return new Triangle(pos);
+			case 'rect': return new Rect(pos);
+			case 'round': return new Round(pos);
+			case 'polygon': return new Polygon(pos);
+			case 'star': return new Star(pos);
+			case 'ellipse': return new Ellipse(pos);
+			default:return new Line(pos);
+		}
+	}
+
+	class Graph{
+		constructor(pos){
+			this.x=pos.x;
+			this.y=pos.y;
+			this.points=[];
+			this.sides=5;
+			this.stars=5;
+			this.lineWidth=1;
+			this.strokeStyle='#f00';
+			this.fillStyle='#f00';
+			this.isFill=false;
+		}
+		initUpdate(start,end){
+			this.points[1]=end;
+			this.x=(start.x+end.x)/2;
+			this.y=(start.y+end.y)/2;
+		}
+		update(i,pos){
+			if(i==9999){
+				var that=this,
+					x1=pos.x-this.x,
+					y1=pos.y-this.y;
+				this.points.forEach((p,i)=>{
+					that.points[i]={x:p.x+x1, y:p.y+y1 };
+				});
+				this.x=Math.round(pos.x);
+				this.y=Math.round(pos.y);
+			} else {
+				this.points[i]=pos;
+				var x=0,y=0;
+				this.points.forEach(p=>{
+					x+=p.x;
+					y+=p.y;
+				});
+				this.x=Math.round(x/this.points.length);
+				this.y=Math.round(y/this.points.length);
+			}
+		}
+		createPath(ctx){
+			ctx.beginPath();
+			this.points.forEach((p,i)=>{
+				ctx[i==0?'moveTo':'lineTo'](p.x,p.y);
+			});
+			ctx.closePath();
+		}
+		isInPath(ctx,pos){
+			for(var i=0,point,len=this.points.length;i<len;i++){
+				point=this.points[i];
+				ctx.beginPath();
+				ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+				if(ctx.isPointInPath(pos.x,pos.y)){
+					return i;
+				}
+			}
+			this.createPath(ctx);
+			if(ctx.isPointInPath(pos.x,pos.y)){
+				return 9999;
+			}
+			return -1
+		}
+		drawController(ctx){
+			this.drawPoints(ctx);
+			this.drawCenter(ctx);
+		}
+		drawPoints(){
+			ctx.save();
+			ctx.lineWidth=2;
+			ctx.strokeStyle='#999';
+			this.points.forEach(p=>{
+				ctx.beginPath();
+				ctx.arc(p.x,p.y,5,0,Math.PI*2,false);
+				ctx.stroke();
+			});
+			ctx.restore();
+		}
+		drawCenter(ctx){
+			ctx.save();
+			ctx.lineWidth=1;
+			ctx.strokeStyle='hsla(60,100%,45%,1)';
+			ctx.fillStyle='hsla(60,100%,50%,1)';
+			ctx.beginPath();
+			ctx.arc(this.x,this.y,5,0,Math.PI*2,false);
+			ctx.stroke();
+			ctx.fill();
+			ctx.restore();
+		}
+		draw(ctx){
+			ctx.save();
+			ctx.lineWidth=this.lineWidth;
+			ctx.strokeStyle=this.strokeStyle;
+			ctx.fillStyle=this.fillStyle;
+			this.createPath(ctx);
+			ctx.stroke();
+			if(this.isFill){ ctx.fill(); }
+			ctx.restore();
+		}
+		createCode(){
+			var codes=['// '+this.name];
+			codes.push('ctx.save();');
+			codes.push('ctx.lineWidth='+this.lineWidth);
+			codes.push('ctx.strokeStyle=\''+this.strokeStyle+'\';');
+			if(this.isFill){
+				codes.push('ctx.fillStyle=\''+this.fillStyle+'\';');
+			}
+			codes.push('ctx.beginPath();');
+			codes.push('ctx.translate('+this.x+','+this.y+');')//translate到中心点，方便使用
+			this.points.forEach((p,i)=>{
+				if(i==0){
+					codes.push('ctx.moveTo('+(p.x-this.x)+','+(p.y-this.y)+');');
+					// codes.push('ctx.moveTo('+(p.x)+','+(p.y)+');');
+				} else {
+					codes.push('ctx.lineTo('+(p.x-this.x)+','+(p.y-this.y)+');');
+					// codes.push('ctx.lineTo('+(p.x)+','+(p.y)+');');
+				}
+			});
+			codes.push('ctx.closePath();');
+			codes.push('ctx.stroke();');
+			if(this.isFill){
+				codes.push('ctx.fill();');
+			}
+			codes.push('ctx.restore();');
+			return codes.join('\n');
+		}
+	}
+
+	class Line extends Graph{
+		constructor(pos){
+			super(pos);
+			this.points=[pos,pos];
+			this.name='直线'
+		}
+		createPath(ctx){
+			ctx.beginPath();
+			ctx.arc(this.x,this.y,5,0,Math.PI*2,false);
+		}
+		draw(ctx){
+			ctx.save();
+			ctx.lineWidth=this.lineWidth;
+			ctx.strokeStyle=this.strokeStyle;
+			ctx.beginPath();
+			this.points.forEach((p,i)=>{
+				if(i==0){
+					ctx.moveTo(p.x,p.y);
+				} else {
+					ctx.lineTo(p.x,p.y);
+				}
+			});
+			ctx.closePath();
+			ctx.stroke();
+			ctx.restore();
+		}
+		createCode(){
+			var codes=['// '+this.name];
+			codes.push('ctx.lineWidth='+this.lineWidth);
+			codes.push('ctx.strokeStyle=\''+this.strokeStyle+'\';');
+			codes.push('ctx.beginPath();');
+			this.points.forEach((p,i)=>{
+				if(i==0){
+					codes.push('ctx.moveTo('+p.x+','+p.y+');');
+				} else {
+					codes.push('ctx.lineTo('+p.x+','+p.y+');');
+				}
+			});
+			codes.push('ctx.closePath();');
+			codes.push('ctx.stroke();');
+			return codes.join('\n');
+		}
+	}
+
+	class Dash extends Line{
+		constructor(pos){
+			super(pos);
+			this.name='虚线'
+		}
+		draw(ctx){
+			ctx.save();
+			ctx.lineWidth=this.lineWidth;
+			ctx.strokeStyle=this.strokeStyle;
+
+			var dashLen=dashLen||5,
+				points=this.points;
+
+				ctx.beginPath();
+			points.forEach((point,i)=>{
+				
+				if(i==0){
+					ctx.moveTo(point.x,point.y);
+				} else {
+					var deltaX=point.x-points[i-1].x,
+						deltaY=point.y-points[i-1].y,
+						dashNums=Math.floor(Math.sqrt(deltaX*deltaX+deltaY*deltaY)/dashLen);
+					for(var j=1;j<dashNums;j++){
+						ctx[j%2==0?'moveTo':'lineTo'](Math.floor(points[i-1].x+(deltaX/dashNums)*j),Math.floor(points[i-1].y+(deltaY/dashNums)*j));
+					}
+					ctx.stroke();
+				}
+			});
+			ctx.restore();
+		}
+		createCode(){
+			var codes=['// '+this.name];
+			codes.push('ctx.lineWidth='+this.lineWidth);
+			codes.push('ctx.strokeStyle=\''+this.strokeStyle+'\';');
+			
+			var dashLen=dashLen||5,
+				points=this.points;
+			codes.push('ctx.beginPath();');
+			points.forEach((point,i)=>{
+				if(i==0){
+					codes.push('ctx.moveTo('+point.x+','+point.y+');');
+				} else {
+					var deltaX=point.x-points[i-1].x,
+						deltaY=point.y-points[i-1].y,
+						dashNums=Math.floor(Math.sqrt(deltaX*deltaX+deltaY*deltaY)/dashLen);
+					for(var j=1;j<dashNums;j++){
+						codes.push('ctx.'+(j%2==0?'moveTo':'lineTo')+'('+Math.floor(points[i-1].x+(deltaX/dashNums)*j)+','+Math.floor(points[i-1].y+(deltaY/dashNums)*j)+');');
+					}
+					codes.push('ctx.stroke();');
+				}
+			});
+			return codes.join('\n');
+		}
+	}
+
+	class Bezier extends Line {
+		constructor(pos){
+			super(pos);
+			this.points=[pos,pos,pos,pos];
+			this.name='三次贝塞尔曲线'
+		}
+		initUpdate(start,end){
+			var a=Math.round(Math.sqrt(Math.pow(end.x-start.x,2)+Math.pow(end.y-start.y,2)))/2,
+				x1=start.x+(end.x-start.x)/2,
+				y1=start.y-a,
+				y2=end.y+a;
+
+			this.points[1]={x:end.x,y:end.y};
+			this.points[2]={x:x1,y:y1<0?0:y1};
+			this.points[3]={x:start.x,y:end.y};
+			this.points[3]={x:x1,y:y2>H?H:y2};
+			this.x=(start.x+end.x)/2;
+			this.y=(start.y+end.y)/2;
+		}
+		drawPoints(ctx){
+			ctx.lineWidth=0.5;
+			ctx.strokeStyle='#00f';
+
+			//画控制点的连线
+			ctx.beginPath();
+			ctx.moveTo(this.points[0].x, this.points[0].y);
+			ctx.lineTo(this.points[2].x, this.points[2].y);
+			ctx.moveTo(this.points[1].x, this.points[1].y);
+			ctx.lineTo(this.points[3].x, this.points[3].y);
+			ctx.stroke();
+
+			//画连接点和控制点
+			this.points.forEach(function(point,i){
+				ctx.beginPath();
+				ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+				ctx.stroke();
+			});
+		}
+		draw(){
+			ctx.save();
+			ctx.lineWidth=this.lineWidth;
+			ctx.strokeStyle=this.strokeStyle;
+			ctx.beginPath();
+			ctx.moveTo(this.points[0].x, this.points[0].y);
+			ctx.bezierCurveTo(this.points[2].x,this.points[2].y,this.points[3].x,this.points[3].y,this.points[1].x,this.points[1].y);
+			ctx.stroke();
+			ctx.restore();
+		}
+		createCode(){
+			var codes=['// '+this.name];
+			codes.push('ctx.lineWidth='+this.lineWidth);
+			codes.push('ctx.strokeStyle=\''+this.strokeStyle+'\';');
+			codes.push('ctx.beginPath();');
+			codes.push(`ctx.moveTo(${this.points[0].x},${this.points[0].y});`);
+			codes.push(`ctx.bezierCurveTo(${this.points[2].x},${this.points[2].y},${this.points[3].x},${this.points[3].y},${this.points[1].x},${this.points[1].y});`);
+			codes.push('ctx.stroke();');
+			return codes.join('\n');
+		}
+	}
+
+	class Quadratic extends Line{
+		constructor(pos){
+			super(pos);
+			this.points=[pos,pos,pos];
+			this.name='二次贝塞尔曲线'
+		}
+		initUpdate(start,end){
+			var a=Math.round(Math.sqrt(Math.pow(end.x-start.x,2)+Math.pow(end.y-start.y,2)))/2,
+				x1=start.x+(end.x-start.x)/2,
+				y1=start.y-a*1.5;
+			this.points[1]={x:end.x,y:end.y};
+			this.points[2]={x:x1,y:y1<0?0:y1};
+			this.x=(this.points[0].x+this.points[1].x+this.points[2].x)/3;
+			this.y=(this.points[0].y+this.points[1].y+this.points[2].y)/3;
+		}
+		drawPoints(ctx){
+			ctx.lineWidth=0.5;
+			ctx.strokeStyle='#00f';
+
+			//画控制点的连线
+			ctx.beginPath();
+			ctx.moveTo(this.points[0].x, this.points[0].y);
+			ctx.lineTo(this.points[2].x, this.points[2].y);
+			ctx.lineTo(this.points[1].x, this.points[1].y);
+			ctx.stroke();
+
+			//画连接点和控制点
+			this.points.forEach(function(point,i){
+				ctx.beginPath();
+				ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+				ctx.stroke();
+			});
+			ctx.restore();
+		}
+		draw(ctx){
+			ctx.save();
+			ctx.lineWidth=this.lineWidth;
+			ctx.strokeStyle=this.strokeStyle;
+			ctx.beginPath();
+			ctx.moveTo(this.points[0].x, this.points[0].y);
+			ctx.quadraticCurveTo(this.points[2].x,this.points[2].y,this.points[1].x,this.points[1].y);
+			ctx.stroke();
+			ctx.restore();
+		}
+		createCode(){
+			var codes=['// '+this.name];
+			codes.push('ctx.lineWidth='+this.lineWidth);
+			codes.push('ctx.strokeStyle=\''+this.strokeStyle+'\';');
+			codes.push('ctx.beginPath();');
+			codes.push(`ctx.moveTo(${this.points[0].x},${this.points[0].y});`);
+			codes.push(`ctx.quadraticCurveTo(${this.points[2].x},${this.points[2].y},${this.points[1].x},${this.points[1].y});`);
+			codes.push('ctx.stroke();');
+			return codes.join('\n');
+		}
+
+	}
+	/**
+	 * 多边形
+	 */
+	class Polygon extends Graph{
+		constructor(pos){
+			super(pos);
+			this.cPoints=[];
+		}
+		get name(){
+			return this.sides+'边形';
+		}
+		createPoints(start,end){
+			var x1 = end.x - start.x,
+				y1 = end.y - start.y,
+				angle=0;
+			this.points=[];
+			for(var i=0;i<this.sides;i++){
+				angle=2*Math.PI/this.sides*i;
+				var sin=Math.sin(angle),
+					cos=Math.cos(angle),
+					newX = x1*cos - y1*sin,
+					newY = y1*cos + x1*sin;
+				this.points.push({
+					x:Math.round(start.x + newX),
+					y:Math.round(start.y + newY)
+				});
+			}
+		}
+		createControlPoint(start,end,len){
+			var x1 = end.x - start.x,
+				y1 = end.y - start.y,
+				angle=Math.atan2(y1,x1),
+				c=Math.round(Math.sqrt(x1*x1+y1*y1)),
+				l=c+(!len?0:c/len),
+				x2 =l * Math.cos(angle) + start.x, 
+	        	y2 =l * Math.sin(angle) + start.y;
+	        return {x:x2,y:y2};
+		}
+		initUpdate(start,end){
+			this.createPoints(start,end);
+            this.cPoints[0]=this.createControlPoint(start,end,3);
+		}
+		update(i,pos){
+			if(i==10000){
+				var point=this.createControlPoint({x:this.x,y:this.y},pos,-4);
+				this.cPoints[0]=pos;
+				this.createPoints({x:this.x,y:this.y},point);
+			} else if(i==9999){	
+				var that=this,
+					x1=pos.x-this.x,
+					y1=pos.y-this.y;
+				this.points.forEach((p,i)=>{
+					that.points[i]={x:p.x+x1, y:p.y+y1 };
+				});
+				this.cPoints.forEach((p,i)=>{
+					that.cPoints[i]={x:p.x+x1,y:p.y+y1};
+				});
+				this.x=Math.round(pos.x);
+				this.y=Math.round(pos.y);
+			} else {
+				this.points[i]=pos;
+				var x=0,y=0;
+				this.points.forEach(p=>{
+					x+=p.x;
+					y+=p.y;
+				});
+				this.x=Math.round(x/this.points.length);
+				this.y=Math.round(y/this.points.length);
+			}
+		}
+		createCPath(ctx){
+			this.cPoints.forEach(p=>{
+				ctx.beginPath();
+				ctx.arc(p.x,p.y,6,0,Math.PI*2,false);
+			});
+		}
+		isInPath(ctx,pos){
+			var index=super.isInPath(ctx,pos);
+			if(index>-1) return index;
+			this.createCPath(ctx);
+			for(var i=0,len=this.cPoints.length;i<len;i++){
+				var p=this.cPoints[i];
+				ctx.beginPath();
+				ctx.arc(p.x,p.y,6,0,Math.PI*2,false);
+				if(ctx.isPointInPath(pos.x,pos.y)){
+					return 10000+i;break;
+				}
+			}
+			return -1
+		}
+		drawCPoints(ctx){
+			ctx.save();
+			ctx.lineWidth=1;
+			ctx.strokeStyle='hsla(0,0%,50%,1)';
+			ctx.fillStyle='hsla(0,100%,60%,1)';
+			this.cPoints.forEach(p=>{
+				ctx.beginPath();
+				ctx.moveTo(this.x,this.y);
+				ctx.lineTo(p.x,p.y);
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.arc(p.x,p.y,6,0,Math.PI*2,false);
+				ctx.stroke();
+				ctx.fill();
+			});
+			ctx.restore();
+		}
+		drawController(ctx){
+			this.drawPoints(ctx);
+			this.drawCPoints(ctx);
+			this.drawCenter(ctx);
+		}
+	}
+
+	class Star extends Polygon{
+		constructor(pos){
+			super(pos);
+			this.cPoints=[];
+			this.size=0.5;
+		}
+		//使用属性自动更新状态
+		get name() {
+			return this.stars+'角星'
+		}
+		createPoints(start,end){
+			var x1 = end.x - start.x,
+				y1 = end.y - start.y,
+				x2 =x1*this.size,
+				y2 =y1*this.size,
+				angle=0,
+				angle2=0;
+			this.points=[];
+			for(var i=0;i<this.stars;i++){
+				angle=2*Math.PI/this.stars*i;
+				angle2=angle+Math.PI/this.stars;
+				var sin=Math.sin(angle),
+					cos=Math.cos(angle),
+					newX = x1*cos - y1*sin,
+					newY = y1*cos + x1*sin,
+					sin2=Math.sin(angle2),
+					cos2=Math.cos(angle2),
+					newX2 = x2*cos2 - y2*sin2,
+					newY2 = y2*cos2 + x2*sin2;
+
+				this.points.push({
+					x:Math.round(start.x + newX),
+					y:Math.round(start.y + newY)
+				});
+				this.points.push({
+					x:Math.round(start.x + newX2),
+					y:Math.round(start.y + newY2)
+				});
+			}
+		}
+		initUpdate(start,end){
+			this.createPoints(start,end);
+			this.cPoints[0]=this.createControlPoint(start,end,3);
+			this.cPoints[1]=this.createControlPoint(start,this.points[1],3);
+		}
+		update(i,pos){
+			if(i==10000){
+				var ang=Math.PI/this.stars,
+					angle=Math.atan2(pos.y-this.y,pos.x-this.x),
+					sin=Math.sin(ang+angle),
+					cos=Math.cos(ang+angle),
+					a=Math.sqrt(Math.pow(pos.x-this.x,2)+Math.pow(pos.y-this.y,2));
+
+				this.cPoints[1]={
+					x:(a*this.size+10)*cos+this.x, 
+					y:(a*this.size+10)*sin+this.y 
+				};
+				var point=this.createControlPoint({x:this.x,y:this.y},pos,-4);//第一个顶点坐标
+				this.cPoints[0]=pos;//第一个选择控制点坐标
+				this.createPoints({x:this.x,y:this.y},point);//更新所有顶点
+			} else if(i==10001){
+				var x1 = this.points[1].x - this.x,
+					y1 = this.points[1].y - this.y,
+					angle=Math.atan2(y1,x1),
+					a=Math.sqrt(Math.pow(pos.x-this.x,2)+Math.pow(pos.y-this.y,2)),
+					b=Math.sqrt(Math.pow(this.points[0].x-this.x,2)+Math.pow(this.points[0].y-this.y,2));
+				
+				var x=a*Math.cos(angle),
+					y=a*Math.sin(angle);
+				this.size=(a-20)/b;
+				this.cPoints[1]={x:this.x+x, y:this.y+y };
+				this.createPoints({x:this.x,y:this.y},this.points[0]);//更新所有顶点
+			} else {
+				super.update(i,pos);
+			}
+		}
+
+	}
+
+	/**
+	 * 三角形
+	 */
+	class Triangle extends Graph{
+		constructor(pos){
+			super(pos);
+			this.points=[pos,pos,pos];
+			this.name='三角形';
+		}
+		initUpdate(start,end){
+			var x1=Math.round(start.x),
+				y1=Math.round(start.y),
+				x2=Math.round(end.x),
+				y2=Math.round(end.y);
+
+			this.points[0]={x:x1,y:y1};
+			this.points[1]={x:x1,y:y2};
+			this.points[2]={x:x2,y:y2};
+			this.x=Math.round((x1*2+x2)/3);
+			this.y=Math.round((y2*2+y1)/3);
+		}
+	}
+	/**
+	 * 矩形
+	 */
+	class Rect extends Graph{
+		constructor(pos){
+			super(pos);
+			this.points=[pos,pos,pos,pos];
+			this.name='矩形';
+		}
+		initUpdate(start,end){
+			var x1=Math.round(start.x),
+				y1=Math.round(start.y),
+				x2=Math.round(end.x),
+				y2=Math.round(end.y);
+			this.points[0]={x:x1,y:y1};
+			this.points[1]={x:x2,y:y1};
+			this.points[2]={x:x2,y:y2};
+			this.points[3]={x:x1,y:y2};
+			this.x=Math.round((x1+x2)/2);
+			this.y=Math.round((y1+y2)/2);
+		}
+	}
+	/**
+	 * 圆形
+	 */
+	class Round extends Graph{
+		constructor(pos){
+			super(pos);
+			this.points=[];
+			this.radius=10;
+			this.name='圆形';
+		}
+		update(i,pos){
+			if(i==9999){
+				var x1=pos.x-this.x,
+					y1=pos.y-this.y;
+				this.points[0].x+=x1;
+				this.points[0].y+=y1;
+				this.x=pos.x;
+				this.y=pos.y;
+			} else {
+				this.points[0]=pos;
+				this.radius=Math.round(Math.sqrt(Math.pow(pos.x-this.x,2)+Math.pow(pos.y-this.y,2)));
+			}
+		}
+		initUpdate(start,end){
+			this.points[0]=end;
+			this.radius=Math.round(Math.sqrt(Math.pow(end.x-start.x,2)+Math.pow(end.y-start.y,2)));
+		}
+		createPath(ctx){
+			ctx.beginPath();
+			ctx.arc(this.x,this.y,this.radius,0,Math.PI*2,false);
+		}
+		createCode(){
+			var codes=['// '+this.name];
+			codes.push('ctx.lineWidth='+this.lineWidth);
+			codes.push('ctx.strokeStyle=\''+this.strokeStyle+'\';');
+			if(this.isFill){
+				codes.push('ctx.fillStyle=\''+this.fillStyle+'\';');
+			}
+			codes.push('ctx.beginPath();');
+			codes.push('ctx.arc('+this.x+','+this.y+','+this.radius+',0,Math.PI*2,false);');
+			codes.push('ctx.stroke();');
+			if(this.isFill){
+				codes.push('ctx.fill();');
+			}
+			return codes.join('\n');
+		}
+	}
+	/**
+	 * 椭圆
+	 */
+	class Ellipse extends Graph{
+		constructor(pos){
+			super(pos);
+			this.angle=0;
+			this.a=0;
+			this.b=0;
+			this.name='椭圆形';
+		}
+		rotateA(){
+			var x1=this.a*Math.cos(Math.PI/2),
+				y1=this.b*Math.sin(Math.PI/2),
+				cos=Math.cos(this.angle),
+				sin=Math.sin(this.angle),
+				x2=x1*cos-y1*sin,
+				y2=y1*cos-x1*sin;
+			this.points[1]={x:this.x-x2,y:this.y-y2};
+		}
+		rotateB(){
+			var x1=this.a*Math.cos(0),
+				y1=this.b*Math.sin(0),
+				cos=Math.cos(this.angle),
+				sin=Math.sin(this.angle),
+				x2=x1*cos-y1*sin,
+				y2=y1*cos-x1*sin;
+			this.points[0]={x:this.x+x2,y:this.y-y2};
+		}
+		initUpdate(start,end){
+			this.points[0]=end;
+			this.a=Math.round(Math.sqrt(Math.pow(this.points[0].x-start.x,2)+Math.pow(this.points[0].y-start.y,2)));
+			this.b=this.a/2;
+			this.angle = Math.atan2(this.points[0].y-this.y,this.points[0].x-this.x);
+			this.rotateA();
+		}
+		update(i,pos){
+			if(i==9999){
+				var that=this,
+					x1=pos.x-this.x,
+					y1=pos.y-this.y;
+				this.points.forEach((p,i)=>{
+					that.points[i]={x:p.x+x1, y:p.y+y1 };
+				});
+				this.x=pos.x;
+				this.y=pos.y;
+			} else {
+				this.points[i]=pos;
+				if(i==0){
+					this.a=Math.round(Math.sqrt(Math.pow(this.points[0].x-this.x,2)+Math.pow(this.points[0].y-this.y,2)));
+					this.angle = Math.atan2(this.points[0].y-this.y,this.points[0].x-this.x);
+					this.rotateA();
+				} else if(i==1){
+					this.b=Math.round(Math.sqrt(Math.pow(this.points[1].x-this.x,2)+Math.pow(this.points[1].y-this.y,2)));
+					this.angle = Math.PI/2+Math.atan2(this.points[1].y-this.y,this.points[1].x-this.x);
+					this.rotateB();
+				}
+			}
+		}
+		createPath(ctx){
+			var k = .5522848,
+				x=0, y=0,
+				a=this.a, b=this.b,
+				ox = a * k, // 水平控制点偏移量
+				oy = b * k; // 垂直控制点偏移量
+			ctx.beginPath();
+			//从椭圆的左端点开始顺时针绘制四条三次贝塞尔曲线
+			ctx.moveTo(x - a, y);
+			ctx.bezierCurveTo(x - a, y - oy, x - ox, y - b, x, y - b);
+			ctx.bezierCurveTo(x + ox, y - b, x + a, y - oy, x + a, y);
+			ctx.bezierCurveTo(x + a, y + oy, x + ox, y + b, x, y + b);
+			ctx.bezierCurveTo(x - ox, y + b, x - a, y + oy, x - a, y);
+			ctx.closePath();
+		}
+		isInPath(ctx,pos){
+			for(var i=0,point,len=this.points.length;i<len;i++){
+				point=this.points[i];
+				ctx.beginPath();
+				ctx.arc(point.x,point.y,5,0,Math.PI*2,false);
+				if(ctx.isPointInPath(pos.x,pos.y)){
+					return i;
+				}
+			}
+			this.createPath(ctx);
+			if(ctx.isPointInPath(pos.x-this.x,pos.y-this.y)){
+				return 9999;
+			}
+			return -1
+		}
+
+		draw(){
+			ctx.save();
+			ctx.lineWidth=this.lineWidth;
+			ctx.strokeStyle=this.strokeStyle;
+			ctx.fillStyle=this.fillStyle;
+			ctx.translate(this.x,this.y);
+			ctx.rotate(this.angle);
+			this.createPath(ctx);
+			ctx.stroke();
+			if(this.isFill){
+				ctx.fill();
+			}
+			ctx.restore();
+		}
+		createCode(){
+			var k = .5522848,
+				x=0, y=0,
+				a=this.a, b=this.b,
+				ox = a * k,
+				oy = b * k;
+			var codes=['// '+this.name];
+			codes.push('ctx.save();');
+			codes.push('ctx.lineWidth='+this.lineWidth);
+			codes.push('ctx.strokeStyle=\''+this.strokeStyle+'\';');
+			if(this.isFill){
+				codes.push('ctx.fillStyle=\''+this.fillStyle+'\';');
+			}
+			codes.push('ctx.translate('+this.x+','+this.y+');');
+			codes.push('ctx.rotate('+this.angle+');');
+			codes.push('ctx.beginPath();');
+			codes.push('ctx.moveTo('+(x - a)+', '+y+');');
+			codes.push('ctx.bezierCurveTo('+(x - a)+', '+(y - oy)+', '+(x - ox)+', '+(y - b)+', '+x+','+ (y - b)+');');
+			codes.push('ctx.bezierCurveTo('+(x + ox)+', '+(y - b)+', '+(x + a)+', '+(y - oy)+', '+(x + a)+','+ y+');');
+			codes.push('ctx.bezierCurveTo('+(x + a)+', '+(y + oy)+', '+(x + ox)+', '+(y + b)+', '+x+', '+(y + b)+');');
+			codes.push('ctx.bezierCurveTo('+(x - ox)+', '+(y + b)+', '+(x - a)+', '+(y + oy)+', '+(x - a)+', '+y+');');
+			codes.push('ctx.closePath();');
+			codes.push('ctx.stroke();');
+			if(this.isFill){
+				codes.push('ctx.fill();');
+			}
+			codes.push('ctx.restore();');
+			return codes.join('\n');
+		}
+	}
+	document.getElementsByClassName('toolbar')[0].addEventListener('click',function(e){
+		if(e.target.getAttribute('type')=='radio'){
+			drawing=true;
+		}
+	},false);
+	canvas.addEventListener('mousedown',function(e){
+		mouseStart=windowToCanvas(canvas,e.clientX,e.clientY);
+		env=getEnv();
+		activeShape=null;
+
+		//新建图形
+		if(drawing){
+			activeShape = factory(env.type,mouseStart);
+			activeShape.lineWidth = env.lineWidth;
+			activeShape.strokeStyle = env.strokeStyle;
+			activeShape.fillStyle = env.fillStyle;
+			activeShape.isFill = env.isFill;
+			activeShape.sides = env.sides;
+			activeShape.stars = env.stars;
+			shapes.push(activeShape);
+			index=-1;
+			drawGraph();
+		} else {
+			//选中控制点后拖拽修改图形
+			for(var i=0,len=shapes.length;i<len;i++){
+				if((index=shapes[i].isInPath(ctx,mouseStart))>-1){
+					canvas.style.cursor='crosshair';
+					activeShape=shapes[i];break;
+				}
+			}
+		}
+		// saveImageData();
+		canvas.addEventListener('mousemove',mouseMove,false);
+		canvas.addEventListener('mouseup',mouseUp,false);
+	},false);
+
+	function mouseMove(e){
+		mouseEnd=windowToCanvas(canvas,e.clientX,e.clientY);
+		if(activeShape){
+			if(index>-1){
+				activeShape.update(index,mouseEnd);
+			} else {
+				activeShape.initUpdate(mouseStart,mouseEnd);
+			}
+
+			drawBG();
+			if(env.guid){drawGuidewires(mouseEnd.x,mouseEnd.y); }
+			drawGraph();
+		}
+		// restoreImageData();
+	}
+
+	function mouseUp(e){
+		canvas.style.cursor='pointer';
+		if(activeShape){
+			drawBG();
+			drawGraph();
+			resetDrawType();
+		}
+		canvas.removeEventListener('mousemove',mouseMove,false);
+		canvas.removeEventListener('mouseup',mouseUp,false);
+	}
+	// 删除图形
+	document.body.onkeydown=function(e){
+		if(e.keyCode==8){
+			for(var i=0,len=shapes.length;i<len;i++){
+				if(shapes[i].isInPath(ctx,currPos)>-1){
+					shapes.splice(i--,1);
+					drawBG();
+					drawGraph();
+					break;
+				}
+			}
+		}
+	};
+	canvas.addEventListener('mousemove',function(e){
+		currPos=windowToCanvas(canvas,e.clientX,e.clientY);
+		showInfo(currPos);
+	},false);
+
+	document.getElementById('clear').onclick=function(){
+		shapes.length=0;
+		drawBG();
+		document.getElementById('codes').value='';
+	}
+	document.getElementById('createCode').onclick=function(){
+		var codes=[];
+		codes.push('var canvas=document.getElementById(\'canvas\'),');
+		codes.push('	ctx=canvas.getContext(\'2d\');');
+		// codes.push('ctx.save();');
+		shapes.forEach(s=>{
+			codes.push(s.createCode());
+		});
+		// codes.push('ctx.restore();');
+		document.getElementById('codes').value=codes.join('\n');
+	}
+	document.getElementById('grid').onclick=document.getElementById('control').onclick=function(e){
+		drawBG();
+		drawGraph();
+	}
+	document.getElementById('size').onchange=setValue;
+	document.getElementById('strokeColor').onchange=setValue;
+	document.getElementById('fillColor').onchange=setValue;
+	function setValue(){
+		this.nextElementSibling.innerHTML = this.value;
+	}
+	function showInfo(pos){
+		var elem=document.getElementById('pos');
+		elem.children[0].innerHTML = pos.x;
+		elem.children[1].innerHTML = pos.y;
+	}
+	function drawBG(){
+		ctx.clearRect(0,0,W,H);
+		if(getEnv().grid){grid(ctx,'lightGray',10,10); }
+	}
+	//Guidwires
+	function drawGuidewires(x,y){
+		ctx.save();
+		ctx.strokeStyle='rgba(0,0,230,0.4)';
+		ctx.lineWidth=0.5;
+		ctx.beginPath();
+		ctx.moveTo(x+0.5,0);
+		ctx.lineTo(x+0.5,ctx.canvas.height);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(0,y+0.5);
+		ctx.lineTo(ctx.canvas.width,y+0.5);
+		ctx.stroke();
+		ctx.restore();
+	}
+
+	function drawGraph(){
+		var showControl=getEnv().control;
+		shapes.forEach(shape=>{
+			shape.draw(ctx);
+			if(showControl){
+				shape.drawController(ctx);
+			}
+		});
+	}
+
+	function init(){
+		canvas.style.cursor='pointer';
+		drawBG();	
+	}
+
+	init();
+</script>
+</body>
+</html>
