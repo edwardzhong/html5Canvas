@@ -337,6 +337,10 @@
         }
       },false);
 
+      box.dom.onmouseout = function(e){
+        box.init();
+      };
+      
       //单击移动模式
       content.onmousedown = function(e) {
         if (isEdit) return;
