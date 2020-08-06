@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>图片处理</title>
+    <style>
+      canvas {
+        background-color: #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="bar">
+      <label for="color">填充: </label>
+      <input id="color" type="color" value="#666666" />
+      <br />
+      <label for="shadow">阴影: </label><input type="checkbox" name="shadow" id="shadow" />
+      <label for="pos">位置:</label><input type="range" name="pos" id="pos" step="0.5" min="-5" max="20" value="10" />
+      <br />
+      <label for="line">描边: </label>
+      <input type="checkbox" name="line" id="line" />
+    </div>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+      const colorElem = document.getElementById('color');
+      const shadowElem = document.getElementById('shadow');
+      const posElem = document.getElementById('pos');
+      const lineElem = document.getElementById('line');
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const oCanvas = document.createElement('canvas');
+      const oCtx = oCanvas.getContext('2d');
+      let imgData, w, h;
+      ctx.globalCompositeOperation = "lighter";
+      const img = new Image();
+      img.src = '002.png';
+      img.onload = function() {
+        w = 200;
+        h = Math.round((img.height / img.width) * 200);
+        oCanvas.width = w;
+        oCanvas.height = h;
+        oCtx.drawImage(img, 0, 0, w, h);
+        imgData = oCtx.getImageData(0, 0, w, h);
+        ctx.drawImage(oCanvas, 20, 20, w, h);
+      };
+
+      colorElem.onchange = function() {
+        shadowElem.checked = false;
+        const rgb = hexToRgb(this.value);
+        ctx.clearRect(0, 0, 400, 400);
+        oCtx.putImageData(getImgData(rgb), 0, 0);
+        ctx.drawImage(oCanvas, 20, 20, w, h);
+      };
+
+      shadowElem.onclick = function() {
+        if (this.checked) {
+          ctx.save();
+          ctx.shadowColor = 'hsla(0,0%,0%,.8)';
+          ctx.shadowOffsetX = 10;
+          ctx.shadowOffsetY = 5;
+          ctx.shadowBlur = 2;
+          ctx.clearRect(0, 0, 400, 400);
+          ctx.drawImage(oCanvas, 20, 20, w, h);
+          ctx.restore();
+        } else {
+          ctx.clearRect(0, 0, 400, 400);
+          ctx.drawImage(oCanvas, 20, 20, w, h);
+        }
+      };
+
+      posElem.onchange = function() {
+        if (!shadowElem.checked) return;
+        ctx.save();
+        ctx.shadowColor = 'hsla(0,0%,0%,.8)';
+        ctx.shadowOffsetX = this.value;
+        ctx.shadowOffsetY = 5;
+        ctx.shadowBlur = 2;
+        ctx.clearRect(0, 0, 400, 400);
+        ctx.drawImage(oCanvas, 20, 20, w, h);
+        ctx.restore();
+      };
+
+      lineElem.onclick = function() {
+        if (this.checked) {
+          // const lCanvas = document.createElement('canvas');
+          // const lCtx = lCanvas.getContext('2d');
+          // lCanvas.width = w;
+          // lCanvas.height = h;
+          ctx.save();
+          // ctx.shadowBlur = 2;
+          // ctx.scale(1.2, 1.2);
+          // lCtx.putImageData(getImgData([240, 0, 0]), 0, 0);
+          // ctx.drawImage(lCanvas, 15, 15, w, h);
+
+          // ctx.scale(1, 1);
+          ctx.drawImage(oCanvas, 20, 20, w, h);
+          ctx.restore();
+        } else {
+        }
+      };
+
+      function getImgData(rgb) {
+        const fillData = imgData;
+        const data = imgData.data;
+        let r, g, b, a;
+        for (let row = 0; row < h; row++) {
+          for (let col = 0; col < w; col++) {
+            r = data[(w * row + col) * 4];
+            g = data[(w * row + col) * 4 + 1];
+            b = data[(w * row + col) * 4 + 2];
+            a = data[(w * row + col) * 4 + 3];
+            if (r > 0 || g > 0 || b > 0 || a == 255) {
+              fillData.data[(w * row + col) * 4] = rgb[0];
+              fillData.data[(w * row + col) * 4 + 1] = rgb[1];
+              fillData.data[(w * row + col) * 4 + 2] = rgb[2];
+            }
+          }
+        }
+        return fillData;
+      }
+
+      function hexToRgb(txt) {
+        const ret = [];
+        const hex = txt.toLowerCase();
+        if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/.test(hex)) {
+          const step = hex.length == 4 ? 1 : 2;
+          for (let i = 1; i < 3 * step + 1; i += step) {
+            ret.push(parseInt('0x' + new Array(4 - step).join(hex.slice(i, i + step))));
+          }
+        }
+        return ret;
+      }
+    </script>
+  </body>
+</html>
