@@ -48,7 +48,7 @@
 			const x = i * TW;          
 			const y = arr[i] * TH;
 			ctx.fillText(text, x, y);
-			if(arr[i] > rows || arr[i] > Math.random() * rows * 6) {//超出 屏幕高度｜随机高度 则从0高度重新开始
+			if(arr[i] > rows || arr[i] > rows/4 + Math.random() * rows * 4) {//超出 屏幕高度｜随机高度 则从0高度重新开始
 				arr[i] = 0;
 			} else {//自增行数
 				arr[i]++;
