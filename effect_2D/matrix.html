@@ -17,49 +17,49 @@
 <body>
 <canvas id="canvas" width="400" height="300"></canvas>
 <script>
-	var canvas=document.getElementById('canvas'),
-		ctx=canvas.getContext('2d'),
-		W=document.documentElement.clientWidth||document.body.clientWidth,
-		H=document.documentElement.clientHeight||document.body.clientHeight,
-		TW=30,
-		TH=24,
-		xl=Math.floor(W/TW),
-		yl=Math.floor(H/TH),
-		x=0, y=0,
-		arr=new Array(xl).join(0).split(''),
-		text='';
+	const canvas = document.getElementById('canvas'),
+		ctx = canvas.getContext('2d'),
+		W = document.documentElement.clientWidth||document.body.clientWidth,
+		H = document.documentElement.clientHeight||document.body.clientHeight,
+		TW = 30,//每字符宽度
+		TH = 24,//每字符高度
+		cols = Math.floor(W/TW),//列数
+		rows = Math.floor(H/TH),//行数
+		arr = Array(cols).fill(0);//记录每列的行数
 
-	canvas.width=W;
-	canvas.height=H;
-	ctx.textAlign='left';
-	ctx.textBaseLine='bottom';
-	ctx.font='20px verdana';
-	ctx.fillStyle = 'hsla(0,0%,0%,.1)';
+	canvas.width = W;
+	canvas.height = H;
+	ctx.textAlign = 'left';
+	ctx.textBaseLine = 'bottom';
+	ctx.font = '20px verdana';
+	ctx.fillStyle = 'hsla(0, 0%, 0%, .1)';//关键样式，每次填充都会加深前面一行的透明度
 	// ctx.globalCompositeOperation = "source-over";
 	
 	function draw() {
-        ctx.fillRect(0, 0, W, H);
-        ctx.save();
-        ctx.translate(20,30);
-        ctx.fillStyle='hsla(120,100%,50%,1)';
-        // ctx.globalCompositeOperation = "lighter";
-        for(i = 0; i < xl; i++) {
-        	text = String.fromCharCode(48 + Math.random() * 79);
-            x = i * TW;          
-            y = arr[i];
-            ctx.fillText(text, x, y);
-            if(y>H||y > (Math.random() * H*4)+H/4) {
-                arr[i] = 0;
-            } else {
-                arr[i] = + parseInt(arr[i]) + TH;
-            }
-        }
-        ctx.restore();
-    }
+		// 填充背景
+		ctx.fillRect(0, 0, W, H);
+		// 填充字符
+		ctx.save();
+		ctx.translate(10, 30);
+		ctx.fillStyle ='hsla(120, 100%, 50%, 1)';
+		ctx.globalCompositeOperation = "lighter";
+		for(i = 0; i < cols; i++) {
+			const text = String.fromCharCode(48 + Math.floor(Math.random() * 79));//随机字符串
+			const x = i * TW;          
+			const y = arr[i] * TH;
+			ctx.fillText(text, x, y);
+			if(arr[i] > rows || arr[i] > Math.random() * rows * 6) {//超出 屏幕高度｜随机高度 则从0高度重新开始
+				arr[i] = 0;
+			} else {//自增行数
+				arr[i] += 1;
+			}
+		}
+		ctx.restore();
+	}
 
-    (function(){
-        setInterval(draw, 60);
-    })();
+	(function(){
+		setInterval(draw, 60);
+	})();
 
 </script>
 </body>
