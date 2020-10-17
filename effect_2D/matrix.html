@@ -51,7 +51,7 @@
 			if(arr[i] > rows || arr[i] > Math.random() * rows * 6) {//超出 屏幕高度｜随机高度 则从0高度重新开始
 				arr[i] = 0;
 			} else {//自增行数
-				arr[i] += 1;
+				arr[i]++;
 			}
 		}
 		ctx.restore();
