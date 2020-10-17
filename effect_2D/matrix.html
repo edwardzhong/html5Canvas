@@ -44,7 +44,7 @@
 		ctx.fillStyle ='hsla(120, 100%, 50%, 1)';
 		ctx.globalCompositeOperation = "lighter";
 		for(i = 0; i < cols; i++) {
-			const text = String.fromCharCode(48 + Math.floor(Math.random() * 79));//随机字符串
+			const text = String.fromCharCode(48 + Math.floor(Math.random() * 79));//随机字符(ascii 48-126 的数字字母字符)
 			const x = i * TW;          
 			const y = arr[i] * TH;
 			ctx.fillText(text, x, y);
